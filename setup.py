@@ -6,7 +6,9 @@ setup(
     packages=find_packages(),
     install_requires=[
         "requests",
-        "pyyaml"
+        "pyyaml",
+        "pandas",
+        "networkx"
     ],
     entry_points={
         'console_scripts': [

@@ -1,5 +1,5 @@
 class PredicateInfo:
-    def __init__(self, name, num_args, args=None):
+    def __init__(self, name, num_args=0, args=None):
         self.name = name
         self.num_args = num_args
         self.args = args if args is not None else []

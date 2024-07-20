@@ -1,6 +1,8 @@
 import pandas as pd
 import networkx as nx
-
+from ..logic.Fact import Fact
+from ..client.JarvisClient import JarvisClient
+from ..logic.Fact import Fact
 
 def aggregate_data(records):
     aggregated = {}
@@ -37,23 +39,17 @@ def process_aggregate_by_start_node(aggregate_by_start_node):
     
     return updated_aggregate
 
-
-def explain(csv_path, root):
-    # Read CSV
+def explain_from_file(root, csv_path):
     df = pd.read_csv(csv_path)
-    
-    # Create graph
     G = nx.DiGraph()
     
     ordered_edges = []
         
-    # Process each row in the DataFrame
-    for index, row in df.iterrows():
+    for row in df.iterrows():
         node_to = row['Fact']
         node_from_left = row['ProvenanceLeft']
         node_from_right = row['ProvenanceRight']
         
-        # Add nodes and edges only if they don't start with 'vatom_'
         G.add_node(node_to, value=node_to)
 
         G.add_edge(node_to, node_from_left, description=row['Rule'])
@@ -61,7 +57,6 @@ def explain(csv_path, root):
         if pd.notna(node_from_right) and node_from_right != '' and node_from_right != 'nan':
             G.add_edge(node_to, node_from_right, description=row['Rule'])
     
-    # Collect ordered edges from BFS
     if root in G:
         for node in nx.bfs_tree(G, source=root):
             connections = list(G.neighbors(node))
@@ -70,11 +65,9 @@ def explain(csv_path, root):
     else:
         return "Root not found in the graph."
     
-    # Aggregate and process data
     aggregated_data = aggregate_data(ordered_edges)
     updated_aggregated = process_aggregate_by_start_node(aggregated_data)
     
-    # Generate text representation
     text_representation = f"Structured explanation of the fact {root}: \n\n"
     for start, ends in updated_aggregated.items():
         text_representation += f"Fact {start} derived by:\n"
@@ -82,3 +75,22 @@ def explain(csv_path, root):
             text_representation += f"  -> {end}\n"
     
     return text_representation
+
+
+def explain(structured_fact : Fact = None, fact=None, csv_path=None):
+    if fact and csv_path:
+        return explain_from_file(fact,csv_path)
+    
+    if fact and not csv_path:
+        explanation_response = JarvisClient.explain(fact)
+     
+    if structured_fact:
+        explanation_response = JarvisClient.explain_by_fact(structured_fact)
+
+    if explanation_response.status_code != 200:
+            raise Exception(f"HTTP error! status: {explanation_response.status_code}, detail: {explanation_response.json()['message']}")
+    if explanation_response.status_code == 200:
+        structured_fact = Fact.from_dict(explanation_response.json()["data"])
+    return structured_fact.textual_explanation
+
+    

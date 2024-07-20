@@ -1,5 +1,8 @@
 from .PredicateInfo import PredicateInfo
 from .Rule import Rule
+import pandas as pd
+from IPython.display import display
+from typing import List
 
 class Ontology:
     def __init__(self, id, name, short_description, long_description, domain_knowledge):
@@ -8,10 +11,10 @@ class Ontology:
         self.shortDescription = short_description
         self.longDescription = long_description
         self.domainKnowledge = domain_knowledge
-        self.inputPredicates = []
-        self.intensionalPredicates = []
-        self.outputPredicates = []
-        self.rules = []
+        self.inputPredicates:List[PredicateInfo] = []
+        self.intensionalPredicates:List[PredicateInfo] = []
+        self.outputPredicates:List[PredicateInfo] = []
+        self.rules:List[Rule] = []
 
     def add_rule(self, rule):
         self.rules.append(rule)
@@ -39,7 +42,7 @@ class Ontology:
         }
 
     @classmethod
-    def _parse_ontology(cls, data):
+    def from_dict(cls, data):
         ontology = cls(
             id=data['id'],
             name=data['name'],
@@ -64,7 +67,7 @@ class Ontology:
             ontology.add_rule(rule)
         return ontology
 
-    def show_rules(self):
+    def show_rules(self, max_rows=None, max_colwidth=None):
         # Create a DataFrame from the rules
         data = [{
             'Logic': rule.logic,
@@ -73,5 +76,11 @@ class Ontology:
         } for rule in sorted(self.rules, key=lambda x: x.positionInOntology)]
         
         df = pd.DataFrame(data)
-        # Display the DataFrame
+
+        pd.set_option('display.max_rows', max_rows)
+        pd.set_option('display.max_columns', max_colwidth)
+        pd.set_option('display.expand_frame_repr', False)
+        pd.set_option('display.max_colwidth', None)
         display(df)
+
+
