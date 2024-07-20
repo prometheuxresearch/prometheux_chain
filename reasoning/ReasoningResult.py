@@ -38,3 +38,6 @@ class ReasoningResult:
     
     def set_page_size(self, new_page_size):
         self.size = new_page_size
+
+    def set_size(self, new_page):
+        self.page = new_page
