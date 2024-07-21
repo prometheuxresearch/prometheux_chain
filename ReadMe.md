@@ -22,6 +22,11 @@ Prometheux_chain is a Python SDK designed to your knowledge graphs by
    pip3 install -r requirements.txt
 ```
 
+To automatically install the library in your Jupyter Lab or Jupyter Notebook run the following command
+```bash
+    pip install git+https://github.com/prometheuxresearch/prometheux_chain.git
+```
+
 To manually install the library in your Jupyter Lab or Jupyter Notebook follows these steps
 ```bash
    python3 -m venv myenv

@@ -17,7 +17,7 @@ setup(
     author='Prometheux Limited',
     author_email='davben@prometheux.co.uk',
     description='Prometheux chain is a Python SDK designed to build, evolve and deploy your new knowledge graphs.',
-    long_description=open('README.md').read(),
+    long_description=open('ReadMe.md').read(),
     long_description_content_type='text/markdown',
     url='https://github.com/prometheuxresearch/prometheux_chain',
     classifiers=[
