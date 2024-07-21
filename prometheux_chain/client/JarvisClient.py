@@ -65,7 +65,7 @@ class JarvisClient:
         return response
 
     @staticmethod
-    def explain_by_fact(structured_fact : Fact):
+    def explain_by_fact(structured_fact : Fact, glossary):
         headers = {'Content-Type': 'application/json'}
         params = {}
         params['fact'] = structured_fact.fact
@@ -77,15 +77,19 @@ class JarvisClient:
         params['knowledgeGraphId'] = structured_fact.knowledge_graph_id
         params['doVisualAndChaseExplanation'] = False
         params['doTextualExplanation'] = True
+        if glossary:
+            params['glossary'] = glossary
         response = requests.get(f"{config['JARVIS_URL']}/chasefact-info/explainByFact", headers=headers, params=params)
         return response
     
     @staticmethod
-    def explain(fact):
+    def explain(fact, glossary):
         headers = {'Content-Type': 'application/json'}
         params = {}
         params['factToExplain'] = fact
         params['doVisualAndChaseExplanation'] = False
         params['doTextualExplanation'] = True
+        if glossary:
+            params['glossary'] = glossary
         response = requests.get(f"{config['JARVIS_URL']}/chasefact-info/explain", headers=headers, params=params)
         return response

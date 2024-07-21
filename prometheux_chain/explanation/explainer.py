@@ -77,15 +77,15 @@ def explain_from_file(root, csv_path):
     return text_representation
 
 
-def explain(structured_fact : Fact = None, fact=None, csv_path=None):
+def explain(structured_fact : Fact = None, fact=None, csv_path=None, glossary = None):
     if fact and csv_path:
         return explain_from_file(fact,csv_path)
     
     if fact and not csv_path:
-        explanation_response = JarvisClient.explain(fact)
+        explanation_response = JarvisClient.explain(fact, glossary)
      
     if structured_fact:
-        explanation_response = JarvisClient.explain_by_fact(structured_fact)
+        explanation_response = JarvisClient.explain_by_fact(structured_fact, glossary)
 
     if explanation_response.status_code != 200:
             raise Exception(f"HTTP error! status: {explanation_response.status_code}, detail: {explanation_response.json()['message']}")

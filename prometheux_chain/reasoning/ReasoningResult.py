@@ -20,7 +20,11 @@ class ReasoningResult:
             'asc' : self.asc
         }
     
-    def get(self):
+    def get(self,new_page = None, new_page_size = None):
+        if new_page:
+            self.set_page(new_page)
+        if new_page_size:
+            self.set_page_size(new_page_size)
         if self.page < 0:
             self.page = 0
         chase_facts_response = JarvisClient.get_chase_facts(self.output_predicate, self.knowledge_graph_id, self.page,self.size,self.sort_property,self.asc)
@@ -32,12 +36,14 @@ class ReasoningResult:
 
     def next(self):
         self.page += 1
+        return self
     
     def prev(self):
         self.page -= 1
+        return self
     
     def set_page_size(self, new_page_size):
         self.size = new_page_size
 
-    def set_size(self, new_page):
+    def set_page(self, new_page):
         self.page = new_page

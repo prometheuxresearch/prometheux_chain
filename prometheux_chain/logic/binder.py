@@ -35,7 +35,7 @@ def bind_output(ontology : Ontology, databases=None):
     intensional_predicates = ontology.intensionalPredicates
     intensional_bindings = []
     for intensional_predicate in intensional_predicates:
-        intensional_bindings.append(Bind(None, intensional_predicate.name, "", Datasource(name="None")))
+        intensional_bindings.append(Bind(None, intensional_predicate.name, "", Datasource(name="Intensional")))
     return BindTable(intensional_bindings)
 
 
