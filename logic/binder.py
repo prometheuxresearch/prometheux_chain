@@ -4,8 +4,10 @@ from .Bind import Bind
 from .BindTable import BindTable
 from ..logic.Ontology import Ontology
 from ..model.Datasource import Datasource
+from typing import List
+from ..model.DatabaseInfo import DatabaseInfo
 
-def bind_input(ontology : Ontology, databases):
+def bind_input(ontology : Ontology, databases : List[DatabaseInfo]):
     databases_ids = []
     for database in databases:
         databases_ids.append(database.id)
@@ -37,7 +39,7 @@ def bind_output(ontology : Ontology, databases=None):
     return BindTable(intensional_bindings)
 
 
-def select_bindings(bind_table, bind_indexes):
+def select_bindings(bind_table : BindTable, bind_indexes):
     selected_bindings = []
     bind_indexes = set(bind_indexes)
     for i in bind_indexes:

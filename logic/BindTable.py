@@ -30,6 +30,8 @@ class BindTable:
         # Create a DataFrame from the rules
         data = [{
             'Predicate Name': bind.predicate_name,
+            'Database Type': bind.database_type,
+            'Database Alias': bind.database_alias,
             'Datasource Name': bind.datasource.name
         } for bind in (self.bindings)]
         

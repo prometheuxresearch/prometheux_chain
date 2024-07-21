@@ -24,13 +24,13 @@ def connect_from_yaml(file_path):
         if store_response.status_code == 409:
             print(store_response.json()["message"])
         elif store_response.status_code != 200:
-            raise Exception(f"HTTP error! status: {store_response.status_code}, detail: {store_response.json().message}")
+            raise Exception(f"HTTP error! status: {store_response.status_code}, detail: {store_response.json()['message']}")
         if store_response.status_code == 200:
             store_response.json()["message"]
 
     get_all_response = ConstellationBackendClient.get_all_databases()
     if get_all_response.status_code != 200:
-        raise Exception(f"HTTP error! status: {get_all_response.status_code}, detail: {get_all_response.json().message}")
+        raise Exception(f"HTTP error! status: {get_all_response.status_code}, detail: {get_all_response.json()['message']}")
     get_databases = get_all_response.json()["data"]
     databases = []
     for get_db in get_databases:
