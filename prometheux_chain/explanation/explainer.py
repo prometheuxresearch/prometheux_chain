@@ -45,7 +45,7 @@ def explain_from_file(root, csv_path):
     
     ordered_edges = []
         
-    for row in df.iterrows():
+    for index, row in df.iterrows():
         node_to = row['Fact']
         node_from_left = row['ProvenanceLeft']
         node_from_right = row['ProvenanceRight']
