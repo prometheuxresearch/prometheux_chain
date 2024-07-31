@@ -72,7 +72,6 @@ class Ontology:
         data = [{
             'Logic': rule.logic,
             'Description': rule.nlDescription,
-            'Position': rule.positionInOntology
         } for rule in sorted(self.rules, key=lambda x: x.positionInOntology)]
         
         df = pd.DataFrame(data)
