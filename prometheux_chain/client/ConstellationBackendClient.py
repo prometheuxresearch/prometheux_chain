@@ -29,3 +29,9 @@ class ConstellationBackendClient:
         headers = {'Content-Type': 'application/json'}
         response = requests.get(f"{config['CONSTELLATION_BACKEND_URL']}/database-info/all", headers=headers)
         return response
+    
+    @staticmethod
+    def delete_all_databases():
+        headers = {'Content-Type': 'application/json'}
+        response = requests.delete(f"{config['CONSTELLATION_BACKEND_URL']}/database-info/deleteAll", headers=headers)
+        return response
