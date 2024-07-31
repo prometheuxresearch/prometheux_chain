@@ -10,5 +10,4 @@ class Rule:
             'id': self.id,
             'logic': self.logic,
             'nlDescription': self.nlDescription,
-            'positionInOntology': self.positionInOntology
         }
