@@ -78,13 +78,13 @@ def explain_from_file(root, csv_path):
 
 
 def explain(structured_fact : Fact = None, fact=None, csv_path=None, json_glossary = None):
-    with open(json_glossary, 'r') as file:
-        json_string = str(file.read())
-    
+
     if fact and csv_path:
         return explain_from_file(fact,csv_path)
-    
+
     if fact and not csv_path:
+        with open(json_glossary, 'r') as file:
+            json_string = str(file.read())
         explanation_response = JarvisClient.explain(fact, json_string)
      
     if structured_fact:
