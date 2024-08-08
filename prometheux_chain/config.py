@@ -1,6 +1,5 @@
 import yaml
 import os
-from client.JarvisClient import JarvisClient
 
 class Config:
     def __init__(self, config_file=None):
