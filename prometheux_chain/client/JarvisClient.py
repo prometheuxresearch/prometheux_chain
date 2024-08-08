@@ -7,6 +7,7 @@ from ..logic.Fact import Fact
 class JarvisClient:
     @staticmethod
     def compile_logic(ontology):
+        JarvisClient.update_llm_configs()
         url = f"{config['JARVIS_URL']}/ontology-info/compileLogic"
         headers = {'Content-Type': 'application/json'}
         json_data = ontology.to_dict()
@@ -15,6 +16,7 @@ class JarvisClient:
     
     @staticmethod
     def store_knowledge_graph(knowledge_graph: KnowledgeGraph):
+        JarvisClient.update_llm_configs()
         url = f"{config['JARVIS_URL']}/knowledgegraph-info/store"
         headers = {'Content-Type': 'application/json'}
         
@@ -25,6 +27,7 @@ class JarvisClient:
     
     @staticmethod
     def reason(knowledge_graph: KnowledgeGraph):
+        JarvisClient.update_llm_configs()
         url = f"{config['JARVIS_URL']}/reasoningtask-info/reason"
         headers = {'Content-Type': 'application/json'}
         
@@ -70,6 +73,7 @@ class JarvisClient:
 
     @staticmethod
     def explain_by_fact(structured_fact : Fact, glossary):
+        JarvisClient.update_llm_configs()
         headers = {'Content-Type': 'application/json'}
         params = {}
         params['fact'] = structured_fact.fact
@@ -88,6 +92,7 @@ class JarvisClient:
     
     @staticmethod
     def explain(fact, glossary):
+        JarvisClient.update_llm_configs()
         headers = {'Content-Type': 'application/json'}
         params = {}
         params['factToExplain'] = fact
@@ -97,3 +102,16 @@ class JarvisClient:
             params['glossary'] = glossary
         response = requests.get(f"{config['JARVIS_URL']}/chasefact-info/explain", headers=headers, params=params)
         return response
+    
+    @staticmethod
+    def update_llm_configs():
+        if config.get("LLM"):
+            set_prop_response = JarvisClient.set_config_prop("LLM",config.get("LLM"))
+            if set_prop_response.status_code != 200:
+                raise Exception(f"HTTP error! status: {set_prop_response.status_code}, detail: {set_prop_response.text}")
+        if config.get("OPENAI_API_KEY"):
+            set_prop_response = JarvisClient.set_config_prop("OPENAI_API_KEY",config.get("OPENAI_API_KEY"))
+            if set_prop_response.status_code != 200:
+                raise Exception(f"HTTP error! status: {set_prop_response.status_code}, detail: {set_prop_response.text}")
+        
+        

@@ -17,10 +17,6 @@ class Config:
         return self._config.get(key)
     
     def set(self, key, value):
-        if key in ["LLM", "OPENAI_API_KEY"]:
-            set_prop_response = JarvisClient.set_config_prop(key, value)
-            if set_prop_response.status_code != 200:
-                raise Exception(f"HTTP error! status: {set_prop_response.status_code}, detail: {set_prop_response.text}")
         self._config[key] = value
         self._save_config()
 
