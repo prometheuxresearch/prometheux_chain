@@ -14,7 +14,7 @@ def compile_vadalog(file_path):
 
     ontology.add_rule(rule)
 
-    response = JarvisClient.compile_logic(ontology).json()
+    response = JarvisClient.compile_logic(ontology)
     if response.status_code == 409:
         print(response.json()["message"])
     elif response.status_code != 200:
