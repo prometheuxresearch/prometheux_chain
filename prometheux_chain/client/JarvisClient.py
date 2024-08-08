@@ -9,14 +9,8 @@ class JarvisClient:
     def compile_logic(ontology):
         url = f"{config['JARVIS_URL']}/ontology-info/compileLogic"
         headers = {'Content-Type': 'application/json'}
-        
-        try:
-            json_data = ontology.to_dict()
-            response = requests.post(url, headers=headers, json=json_data)
-            response.raise_for_status()
-        except requests.RequestException as e:
-            raise Exception(f"An error occurred during HTTP request: {e}")
-        
+        json_data = ontology.to_dict()
+        response = requests.post(url, headers=headers, json=json_data)
         return response
     
     @staticmethod
@@ -63,6 +57,16 @@ class JarvisClient:
         params['asc'] = asc
         response = requests.get(f"{config['JARVIS_URL']}/chasefact-info/paged/startswith", headers=headers, params=params)
         return response
+    
+    @staticmethod
+    def set_config_prop(key, value):
+        headers = {'Content-Type': 'application/json'}
+        params = {}
+        params['key'] = key
+        params['value'] = value
+        response = requests.get(f"{config['JARVIS_URL']}/config-info/set", headers=headers, params=params)
+        return response
+
 
     @staticmethod
     def explain_by_fact(structured_fact : Fact, glossary):
