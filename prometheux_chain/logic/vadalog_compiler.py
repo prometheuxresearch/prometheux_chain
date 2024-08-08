@@ -19,5 +19,5 @@ def compile_vadalog(file_path):
         print(response.json()["message"])
     elif response.status_code != 200:
         raise Exception(f"HTTP error! status: {response.status_code}, detail: {response.text}")
-    ontology = response["data"]
+    ontology = response.json()["data"]
     return Ontology.from_dict(ontology)
