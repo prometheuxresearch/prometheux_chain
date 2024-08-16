@@ -114,4 +114,10 @@ class JarvisClient:
             if set_prop_response.status_code != 200:
                 raise Exception(f"HTTP error! status: {set_prop_response.status_code}, detail: {set_prop_response.text}")
         
-        
+    
+
+    @staticmethod
+    def delete_all_resoning_resources():
+        headers = {'Content-Type': 'application/json'}
+        response = requests.delete(f"{config['JARVIS_URL']}/deleteAll", headers=headers)
+        return response
