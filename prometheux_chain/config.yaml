@@ -1,2 +1,3 @@
 CONSTELLATION_BACKEND_URL: http://localhost:8085
 JARVIS_URL: http://localhost:8084
+LLM: NoLLM
