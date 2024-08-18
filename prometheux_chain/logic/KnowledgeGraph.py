@@ -3,7 +3,7 @@ from ..logic.Bind import Bind
 from typing import List
 
 class KnowledgeGraph:
-    def __init__(self, id=None, name="", ontologies:List[Ontology]=None, databases=None, bindings=None, schema="", for_chase=False):
+    def __init__(self, id=None, name="", ontologies:List[Ontology]=None, databases=None, bindings:list[Bind]=None, schema="", for_chase=False, params:dict={}):
         self.id = id
         self.name = name
         self.ontologies = ontologies if ontologies is not None else []
@@ -11,6 +11,7 @@ class KnowledgeGraph:
         self.bindings = bindings if bindings is not None else []
         self.schema = schema
         self.forChase = for_chase
+        self.params = params
 
     def to_dict(self):
         """Converts the object to a dictionary for JSON serialization."""
@@ -21,7 +22,8 @@ class KnowledgeGraph:
             "databases": self.databases,
             "bindings": [binding.to_dict() for binding in self.bindings],
             "schema": self.schema,
-            "forChase": self.forChase
+            "forChase": self.forChase,
+            "params" : self.params
         }
 
     @classmethod
@@ -35,5 +37,6 @@ class KnowledgeGraph:
             databases=data.get('databases', []),
             bindings=bindings,
             schema=data.get('schema', "\{\}"),
-            for_chase=data.get('forChase', False)
+            for_chase=data.get('forChase', False),
+            params = data.get('params')
         )

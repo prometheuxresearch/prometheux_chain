@@ -15,6 +15,7 @@ class Ontology:
         self.intensionalPredicates:List[PredicateInfo] = []
         self.outputPredicates:List[PredicateInfo] = []
         self.rules:List[Rule] = []
+        self.vada_file_path = ""
 
     def add_rule(self, rule):
         self.rules.append(rule)
@@ -81,5 +82,8 @@ class Ontology:
         pd.set_option('display.expand_frame_repr', False)
         pd.set_option('display.max_colwidth', None)
         display(df)
+    
+    def set_vada_file_path(self, vada_file_path):
+        self.vada_file_path = vada_file_path
 
 

@@ -2,8 +2,10 @@ from ..client.JarvisClient import JarvisClient
 from ..model.PageResponse import PageResponse
 
 class ReasoningResult:
-    def __init__(self, knowledge_graph_id, page=-1, size=50, sort_property="fact", asc=True):
+    def __init__(self, knowledge_graph_id, reasoning_status_code, reasoning_message, page=-1, size=50, sort_property="fact", asc=True):
         self.knowledge_graph_id = knowledge_graph_id
+        self.reasoning_status_code = reasoning_status_code
+        self.reasoning_message = reasoning_message
         self.page = page
         self.size = size
         self.sort_property=sort_property
