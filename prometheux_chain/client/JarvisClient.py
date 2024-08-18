@@ -83,7 +83,8 @@ class JarvisClient:
         params['isForChase'] = structured_fact.is_for_chase
         params['reasoningTaskId'] = structured_fact.reasoning_task_id
         params['knowledgeGraphId'] = structured_fact.knowledge_graph_id
-        params['doVisualAndChaseExplanation'] = False
+        params['doVisualExplanation'] = False
+        params['doChaseExplanation'] = True
         params['doTextualExplanation'] = True
         if glossary:
             params['glossary'] = glossary
@@ -96,7 +97,8 @@ class JarvisClient:
         headers = {'Content-Type': 'application/json'}
         params = {}
         params['factToExplain'] = fact
-        params['doVisualAndChaseExplanation'] = False
+        params['doVisualExplanation'] = False
+        params['doChaseExplanation'] = True
         params['doTextualExplanation'] = True
         if glossary:
             params['glossary'] = glossary
