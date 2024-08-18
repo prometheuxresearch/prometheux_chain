@@ -1,13 +1,13 @@
 import json
 import pandas as pd
 import networkx as nx
+import ipycytoscape
 from pyvis.network import Network
 from IPython import get_ipython
 from IPython.display import display, HTML
 import webbrowser
 import os
 from time import sleep
-# import py4cytoscape as p4c
 from ..client.JarvisClient import JarvisClient
 from ..logic.Fact import Fact
 
@@ -26,9 +26,8 @@ def in_notebook():
         return False
 
 
-def visualize_chase_explanation(chase_explanation_json):
+def visualize_chase_explanation_with_pyvis(chase_explanation_json, is_in_notebook):
     chase_explanation = json.loads(chase_explanation_json)
-    is_in_notebook = in_notebook()
     
     # Initialize the Pyvis network
     net = Network(notebook=is_in_notebook, directed=True, cdn_resources='in_line')
@@ -41,6 +40,9 @@ def visualize_chase_explanation(chase_explanation_json):
         else:
             net.add_node(data['id'], label=data['label'], title=data['label'])
     
+    # Limit the physics so nodes don't keep moving after initial rendering
+    net.toggle_physics(False)
+
     # Generate the network visualization
     output_file = os.path.join(os.getcwd(), "chase_explanation.html")
     if os.path.exists(output_file):
@@ -61,10 +63,56 @@ def visualize_chase_explanation(chase_explanation_json):
         print("Error: The HTML file was not generated.")
 
 
+def visualize_chase_explanation_with_cytoscape(chase_explanation_json):
+    chase_explanation = json.loads(chase_explanation_json)
+    G = nx.DiGraph()
+
+    # Process each item in the chase explanation JSON
+    for item in chase_explanation:
+        data = item['data']
+        
+        if 'source' in data and 'target' in data:
+            # This is an edge
+            G.add_edge(data['source'], data['target'], label=data['label'])
+        else:
+            # This is a node
+            G.add_node(data['id'], label=data['label'])
+
+    # Create an ipycytoscape widget and load the NetworkX graph into it
+    cyto_widget = ipycytoscape.CytoscapeWidget()
+    cyto_widget.graph.add_graph_from_networkx(G)
+
+    # Optionally, you can set styles and layout
+    cyto_widget.set_style([{
+        'selector': 'node',
+        'style': {
+            'label': 'data(label)',
+            'background-color': '#BFD7B5'
+        }
+    }, {
+        'selector': 'edge',
+        'style': {
+            'label': 'data(label)',
+            'line-color': '#A3C4BC',
+            'width': 2,
+            'target-arrow-shape': 'triangle',
+            'target-arrow-color': '#A3C4BC',
+            'curve-style': 'bezier'
+        }
+    }])
+
+    # Set the layout (optional)
+    cyto_widget.set_layout(name='breadthfirst')  # Other options: 'grid', 'circle', 'cose', etc.
+
+    # Display the widget
+    display(cyto_widget)
+
+
 '''
-    NOTE: this version uses Cytoscape   
+    Alternative visualization with cytoscape application for large graphs 
+    (directly in cytoscape ide, in jupyter lab only a png can be visualized with this approach)
 '''
-# def visualize_chase_explanation(chase_explanation_json):
+# def visualize_chase_explanation_with_cytoscape(chase_explanation_json):
 #     chase_explanation = json.loads(chase_explanation_json)
 #     nodes_data = []
 #     edges_data = []
@@ -99,6 +147,8 @@ def visualize_chase_explanation(chase_explanation_json):
 #     p4c.set_edge_target_arrow_shape_default('ARROW')
 #     p4c.set_edge_source_arrow_shape_default('NONE')
 #     p4c.set_edge_label_default('DERIVED BY')
+
+#     p4c.notebook_export_show_image()
     
 
 def aggregate_data(records):
@@ -201,8 +251,20 @@ def explain(structured_fact : Fact = None, fact=None, csv_path=None, json_glossa
         
         chase_explanation = explanation_data.get("chaseExplanation", "")
         if chase_explanation:
-            visualize_chase_explanation(chase_explanation)
+            # Check if the user is launching the request from python or from jupyter notebook
+            is_in_notebook = in_notebook()
 
+            if is_in_notebook:
+                try:
+                    # Attempt to use ipycytoscape for visualization
+                    # p4c.cytoscape_ping()
+                    visualize_chase_explanation_with_cytoscape(chase_explanation)
+                except Exception as e:
+                    # Fall back to Pyvis
+                    visualize_chase_explanation_with_pyvis(chase_explanation, is_in_notebook)
+            else:
+                visualize_chase_explanation_with_pyvis(chase_explanation, is_in_notebook)
+                
         return textual_explanation
 
     

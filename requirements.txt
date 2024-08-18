@@ -1,5 +1,7 @@
+jupyter
 requests
 pyyaml
 pandas
 pyvis
+ipycytoscape
 networkx

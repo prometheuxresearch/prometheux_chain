@@ -22,20 +22,24 @@ Prometheux_chain is a Python SDK designed to your knowledge graphs by
    pip3 install -r requirements.txt
 ```
 
+To enable the cytoscape visualization in jupyter lab, run the following command
+```bash
+   jupyter labextension install @jupyter-widgets/jupyterlab-manager
+```
+
 To automatically install the library in your Jupyter Lab or Jupyter Notebook run the following command
 ```bash
     pip install git+https://github.com/prometheuxresearch/prometheux_chain.git
 ```
 
-To manually install the library in your Jupyter Lab or Jupyter Notebook follows these steps
+To manually install the library in your Jupyter Lab or Jupyter Notebook follow these steps
 ```bash
-   python3 -m venv myenv
-   source myvenv/bin/activate
    pip install -e .
-   rm -r myenv/lib/python3.x/site-packages/prometheux_chain/
-   cp -r ../prometheux_chain myenv/lib/python3.x/site-packages
-   jupyter lab
+   rm -rf myvenv/lib/python3.9/site-packages/prometheux_chain/
+   cp -r prometheux_chain myvenv/lib/python3.9/site-packages
+   myvenv/bin/jupyter lab
 ```
+
 
 Ensure that the services Constellation and Jarvis are active
 
