@@ -102,7 +102,7 @@ def visualize_chase_explanation_with_cytoscape(chase_explanation_json):
     }])
 
     # Set the layout (optional)
-    cyto_widget.set_layout(name='breadthfirst')  # Other options: 'grid', 'circle', 'cose', etc.
+    cyto_widget.set_layout(name='dagre')  # Other options: 'cose', 'grid', 'circle', 'breadthfirst', etc.
 
     # Display the widget
     display(cyto_widget)

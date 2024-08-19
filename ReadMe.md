@@ -24,7 +24,7 @@ Prometheux_chain is a Python SDK designed to your knowledge graphs by
 
 To enable the cytoscape visualization in jupyter lab, run the following command
 ```bash
-   jupyter labextension install @jupyter-widgets/jupyterlab-manager
+   myvenv/bin/jupyter labextension install @jupyter-widgets/jupyterlab-manager
 ```
 
 To automatically install the library in your Jupyter Lab or Jupyter Notebook run the following command
