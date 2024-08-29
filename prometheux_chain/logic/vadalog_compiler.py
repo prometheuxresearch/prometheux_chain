@@ -15,8 +15,7 @@ def compile_vadalog(file_paths):
             with open(file_path, 'r') as file:
                 vadalog_program = file.read()
         except IOError as e:
-            print(f"Error opening file {file_path}: {e}")
-            return None
+            raise Exception(f"Error opening file {file_path}: {e}")
         rule = Rule(None, vadalog_program, "Description of the rule", 1)
         ontology = Ontology(id=None, name="", short_description="", long_description="", domain_knowledge="")
         ontology.add_rule(rule)

@@ -232,8 +232,9 @@ def explain(structured_fact : Fact = None, fact=None, csv_path=None, json_glossa
 
     json_string = "[]"
 
-    with open(json_glossary, 'r') as file:
-            json_string = str(file.read())
+    if json_glossary:
+        with open(json_glossary, 'r') as file:
+                json_string = str(file.read())
 
     if fact and not csv_path:
         explanation_response = JarvisClient.explain(fact, json_string)
