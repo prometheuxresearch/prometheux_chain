@@ -115,7 +115,20 @@ class JarvisClient:
             set_prop_response = JarvisClient.set_config_prop("OPENAI_API_KEY",config.get("OPENAI_API_KEY"))
             if set_prop_response.status_code != 200:
                 raise Exception(f"HTTP error! status: {set_prop_response.status_code}, detail: {set_prop_response.text}")
-        
+        if config.get("OPENAI_MODEL"):
+            set_prop_response = JarvisClient.set_config_prop("OPENAI_MODEL",config.get("OPENAI_MODEL"))
+            if set_prop_response.status_code != 200:
+                raise Exception(f"HTTP error! status: {set_prop_response.status_code}, detail: {set_prop_response.text}")
+        if config.get("OPENAI_MAX_TOKENS"):
+            set_prop_response = JarvisClient.set_config_prop("OPENAI_MAX_TOKENS",config.get("OPENAI_MAX_TOKENS"))
+            if set_prop_response.status_code != 200:
+                raise Exception(f"HTTP error! status: {set_prop_response.status_code}, detail: {set_prop_response.text}")
+        if config.get("OPENAI_TEMPERATURE"):
+            set_prop_response = JarvisClient.set_config_prop("OPENAI_TEMPERATURE",config.get("OPENAI_TEMPERATURE"))
+            if set_prop_response.status_code != 200:
+                raise Exception(f"HTTP error! status: {set_prop_response.status_code}, detail: {set_prop_response.text}")
+ 
+ 
     
 
     @staticmethod

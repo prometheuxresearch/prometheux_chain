@@ -225,7 +225,7 @@ def explain_from_file(root, csv_path):
     return text_representation
 
 
-def explain(structured_fact : Fact = None, fact=None, csv_path=None, json_glossary = None):
+def explain(structured_fact : Fact = None, fact=None, csv_path=None, json_glossary = None, attempts=0):
 
     if fact and csv_path:
         return explain_from_file(fact,csv_path)
@@ -241,6 +241,14 @@ def explain(structured_fact : Fact = None, fact=None, csv_path=None, json_glossa
      
     if structured_fact:
         explanation_response = JarvisClient.explain_by_fact(structured_fact, json_string)
+
+    if explanation_response.status_code == 429:
+        if attempts == 3:
+            raise Exception(f"HTTP error! status: {explanation_response.status_code}, detail: {explanation_response.json()['message']}")
+        print("Attempt "+attempts+". "+explanation_response.json()['message']+ ". Retrying after 5 seconds")
+        time.sleep(5)
+        attempts = attempts + 1
+        explain(structured_fact, fact, csv_path, json_glossary, attempts)
 
     if explanation_response.status_code != 200:
             raise Exception(f"HTTP error! status: {explanation_response.status_code}, detail: {explanation_response.json()['message']}")

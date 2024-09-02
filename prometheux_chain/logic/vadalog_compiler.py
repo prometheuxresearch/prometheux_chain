@@ -1,8 +1,9 @@
 from .Rule import Rule
 from .Ontology import Ontology
 from ..client.JarvisClient import JarvisClient
+import time
 
-def compile_vadalog(file_paths):
+def compile_vadalog(file_paths, attempts = 0):
 
     if isinstance(file_paths, str):
         file_paths = [file_paths]
@@ -22,6 +23,13 @@ def compile_vadalog(file_paths):
         response = JarvisClient.compile_logic(ontology)
         ordinal = lambda n: "%d%s" % (n, "th" if 4 <= n % 100 <= 20 else {1: "st", 2: "nd", 3: "rd"}.get(n % 10, "th"))
         ordinal_i = ordinal(i)
+        if response.status_code == 429:
+            if attempts == 3:
+                raise Exception(f"HTTP error! status: {explanation_response.status_code}, detail: {explanation_response.json()['message']}")
+            print("Attempt "+attempts+". "+explanation_response.json()['message']+ ". Retrying after 5 seconds")
+            time.sleep(5)
+            attempts = attempts + 1
+            compile_vadalog(file_paths, attempts)
         if response.status_code != 200:
             raise Exception(f"Compilation error at {ordinal_i} program! Detail: {response.json()['message']}")
         else:
