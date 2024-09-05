@@ -5,3 +5,16 @@ pandas
 pyvis
 ipycytoscape
 networkx
+Flask
+Flask-Cors
+neo4j==5.13
+langchain_openai
+langchain-community
+langchain_experimental
+json-repair
+py2neo
+networkx
+matplotlib
+yfiles-jupyter-graphs
+requests
+python-dotenv

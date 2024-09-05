@@ -128,7 +128,13 @@ class JarvisClient:
             if set_prop_response.status_code != 200:
                 raise Exception(f"HTTP error! status: {set_prop_response.status_code}, detail: {set_prop_response.text}")
  
- 
+    @staticmethod
+    def queryExplain(nlQuery):
+        headers = {'Content-Type': 'application/json'}
+        params = {}
+        params['nlQuery'] = nlQuery
+        response = requests.get(f"{config['JARVIS_URL']}/rag-info/queryExplain", headers=headers, params=params)
+        return response
     
 
     @staticmethod
