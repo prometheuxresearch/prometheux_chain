@@ -5,7 +5,6 @@ from ..logic.Ontology import Ontology
 from ..logic.PredicateInfo import PredicateInfo
 from ..reasoning.ReasoningResult import ReasoningResult
 import uuid
-from ..chat.vector_index_initializer import VectorIndexInitializer
 
 def reason(ontologies, bind_input_table: BindTable = None, bind_output_table: BindTable = None, for_explanation=False, params : dict = {}):
     if isinstance(ontologies, Ontology):
