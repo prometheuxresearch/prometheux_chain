@@ -109,8 +109,8 @@ paginated_results.show()
 ```
 
 ## Generating Textual Explanations
-Generate and display textual explanations for a selected result, using a predefined glossary:
+Generate and display textual explanations for a selected result:
 
 ```bash
-pmtx.explain(paginated_results.get(0), json_glossary="glossary.json")
+pmtx.explain(paginated_results.get(0))
 ```
