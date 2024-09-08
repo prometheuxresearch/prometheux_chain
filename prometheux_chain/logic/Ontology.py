@@ -82,6 +82,9 @@ class Ontology:
         pd.set_option('display.expand_frame_repr', False)
         pd.set_option('display.max_colwidth', None)
         display(df)
+
+    def show_summary(self):
+        print("\n" + self.longDescription + "\n")
     
     def set_vada_file_path(self, vada_file_path):
         self.vada_file_path = vada_file_path
