@@ -47,7 +47,7 @@ class JarvisClient:
 
         if response.status_code != 200:
             raise Exception(f"HTTP error! status: {response.status_code}, detail: {response.json().message}")
-
+        
         return response
 
     @staticmethod

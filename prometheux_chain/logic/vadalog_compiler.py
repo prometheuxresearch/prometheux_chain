@@ -18,6 +18,9 @@ def compile_vadalog(file_paths, attempts=0):
                 vadalog_program = file.read()
         except IOError as e:
             raise Exception(f"Error opening file {file_path}: {e}")
+        
+        # Pre-process vadalog program, concatenating in single line multi-line model annotations
+        vadalog_program = preprocess_model_annotations(vadalog_program)
 
         rule = Rule(None, vadalog_program, "Description of the rule", 1)
         ontology = Ontology(id=None, name="", short_description="", long_description="", domain_knowledge="")
@@ -53,43 +56,48 @@ def compile_vadalog(file_paths, attempts=0):
     return ontologies
 
 
+def preprocess_model_annotations(vadalog_program):
+    # Regex to find multi-line @model annotations and collapse them into a single line
+    model_regex = re.compile(r'@model\s*\((.*?)\)\.', re.DOTALL)
+    
+    # Replace multi-line @model annotations by collapsing them into a single line
+    def collapse_to_single_line(match):
+        # Capture everything inside @model(...) and remove newlines
+        annotation_content = match.group(1)
+        # Replace newlines and excessive whitespace within the captured content
+        single_line_annotation = re.sub(r'\s+', ' ', annotation_content).strip()
+        return f"@model({single_line_annotation})."
+    
+    # Apply the regex to collapse all multi-line @model annotations
+    vadalog_program = model_regex.sub(collapse_to_single_line, vadalog_program)
+    
+    return vadalog_program
+
+
 def update_vada_file_with_summary(vada_file_path, compiled_ontology):
+    # Read the file content
     with open(vada_file_path, 'r') as file:
-        vada_lines = file.readlines()
+        vadalog_program = file.read()
 
     # Loop over the ontology rules (which contain the updated @model annotations)
     for rule in compiled_ontology.rules:
+
         # Extract the first argument from the rule.logic (the argument that defines the model)
         model_id_match = re.match(r'@model\("([^"]+)",', rule.logic.strip())
         if model_id_match:
             model_id = model_id_match.group(1)  # This is the first argument (the model identifier)
 
-            # The updated @model annotation is the full logic of the rule
+            # The updated @model annotation is the full logic of the rule (from the ontology)
             updated_model_annotation = rule.logic.strip()
 
-            # Prepare a regular expression to find the corresponding model annotation in the vada file
-            model_regex = re.compile(rf'@model\("{model_id}",')
+            # Prepare a regular expression to find the corresponding model annotation in the file
+            model_regex = re.compile(rf'@model\s*\(\s*"{model_id}",.*?\)\.', re.DOTALL)
 
-            # Search for the corresponding @model annotation in the vada file
-            start_index = -1
-            for i, line in enumerate(vada_lines):
-                # If the line matches the start of the @model annotation, mark the starting point
-                if model_regex.search(line):
-                    start_index = i
-                    break
-            if start_index != -1:
-                # Now gather the lines that form the complete multi-line @model annotation
-                end_index = start_index
-                while not vada_lines[end_index].strip().endswith(').'):
-                    end_index += 1
-
-                # Check if the annotation is already the same, skip if no change
-                current_annotation = ''.join(vada_lines[start_index:end_index + 1]).strip()
-                if current_annotation != updated_model_annotation:
-                    # Replace the multi-line @model annotation with the updated version from the ontology
-                    vada_lines[start_index:end_index + 1] = [updated_model_annotation + '\n']
+            # Search for the existing @model annotation and replace it with the updated one
+            if model_regex.search(vadalog_program):
+                vadalog_program = model_regex.sub(updated_model_annotation, vadalog_program)
 
     # Overwrite the original .vada file with the updated content
     with open(vada_file_path, 'w') as updated_file:
-        updated_file.writelines(vada_lines)
+        updated_file.write(vadalog_program)
 

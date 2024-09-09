@@ -28,10 +28,10 @@ def in_notebook():
 
 def visualize_chase_explanation_with_pyvis(chase_explanation_json, is_in_notebook):
     chase_explanation = json.loads(chase_explanation_json)
-    
+
     # Initialize the Pyvis network
     net = Network(notebook=is_in_notebook, directed=True, cdn_resources='in_line')
-    
+
     # Process each item in the chase explanation JSON
     for item in chase_explanation:
         data = item['data']
@@ -39,7 +39,7 @@ def visualize_chase_explanation_with_pyvis(chase_explanation_json, is_in_noteboo
             net.add_edge(data['source'], data['target'], title=data['label'], label=data['label'])
         else:
             net.add_node(data['id'], label=data['label'], title=data['label'])
-    
+
     # Limit the physics so nodes don't keep moving after initial rendering
     net.toggle_physics(False)
 
@@ -49,7 +49,7 @@ def visualize_chase_explanation_with_pyvis(chase_explanation_json, is_in_noteboo
         os.remove(output_file)
     net.write_html(output_file)
     sleep(1)
-    
+
     if os.path.exists(output_file):
         if is_in_notebook:
             # Running in a regular Jupyter notebook
@@ -70,7 +70,7 @@ def visualize_chase_explanation_with_cytoscape(chase_explanation_json):
     # Process each item in the chase explanation JSON
     for item in chase_explanation:
         data = item['data']
-        
+
         if 'source' in data and 'target' in data:
             # This is an edge
             G.add_edge(data['source'], data['target'], label=data['label'])
@@ -112,6 +112,8 @@ def visualize_chase_explanation_with_cytoscape(chase_explanation_json):
     Alternative visualization with cytoscape application for large graphs 
     (directly in cytoscape ide, in jupyter lab only a png can be visualized with this approach)
 '''
+
+
 # def visualize_chase_explanation_with_cytoscape(chase_explanation_json):
 #     chase_explanation = json.loads(chase_explanation_json)
 #     nodes_data = []
@@ -120,7 +122,7 @@ def visualize_chase_explanation_with_cytoscape(chase_explanation_json):
 #     # Process each item in the chase explanation JSON
 #     for item in chase_explanation:
 #         data = item['data']
-        
+
 #         if 'source' in data and 'target' in data:
 #             # This is an edge
 #             edges_data.append({
@@ -142,14 +144,14 @@ def visualize_chase_explanation_with_cytoscape(chase_explanation_json):
 
 #     # Create the network in Cytoscape from dataframes
 #     network_suid = p4c.create_network_from_data_frames(nodes=nodes_df, edges=edges_df, title='Chase Explanation', collection='Chase Explanations')
-    
+
 #     # Set edge arrows to appear with arrows
 #     p4c.set_edge_target_arrow_shape_default('ARROW')
 #     p4c.set_edge_source_arrow_shape_default('NONE')
 #     p4c.set_edge_label_default('DERIVED BY')
 
 #     p4c.notebook_export_show_image()
-    
+
 
 def aggregate_data(records):
     aggregated = {}
@@ -175,7 +177,7 @@ def process_aggregate_by_start_node(aggregate_by_start_node):
             return final_ancestors
         else:
             return {predicate}
-    
+
     updated_aggregate = {}
     for key, values in aggregate_by_start_node.items():
         if "vatom_" not in key.split("(")[0]:
@@ -183,28 +185,28 @@ def process_aggregate_by_start_node(aggregate_by_start_node):
             for value in values:
                 new_values.update(replace_skipped_predicates(value))
             updated_aggregate[key] = new_values
-    
+
     return updated_aggregate
 
 
 def explain_from_file(root, csv_path):
     df = pd.read_csv(csv_path)
     G = nx.DiGraph()
-    
+
     ordered_edges = []
-        
+
     for index, row in df.iterrows():
         node_to = row['Fact']
         node_from_left = row['ProvenanceLeft']
         node_from_right = row['ProvenanceRight']
-        
+
         G.add_node(node_to, value=node_to)
 
         G.add_edge(node_to, node_from_left, description=row['Rule'])
-        
+
         if pd.notna(node_from_right) and node_from_right != '' and node_from_right != 'nan':
             G.add_edge(node_to, node_from_right, description=row['Rule'])
-    
+
     if root in G:
         for node in nx.bfs_tree(G, source=root):
             connections = list(G.neighbors(node))
@@ -212,23 +214,22 @@ def explain_from_file(root, csv_path):
                 ordered_edges.append([node, 'derived by', neighbor])
     else:
         return "Root not found in the graph."
-    
+
     aggregated_data = aggregate_data(ordered_edges)
     updated_aggregated = process_aggregate_by_start_node(aggregated_data)
-    
+
     text_representation = f"Structured explanation of the fact {root}: \n\n"
     for start, ends in updated_aggregated.items():
         text_representation += f"Fact {start} derived by:\n"
         for end in ends:
             text_representation += f"  -> {end}\n"
-    
+
     return text_representation
 
 
 def explain(structured_fact: Fact = None, fact=None, csv_path=None, attempts=0):
-
     if fact and csv_path:
-        return explain_from_file(fact,csv_path)
+        return explain_from_file(fact, csv_path)
 
     if fact and not csv_path:
         explanation_response = JarvisClient.explain(fact)
@@ -238,20 +239,22 @@ def explain(structured_fact: Fact = None, fact=None, csv_path=None, attempts=0):
 
     if explanation_response.status_code == 429:
         if attempts == 3:
-            raise Exception(f"HTTP error! status: {explanation_response.status_code}, detail: {explanation_response.json()['message']}")
-        print("Attempt "+attempts+". "+explanation_response.json()['message']+ ". Retrying after 5 seconds")
+            raise Exception(
+                f"HTTP error! status: {explanation_response.status_code}, detail: {explanation_response.json()['message']}")
+        print("Attempt " + attempts + ". " + explanation_response.json()['message'] + ". Retrying after 5 seconds")
         sleep(5)
         attempts = attempts + 1
         explain(structured_fact, fact, csv_path, attempts)
 
     if explanation_response.status_code != 200:
-            raise Exception(f"HTTP error! status: {explanation_response.status_code}, detail: {explanation_response.json()['message']}")
-    
+        raise Exception(
+            f"HTTP error! status: {explanation_response.status_code}, detail: {explanation_response.json()['message']}")
+
     if explanation_response.status_code == 200:
         explanation_data = explanation_response.json().get("data")
-        
+
         textual_explanation = explanation_data.get("textualExplanation", "")
-        
+
         chase_explanation = explanation_data.get("chaseExplanation", "")
         if chase_explanation:
             # Check if the user is launching the request from python or from jupyter notebook
@@ -267,7 +270,5 @@ def explain(structured_fact: Fact = None, fact=None, csv_path=None, attempts=0):
                     visualize_chase_explanation_with_pyvis(chase_explanation, is_in_notebook)
             else:
                 visualize_chase_explanation_with_pyvis(chase_explanation, is_in_notebook)
-                
-        return textual_explanation
 
-    
+        return textual_explanation
