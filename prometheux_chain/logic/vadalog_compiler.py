@@ -90,7 +90,6 @@ def update_vada_file_with_model_descriptions(compiled_ontology: Ontology):
         rule_logic_strip = rule.logic.strip()
         rules_by_file[rule.file_path].append(rule_logic_strip)
 
-    print(str(rules_by_file))
     # Step 2: Iterate over each file and apply substitutions
     for vada_file_path, rules in rules_by_file.items():
         # Read the file content
