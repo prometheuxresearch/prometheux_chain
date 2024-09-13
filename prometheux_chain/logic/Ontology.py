@@ -42,6 +42,26 @@ class Ontology:
             'rules': [rule.to_dict() for rule in self.rules]
         }
 
+    def merge(self, ontology: 'Ontology'):
+        #self.inputPredicates:List[PredicateInfo] = []
+        #self.intensionalPredicates:List[PredicateInfo] = []
+        #self.outputPredicates:List[PredicateInfo] = []
+        #self.rules:List[Rule] = []
+        for predicateInfo in ontology.inputPredicates:
+            self.add_input_predicate(predicateInfo)
+        for predicateInfo in ontology.intensionalPredicates:
+            self.add_intensional_predicate(predicateInfo)
+        for predicateInfo in ontology.outputPredicates:
+            self.add_output_predicate(predicateInfo)
+        for rule in ontology.rules:
+            self.add_rule(rule)
+        self.longDescription += "\n\n"+ontology.longDescription
+        self.shortDescription += "\n\n"+ontology.shortDescription
+        self.domainKnowledge += "\n\n"+ontology.domainKnowledge
+        
+        
+
+
     @classmethod
     def from_dict(cls, data):
         ontology = cls(
@@ -63,7 +83,8 @@ class Ontology:
                 id=rule_data['id'],
                 logic=rule_data['logic'],
                 nl_description=rule_data['nlDescription'],
-                position_in_ontology=rule_data['positionInOntology']
+                position_in_ontology=rule_data['positionInOntology'],
+                file_path=rule_data['filePath']
             )
             ontology.add_rule(rule)
         return ontology
