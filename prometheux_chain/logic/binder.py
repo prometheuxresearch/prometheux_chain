@@ -47,11 +47,7 @@ def select_bindings(bind_table: BindTable, bind_indexes):
 
     # If more than one index is provided, raise an exception
     if len(bind_indexes) > 1:
-        raise MultipleBindingsException("More than one binding selected.")
-    
-    class MultipleBindingsException(Exception):
-        """Exception raised when more than one binding is selected."""
-        pass
+        print("If output bind selection, remember to only select one bind")
 
     # Collect the selected bindings
     selected_bindings = []
