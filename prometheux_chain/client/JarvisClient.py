@@ -3,6 +3,7 @@ import requests
 import json
 from ..logic.KnowledgeGraph import KnowledgeGraph
 from ..logic.Fact import Fact
+from .JarvisPyClient import JarvisPyClient
 
 
 class JarvisClient:
@@ -29,6 +30,7 @@ class JarvisClient:
     @staticmethod
     def reason(knowledge_graph: KnowledgeGraph):
         JarvisClient.update_llm_configs()
+        JarvisPyClient.update_llm_configs()
         url = f"{config['JARVIS_URL']}/reasoningtask-info/reason"
         headers = {'Content-Type': 'application/json'}
 
