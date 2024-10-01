@@ -6,7 +6,7 @@ import time
 from collections import defaultdict
 
 
-def compile_vadalog(file_paths, attempts=0):
+def compile_vadalog(file_paths, attempts=0, user_prompt=""):
     ontologiesPaths = []
     if isinstance(file_paths, str):
         ontologiesPaths = [[file_paths]]
@@ -35,7 +35,7 @@ def compile_vadalog(file_paths, attempts=0):
             except IOError as e:
                 raise Exception(f"Error opening file {ontologyPath}: {e}")
     
-        response = JarvisClient.compile_logic(ontology)
+        response = JarvisClient.compile_logic(ontology, user_prompt)
         ordinal = lambda n: "%d%s" % (n, "th" if 4 <= n % 100 <= 20 else {1: "st", 2: "nd", 3: "rd"}.get(n % 10, "th"))
         ordinal_i = ordinal(i)
 

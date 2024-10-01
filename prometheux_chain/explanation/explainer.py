@@ -227,15 +227,15 @@ def explain_from_file(root, csv_path):
     return text_representation
 
 
-def explain(structured_fact: Fact = None, fact=None, csv_path=None, attempts=0):
+def explain(structured_fact: Fact = None, fact=None, csv_path=None, nl_explanation=False, user_prompt="", attempts=0):
     if fact and csv_path:
         return explain_from_file(fact, csv_path)
 
     if fact and not csv_path:
-        explanation_response = JarvisClient.explain(fact)
+        explanation_response = JarvisClient.explain(fact, nl_explanation, user_prompt=user_prompt)
 
     if structured_fact:
-        explanation_response = JarvisClient.explain_by_fact(structured_fact)
+        explanation_response = JarvisClient.explain_by_fact(structured_fact, nl_explanation, user_prompt=user_prompt)
 
     if explanation_response.status_code == 429:
         if attempts == 3:

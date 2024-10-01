@@ -8,12 +8,15 @@ from .JarvisPyClient import JarvisPyClient
 
 class JarvisClient:
     @staticmethod
-    def compile_logic(ontology):
+    def compile_logic(ontology, user_prompt):
         JarvisClient.update_llm_configs()
         url = f"{config['JARVIS_URL']}/ontology-info/compileLogic"
         headers = {'Content-Type': 'application/json'}
-        json_data = ontology.to_dict()
-        response = requests.post(url, headers=headers, json=json_data)
+        data = {
+            'ontology': ontology.to_dict(),
+            'userPrompt': user_prompt
+        }        
+        response = requests.post(url, headers=headers, json=data)
         return response
 
     @staticmethod
@@ -74,35 +77,41 @@ class JarvisClient:
         params['value'] = value
         response = requests.get(f"{config['JARVIS_URL']}/config-info/set", headers=headers, params=params)
         return response
-
+    
     @staticmethod
-    def explain_by_fact(structured_fact: Fact):
+    def explain(fact, nl_explanation, user_prompt):
         JarvisClient.update_llm_configs()
         headers = {'Content-Type': 'application/json'}
-        params = {}
-        params['fact'] = structured_fact.fact
-        params['textualExplanation'] = structured_fact.textual_explanation
-        params['visualExplanation'] = structured_fact.visual_explanation
-        params['chaseExplanation'] = structured_fact.chase_explanation
-        params['isForChase'] = structured_fact.is_for_chase
-        params['reasoningTaskId'] = structured_fact.reasoning_task_id
-        params['knowledgeGraphId'] = structured_fact.knowledge_graph_id
-        params['doVisualExplanation'] = False
-        params['doChaseExplanation'] = True
-        params['doTextualExplanation'] = True
-        response = requests.get(f"{config['JARVIS_URL']}/chasefact-info/explainByFact", headers=headers, params=params)
+        params = {
+            'factToExplain': fact,
+            'doVisualExplanation': False,
+            'doChaseExplanation': True,
+            'doTextualExplanation': True,
+            'doNLTextualExplanation': nl_explanation,
+            'userPrompt': user_prompt
+        }
+        response = requests.get(f"{config['JARVIS_URL']}/chasefact-info/explain", headers=headers, params=params)
         return response
 
     @staticmethod
-    def explain(fact):
+    def explain_by_fact(structured_fact: Fact, nl_explanation, user_prompt):
         JarvisClient.update_llm_configs()
         headers = {'Content-Type': 'application/json'}
-        params = {}
-        params['factToExplain'] = fact
-        params['doVisualExplanation'] = False
-        params['doChaseExplanation'] = True
-        params['doTextualExplanation'] = True
-        response = requests.get(f"{config['JARVIS_URL']}/chasefact-info/explain", headers=headers, params=params)
+        params = {
+            'fact': structured_fact.fact,
+            'textualExplanation': structured_fact.textual_explanation,
+            'visualExplanation': structured_fact.visual_explanation,
+            'chaseExplanation': structured_fact.chase_explanation,
+            'isForChase': structured_fact.is_for_chase,
+            'reasoningTaskId': structured_fact.reasoning_task_id,
+            'knowledgeGraphId': structured_fact.knowledge_graph_id,
+            'doVisualExplanation': False,
+            'doChaseExplanation': True,
+            'doTextualExplanation': True,
+            'doNLTextualExplanation': nl_explanation,
+            'userPrompt': user_prompt
+        }
+        response = requests.get(f"{config['JARVIS_URL']}/chasefact-info/explainByFact", headers=headers, params=params)
         return response
 
     @staticmethod
