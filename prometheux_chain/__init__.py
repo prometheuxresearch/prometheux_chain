@@ -11,3 +11,4 @@ from .reasoning.reasoner import reason
 from .explanation.explainer import explain
 from .common.cleaner import cleanup
 from .chat.chat import chat
+from .translator.schema_translator import infer_from_schema
