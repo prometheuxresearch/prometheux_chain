@@ -3,6 +3,7 @@ import json
 from ..config import config
 from ..model.DatabaseInfo import DatabaseInfo
 from ..model.SchemaInferencePayload import SchemaInferencePayload
+from ..model.DbAnalytics import DbAnalytics
 
 class ConstellationBackendClient:
     @staticmethod
@@ -10,6 +11,15 @@ class ConstellationBackendClient:
         headers = {'Content-Type': 'application/json'}
         data = json.dumps(database_info.to_dict())
         response = requests.post(f"{config['CONSTELLATION_BACKEND_URL']}/database-info/store", headers=headers, data=data)
+        return response
+    
+    @staticmethod
+    def vadalog_db_analytics(db_analytics_payload : list[DbAnalytics]):
+        headers = {'Content-Type': 'application/json'}
+        data = []
+        for db_analytics in db_analytics_payload:
+            data.append(db_analytics.to_dict())
+        response = requests.post(f"{config['CONSTELLATION_BACKEND_URL']}/analytics-info/vadalog-dbanalytics", headers=headers, json=data)
         return response
     
     @staticmethod

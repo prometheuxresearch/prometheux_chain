@@ -13,10 +13,6 @@ def infer_from_schema(type, user, password, host, port, database, add_bind=False
         add_bind=add_bind
     )
 
-    headers = {
-        "Content-Type": "application/json"
-    }
-
     try:
         response = ConstellationBackendClient.infer_from_schema(schema_inference_payload)
         
