@@ -96,7 +96,7 @@ def perform(vada_file_paths, params={}):
             raise Exception(f"Evaluation error at {ordinal_i} program! Detail: {response.json()['message']}")
         else:
             print(
-                f"Evaluation successfully completed for the {ordinal_i} program. Detail: {response.json()['message']}")
+                f"Evaluation successfully completed for the {ordinal_i} program.")
         
         evaluation_response = response.json()["data"]
         print(evaluation_response)
