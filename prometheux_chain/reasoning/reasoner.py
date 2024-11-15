@@ -99,7 +99,6 @@ def perform(vada_file_paths, params={}):
                 f"Evaluation successfully completed for the {ordinal_i} program.")
         
         evaluation_response = response.json()["data"]
-        print(evaluation_response)
 
         # Iterate over the resultSet and create Fact instances
         for predicate_name, arguments_list in evaluation_response.get('resultSet', {}).items():
