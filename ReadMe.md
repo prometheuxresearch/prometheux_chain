@@ -51,8 +51,7 @@ import prometheux_chain as px
 import os
 
 # Set Prometheux configuration
-px.config.set("PMTX_URL", "https://engine.prometheux.ai")
-os.environ['PMTX_TOKEN'] = "MyToken" # Prammatically: px.config.set("PMTX_TOKEN", "MyToken")
+os.environ['PMTX_TOKEN'] = "MyToken"
 
 # Perform evaluation by processing the pmtx-test.vada
 results = px.perform("pmtx-test.vada", {"key": "value"})
