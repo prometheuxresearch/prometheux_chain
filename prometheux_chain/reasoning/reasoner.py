@@ -99,7 +99,7 @@ def perform(vada_file_paths, params={}):
                 f"Evaluation successfully completed for the {ordinal_i} program.")
         
         if response.status_code == 504:
-            evaluation_response = ""
+            evaluation_response = {}
 
         if response.status_code == 200:
             evaluation_response = response.json()["data"]
