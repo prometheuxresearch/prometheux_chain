@@ -35,13 +35,6 @@ source myenv/bin/activate  # On Windows: myenv\Scripts\activate
 pip install git+https://github.com/prometheuxresearch/prometheux_chain.git
 ````
 
-## Configuration
-Prometheux Chain requires certain environment variables and configurations to be set:
-
-- **PMTX_URL**: URL of the Prometheux engine.
-- **PMTX_TOKEN**: Authentication token for secure access.
-These can be set either programmatically or via environment variables for seamless integration.
-
 ## Usage 
 
 To perform an evaluation over your .vada file, follow these steps
