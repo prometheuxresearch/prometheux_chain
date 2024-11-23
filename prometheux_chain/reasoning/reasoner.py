@@ -92,7 +92,7 @@ def perform(vada_file_paths, params={}):
         ordinal = lambda n: "%d%s" % (n, "th" if 4 <= n % 100 <= 20 else {1: "st", 2: "nd", 3: "rd"}.get(n % 10, "th"))
         ordinal_i = ordinal(i)
 
-        if response.status_code != 200:
+        if response.status_code != 200 and response.status_code != 504:
             raise Exception(f"Evaluation error at {ordinal_i} program! Detail: {response.json()['message']}")
         else:
             print(
