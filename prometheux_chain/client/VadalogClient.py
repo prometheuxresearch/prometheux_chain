@@ -27,7 +27,7 @@ class VadalogClient:
         # Send the POST request with form-encoded data
         response = requests.post(url, data=data, headers=headers)
 
-        if response.status_code != 200:
+        if response.status_code != 200 and response.status_code != 504:
             raise Exception(f"Request to PMTX failed with error: {response.json()['message']}")
 
         return response
