@@ -98,7 +98,11 @@ def perform(vada_file_paths, params={}):
             print(
                 f"Evaluation successfully completed for the {ordinal_i} program.")
         
-        evaluation_response = response.json()["data"]
+        if response.status_code == 504:
+            evaluation_response = ""
+
+        if response.status_code == 200:
+            evaluation_response = response.json()["data"]
 
         # Iterate over the resultSet and create Fact instances
         for predicate_name, arguments_list in evaluation_response.get('resultSet', {}).items():
