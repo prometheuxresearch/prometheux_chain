@@ -62,7 +62,7 @@ def reason_on_single_ontology(ontology: Ontology, bind_input_table: BindTable, b
 
 
 
-def perform(vada_file_paths, params={}):
+def perform(vada_file_paths, params={}, measure_time=False):
     for k in params:
         if isinstance(params[k], str):
             params[k] = f'"{params[k]}"'
@@ -88,6 +88,11 @@ def perform(vada_file_paths, params={}):
             except IOError as e:
                 raise Exception(f"Error opening file {ontologyPath}: {e}")
         
+        # Start timing if measure_time is True
+        if measure_time:
+            import time
+            start_time = time.time()
+        
         response = VadalogClient.evaluateWithParams(vadalog_program, params)
         ordinal = lambda n: "%d%s" % (n, "th" if 4 <= n % 100 <= 20 else {1: "st", 2: "nd", 3: "rd"}.get(n % 10, "th"))
         ordinal_i = ordinal(i)
@@ -95,8 +100,14 @@ def perform(vada_file_paths, params={}):
         if response.status_code != 200 and response.status_code != 504:
             raise Exception(f"Evaluation error at {ordinal_i} program! Detail: {response.json()['message']}")
         else:
-            print(
-                f"Evaluation successfully completed for the {ordinal_i} program.")
+            # Calculate elapsed time if measure_time is True
+            if measure_time:
+                elapsed_time = time.time() - start_time
+                print(
+                    f"Evaluation successfully completed for the {ordinal_i} program in {elapsed_time:.2f} seconds.")
+            else:
+                print(
+                    f"Evaluation successfully completed for the {ordinal_i} program.")
         
         if response.status_code == 504:
             evaluation_response = {}
