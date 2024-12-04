@@ -69,6 +69,7 @@ class JarvisPyClient:
         """
         try:
             response = requests.get(config['JARVISPY_URL'] + "/api/hello", timeout=5)
+            print(response,response)
             response.raise_for_status()
             return True
         except requests.exceptions.RequestException as e:
@@ -112,7 +113,7 @@ class JarvisPyClient:
 
         # Send the POST request with JSON data
         try:
-            response = requests.post(f"{config['JARVISPY_URL']}/api/graphRAG", headers=headers, json=data)
+            response = requests.post(f"{config['JARVISPY_URL']}/api/semanticIndex", headers=headers, json=data)
             response.raise_for_status()
         except requests.exceptions.RequestException as e:
             raise Exception(f"Error connecting to JarvisPy backend: {e}")

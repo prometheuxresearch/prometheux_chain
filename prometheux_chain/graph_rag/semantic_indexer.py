@@ -23,8 +23,8 @@ def semantic_indexing(vada_file_path):
     client = JarvisPyClient()
 
     # Check if JarvisPy backend is reachable
-    if not client.is_reachable():
-        return "Error: JarvisPy backend is not reachable. Ensure the backend is running and accessible."
+#    if not client.is_reachable():
+#        return "Error: JarvisPy backend is not reachable. Ensure the backend is running and accessible."
 
     return client.semantic_indexing(vadalog_program)
 
