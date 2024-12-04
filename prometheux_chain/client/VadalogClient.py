@@ -3,6 +3,7 @@ import requests
 from ..config import config
 import json
 
+
 class VadalogClient:
     @staticmethod
     def evaluateWithParams(vadalogProgram, vadalogParams):
@@ -17,7 +18,7 @@ class VadalogClient:
         url = f"{VADALOG_URL}/evaluateWithParams"
         data = {
             'program': vadalogProgram,
-            'params':  json.dumps(vadalogParams)
+            'params': json.dumps(vadalogParams)
         }
         headers = {
             'Content-Type': 'application/x-www-form-urlencoded',
