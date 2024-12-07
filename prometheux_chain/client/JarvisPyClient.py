@@ -121,4 +121,4 @@ class JarvisPyClient:
         if response.status_code == 200:
             return response_json['data']
         else:
-            raise Exception(f"Graph RAG failed with error: {response_json['message']}")
+            return (f"Graph RAG failed with error: {response_json['message']}")
