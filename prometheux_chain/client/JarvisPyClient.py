@@ -69,63 +69,13 @@ class JarvisPyClient:
         """
         try:
             response = requests.get(config['JARVISPY_URL'] + "/api/hello", timeout=5)
-            print(response,response)
             response.raise_for_status()
             return True
         except requests.exceptions.RequestException as e:
             return False
 
     @staticmethod
-    def semantic_indexing(vadalog_program):
-        """
-        Sends the .vada content to the backend for semantic indexing of the bound data,
-        along with necessary tokens and parameters.
-
-        Parameters:
-            vadalog_program (str): The content of the .vada file.
-
-        Returns:
-            Response object from the backend.
-        """
-
-        # Get tokens from environment variables or config
-        OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', config.get('OPENAI_API_KEY', ''))
-        PMTX_TOKEN = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
-
-        if not OPENAI_API_KEY:
-            raise Exception("OPENAI_API_KEY is not set. "
-                            "Please set it in the environment variables or config.")
-        if not PMTX_TOKEN:
-            raise Exception("PMTX_TOKEN is not set. "
-                            "Please set it in the environment variables or config.")
-
-        # Prepare headers and data for the request
-        headers = {
-            'Content-Type': 'application/json',
-            'Authorization': f"Bearer {PMTX_TOKEN};{OPENAI_API_KEY}"
-        }
-        data = {
-            'vadalog_program': vadalog_program,
-            'openai_embedding_model': config.get('OPENAI_EMBEDDING_MODEL', 'text-embedding-ada-002'),  # Default model
-            'openai_embedding_dimensions': config.get('OPENAI_EMBEDDING_DIMENSIONS', 2048)
-
-        }
-
-        # Send the POST request with JSON data
-        try:
-            response = requests.post(f"{config['JARVISPY_URL']}/api/semanticIndex", headers=headers, json=data)
-            response.raise_for_status()
-        except requests.exceptions.RequestException as e:
-            raise Exception(f"Error connecting to JarvisPy backend: {e}")
-
-        # Process the response
-        if response.status_code == 200:
-            return response.json().get('message')
-        else:
-            return f"Error processing vada file: {response.status_code} - {response.json().get('message')}"
-
-    @staticmethod
-    def graph_rag(question, vadalog_program):
+    def graph_rag(question=None, vadalog_program=None):
         """
         Sends a natural language question to the backend's graph_rag endpoint.
 
@@ -139,29 +89,36 @@ class JarvisPyClient:
         Raises:
             Exception: If there's an error in the request or response.
         """
+        if(not question and not vadalog_program):
+            raise Exception("Please provide a question to ask or a vadalog_program for reasoning or both")
+        
         # Get tokens from environment variables or config
+        OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', config.get('OPENAI_API_KEY', ''))
         PMTX_TOKEN = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
 
+        if not OPENAI_API_KEY:
+            raise Exception("OPENAI_API_KEY is not set. Please set it in the environment variables or config.")
         if not PMTX_TOKEN:
             raise Exception("PMTX_TOKEN is not set. Please set it in the environment variables or config.")
 
         # Prepare headers and data for the request
         headers = {
             'Content-Type': 'application/json',
-            'Authorization': f"Bearer {PMTX_TOKEN}"
+            'Authorization': f"Bearer {PMTX_TOKEN};{OPENAI_API_KEY}"
         }
         data = {
-            'question': question,
-            'vadalog_program': vadalog_program
+            'question' : question,
+            'vadalog_program': vadalog_program,
+            'model': config.get('MODEL', 'gpt-4'),
+            'temperature': config.get('TEMPERATURE', 0.5),
+            'embedding_model': config.get('EMBEDDING_MODEL', 'text-embedding-3-large'),
+            'embedding_dimensions': config.get('EMBEDDING_DIMENSIONS', 2048)
         }
 
         # Send the POST request with JSON data
-        try:
-            response = requests.post(f"{config['JARVISPY_URL']}/api/graphRAG", headers=headers, json=data)
-            response.raise_for_status()
-        except requests.exceptions.RequestException as e:
-            raise Exception(f"Error connecting to JarvisPy backend: {e}")
-
-        # Process the response
+        response = requests.post(f"{config['JARVISPY_URL']}/api/graphRAG", headers=headers, json=data)
         response_json = response.json()
-        return response_json.get('data', {})
+        if response.status_code == 200:
+            return response_json['data']
+        else:
+            raise Exception(f"Graph RAG failed with error: {response_json['message']}")
