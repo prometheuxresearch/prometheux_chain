@@ -1,7 +1,6 @@
 from ..config import config
 import requests
 import os
-import json
 
 
 class JarvisPyClient:
@@ -75,6 +74,92 @@ class JarvisPyClient:
             return False
 
     @staticmethod
+    def reason(vada_programs, vada_params, to_explain, to_materialize):
+        JARVISPY_URL = config['JARVISPY_URL']
+        PMTX_TOKEN = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
+
+        if not PMTX_TOKEN:
+            raise Exception("PMTX_TOKEN is not set. Please set it in the environment variables or config.")
+
+        url = f"{JARVISPY_URL}/api/reason"
+        data = {
+            'programs': vada_programs,
+            'params': vada_params,
+            'to_explain': to_explain,
+            'to_materialize': to_materialize
+        }
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f"Bearer {PMTX_TOKEN}"
+        }
+
+        response = requests.post(url, json=data, headers=headers)
+
+        return response
+
+    @staticmethod
+    def query(vada_program, vada_params, virtual_kg):
+        JARVISPY_URL = config['JARVISPY_URL']
+        PMTX_TOKEN = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
+
+        if not PMTX_TOKEN:
+            raise Exception("PMTX_TOKEN is not set. Please set it in the environment variables or config.")
+
+        url = f"{JARVISPY_URL}/api/query"
+        data = {
+            'virtual_kg': virtual_kg,
+            'program': vada_program,
+            'params': vada_params
+        }
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f"Bearer {PMTX_TOKEN}"
+        }
+
+        response = requests.post(url, json=data, headers=headers)
+
+        return response
+
+    @staticmethod
+    def explain(tuple_to_explain, virtual_kg):
+        JARVISPY_URL = config['JARVISPY_URL']
+        PMTX_TOKEN = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
+
+        if not PMTX_TOKEN:
+            raise Exception("PMTX_TOKEN is not set. Please set it in the environment variables or config.")
+
+        url = f"{JARVISPY_URL}/api/explain"
+        data = {
+            'virtual_kg': virtual_kg,
+            'tuple_to_explain': tuple_to_explain
+        }
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f"Bearer {PMTX_TOKEN}"
+        }
+
+        response = requests.post(url, json=data, headers=headers)
+        return response
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    @staticmethod
     def graph_rag(question=None, vadalog_program=None):
         """
         Sends a natural language question to the backend's graph_rag endpoint.
@@ -91,7 +176,7 @@ class JarvisPyClient:
         """
         if(not question and not vadalog_program):
             raise Exception("Please provide a question to ask or a vadalog_program for reasoning or both")
-        
+
         # Get tokens from environment variables or config
         OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY', config.get('OPENAI_API_KEY', ''))
         PMTX_TOKEN = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
@@ -122,3 +207,4 @@ class JarvisPyClient:
             return response_json['data']
         else:
             return (f"Graph RAG failed with error: {response_json['message']}")
+
