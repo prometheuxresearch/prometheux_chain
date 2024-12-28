@@ -74,9 +74,9 @@ class JarvisPyClient:
             return False
 
     @staticmethod
-    def reason(vada_programs, vada_params, to_explain, to_materialize):
+    def reason(vada_programs, vada_params, to_explain, to_persist):
         JARVISPY_URL = config['JARVISPY_URL']
-        PMTX_TOKEN = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
+        PMTX_TOKEN = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN'))
 
         if not PMTX_TOKEN:
             raise Exception("PMTX_TOKEN is not set. Please set it in the environment variables or config.")
@@ -86,8 +86,9 @@ class JarvisPyClient:
             'programs': vada_programs,
             'params': vada_params,
             'to_explain': to_explain,
-            'to_materialize': to_materialize
+            'to_persist': to_persist
         }
+
         headers = {
             'Content-Type': 'application/json',
             'Authorization': f"Bearer {PMTX_TOKEN}"
@@ -98,7 +99,7 @@ class JarvisPyClient:
         return response
 
     @staticmethod
-    def query(vada_program, vada_params, virtual_kg):
+    def query(virtual_kg, vada_program, vada_params):
         JARVISPY_URL = config['JARVISPY_URL']
         PMTX_TOKEN = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
 
@@ -121,7 +122,7 @@ class JarvisPyClient:
         return response
 
     @staticmethod
-    def explain(tuple_to_explain, virtual_kg):
+    def explain(fact_to_explain, virtual_kg):
         JARVISPY_URL = config['JARVISPY_URL']
         PMTX_TOKEN = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
 
@@ -130,8 +131,8 @@ class JarvisPyClient:
 
         url = f"{JARVISPY_URL}/api/explain"
         data = {
-            'virtual_kg': virtual_kg,
-            'tuple_to_explain': tuple_to_explain
+            'fact_to_explain': fact_to_explain,
+            'virtual_kg': virtual_kg
         }
         headers = {
             'Content-Type': 'application/json',

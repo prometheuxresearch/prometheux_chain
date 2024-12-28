@@ -1,41 +1,29 @@
 from ..client.JarvisPyClient import JarvisPyClient
-import json
-import pandas as pd
-import networkx as nx
-import ipycytoscape
-from pyvis.network import Network
-from IPython import get_ipython
-from IPython.display import display, HTML
-import webbrowser
-from time import sleep
-from ..client.JarvisClient import JarvisClient
-from ..logic.Fact import Fact
 
 
+def explain(fact_to_explain, virtual_kg):
+    if not fact_to_explain:
+        raise Exception("Fact to explain is null or empty. Cannot perform explanation.")
 
-class Explainer:
+    if virtual_kg is None:
+        raise Exception("Virtual Knowledge Graph is null. Cannot perform explanation.")
+    
+    if not virtual_kg['to_explain']:
+        raise Exception("No facts to explain. Cannot perform explanation.")
 
-    @staticmethod
-    def explain(tuple_to_explain, virtual_kg):
-        if not tuple_to_explain:
-            raise Exception("Tuple to explain is null or empty. Cannot perform explanation.")
+    response = JarvisPyClient.explain(fact_to_explain, virtual_kg)
 
-        if virtual_kg is None:
-            raise Exception("Virtual Knowledge Graph is null. Cannot perform explanation.")
+    # Handle response codes
+    if response.status_code not in (200, 504):
+        msg = response.json().get('message', 'Unknown error')
+        raise Exception(f"An exception occurred during explanation: {msg}")
 
-        response = JarvisPyClient.explain(tuple_to_explain, virtual_kg)
+    if response.status_code == 504:
+        explanation = None
+    else:  # status_code == 200
+        explanation = response.json().get("data", {})
 
-        # Handle response codes
-        if response.status_code not in (200, 504):
-            msg = response.json().get('message', 'Unknown error')
-            raise Exception(f"An exception occurred during explanation: {msg}")
-
-        if response.status_code == 504:
-            explanation = None
-        else:  # status_code == 200
-            explanation = response.json().get("data", {})
-
-        return explanation
+    return explanation
 
 
 
