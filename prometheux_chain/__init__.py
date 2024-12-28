@@ -1,9 +1,4 @@
 from .config import config
-from .reasoning.reasoner import Reasoner
-from .explanation.explainer import Explainer
-
-
-
 from .connector.database_connector import connect_from_yaml
 from .model.DatabaseInfo import DatabaseInfo
 from .client.ConstellationBackendClient import ConstellationBackendClient
@@ -18,3 +13,6 @@ from .translator.schema_translator import infer_from_schema
 from .analytics.all_pairs_join import all_pairs_join
 from .graph_rag.semantic_indexer import semantic_indexing
 from .graph_rag.graph_rag_runner import graph_rag
+from .reasoning.reasoner import reason
+from .reasoning.reasoner import query
+from .explanation.explainer import explain
