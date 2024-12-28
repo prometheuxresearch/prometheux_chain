@@ -99,7 +99,7 @@ class JarvisPyClient:
         return response
 
     @staticmethod
-    def query(virtual_kg, vada_program, vada_params):
+    def query(virtual_kg, vadalog_or_sql_query, vada_params, language_type):
         JARVISPY_URL = config['JARVISPY_URL']
         PMTX_TOKEN = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
 
@@ -109,8 +109,9 @@ class JarvisPyClient:
         url = f"{JARVISPY_URL}/api/query"
         data = {
             'virtual_kg': virtual_kg,
-            'program': vada_program,
-            'params': vada_params
+            'query': vadalog_or_sql_query,
+            'params': vada_params,
+            'language_type': language_type
         }
         headers = {
             'Content-Type': 'application/json',
