@@ -1,4 +1,3 @@
-from ..client.JarvisClient import JarvisClient
 from ..client.JarvisPyClient import JarvisPyClient
 
 def chat(nlQuery):

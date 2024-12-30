@@ -1,4 +1,3 @@
-# graph_rag_runner.py
 from ..client.JarvisPyClient import JarvisPyClient
 
 
