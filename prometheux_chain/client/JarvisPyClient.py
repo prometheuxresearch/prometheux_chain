@@ -74,7 +74,27 @@ class JarvisPyClient:
             return False
 
     @staticmethod
-    def reason(vada_programs, vada_params, to_explain, to_persist):
+    def delete_all_virtual_kg_resources():
+        """
+        Calls the /api/cleanup endpoint to delete all
+        Virtual Knowledge Graph resources.
+        """
+        JARVISPY_URL = config['JARVISPY_URL']
+        PMTX_TOKEN = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
+
+        if not PMTX_TOKEN:
+            raise Exception("PMTX_TOKEN is not set. Please set it in the environment variables or config.")
+
+        url = f"{JARVISPY_URL}/api/cleanup"
+        headers = {
+            'Authorization': f"Bearer {PMTX_TOKEN}"
+        }
+
+        response = requests.delete(url, headers=headers)
+        return response
+
+    @staticmethod
+    def reason(programs, params, to_explain, to_persist):
         JARVISPY_URL = config['JARVISPY_URL']
         PMTX_TOKEN = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN'))
 
@@ -83,8 +103,8 @@ class JarvisPyClient:
 
         url = f"{JARVISPY_URL}/api/reason"
         data = {
-            'programs': vada_programs,
-            'params': vada_params,
+            'programs': programs,
+            'params': params,
             'to_explain': to_explain,
             'to_persist': to_persist
         }
@@ -99,7 +119,7 @@ class JarvisPyClient:
         return response
 
     @staticmethod
-    def query(virtual_kg, vadalog_or_sql_query, vada_params, language_type):
+    def query(virtual_kg, query, params, language_type):
         JARVISPY_URL = config['JARVISPY_URL']
         PMTX_TOKEN = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
 
@@ -109,8 +129,8 @@ class JarvisPyClient:
         url = f"{JARVISPY_URL}/api/query"
         data = {
             'virtual_kg': virtual_kg,
-            'query': vadalog_or_sql_query,
-            'params': vada_params,
+            'query': query,
+            'params': params,
             'language_type': language_type
         }
         headers = {
@@ -123,7 +143,7 @@ class JarvisPyClient:
         return response
 
     @staticmethod
-    def explain(fact_to_explain, virtual_kg):
+    def explain(virtual_kg, fact_to_explain):
         JARVISPY_URL = config['JARVISPY_URL']
         PMTX_TOKEN = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
 
@@ -143,24 +163,6 @@ class JarvisPyClient:
         response = requests.post(url, json=data, headers=headers)
         return response
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     @staticmethod
     def graph_rag(question=None, vadalog_program=None):
         """
@@ -176,7 +178,7 @@ class JarvisPyClient:
         Raises:
             Exception: If there's an error in the request or response.
         """
-        if(not question and not vadalog_program):
+        if not question and not vadalog_program:
             raise Exception("Please provide a question to ask or a vadalog_program for reasoning or both")
 
         # Get tokens from environment variables or config
@@ -194,7 +196,7 @@ class JarvisPyClient:
             'Authorization': f"Bearer {PMTX_TOKEN};{OPENAI_API_KEY}"
         }
         data = {
-            'question' : question,
+            'question': question,
             'vadalog_program': vadalog_program,
             'model': config.get('MODEL', 'gpt-4'),
             'temperature': config.get('TEMPERATURE', 0.5),
@@ -208,5 +210,4 @@ class JarvisPyClient:
         if response.status_code == 200:
             return response_json['data']
         else:
-            return (f"Graph RAG failed with error: {response_json['message']}")
-
+            return f"Graph RAG failed with error: {response_json['message']}"

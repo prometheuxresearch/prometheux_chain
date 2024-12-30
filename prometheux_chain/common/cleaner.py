@@ -1,13 +1,12 @@
-from ..client.ConstellationBackendClient import ConstellationBackendClient
-from ..client.JarvisClient import JarvisClient
+from ..client.JarvisPyClient import JarvisPyClient
 
 
-def cleanup():
-    delete_db_response = ConstellationBackendClient.delete_all_databases()
-    if delete_db_response.status_code != 200:
-        raise Exception(f"HTTP error! status: {delete_db_response.status_code}, detail: {delete_db_response.json()['message']}")
-    print("Databases Cleanup completed")
-    delete_reasoning_resource_response = JarvisClient.delete_all_resoning_resources()
-    if delete_reasoning_resource_response.status_code != 200:
-        raise Exception(f"HTTP error! status: {delete_reasoning_resource_response.status_code}, detail: {delete_reasoning_resource_response.json()['message']}")
-    print("Reasoning Resources Cleanup completed")
+def cleanup(kg_path=None):
+    """
+    Cleanup all virtual kg resources for the user with optional kg_path.
+    """
+    delete_virtual_kg_resource_response = JarvisPyClient.delete_all_virtual_kg_resources()
+    if delete_virtual_kg_resource_response.status_code != 200:
+        raise Exception(f"HTTP error! status: {delete_virtual_kg_resource_response.status_code}, "
+                        f"detail: {delete_virtual_kg_resource_response.json()['message']}")
+    print("Virtual Knowledge Graph Resources Cleanup completed")

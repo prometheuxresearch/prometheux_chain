@@ -1,11 +1,13 @@
 import time
 import os
-from .Fact import Fact
 from ..client.JarvisPyClient import JarvisPyClient
 from typing import Dict
 
 
-def reason(vada_file_paths, params={}, measure_time=False, to_explain=False, to_persist=False):
+def reason(vada_file_paths, params=None, measure_time=False, to_explain=False, to_persist=False):
+    if params is None:
+        params = {}
+
     # Build the ontologiesPaths from vada_file_paths
     ontologiesPaths = []
     if isinstance(vada_file_paths, str):
@@ -30,14 +32,13 @@ def reason(vada_file_paths, params={}, measure_time=False, to_explain=False, to_
     # Read .vada files and store in a list of lists of dict <file_name, file_content>
     vadalog_programs = []
     for ontologiesPath in ontologiesPaths:
-        vadalog_programs_serial_evaluation:list[Dict[str:str]] = []
+        vadalog_programs_serial_evaluation: list[Dict[str:str]] = []
         for ontologyPath in ontologiesPath:
             try:
                 with open(ontologyPath, 'r') as file:
                     file_content = file.read()
                     filename = os.path.basename(ontologyPath)
-                    vadalog_program_single = {}
-                    vadalog_program_single[filename] = file_content
+                    vadalog_program_single = {filename: file_content}
                     vadalog_programs_serial_evaluation.append(vadalog_program_single)
             except IOError as e:
                 raise Exception(f"Error opening file {ontologyPath}: {e}")
@@ -45,10 +46,11 @@ def reason(vada_file_paths, params={}, measure_time=False, to_explain=False, to_
 
     # Measure time if needed
     start_time = time.time() if measure_time else None
+
     # Call JarvisPyClient
     response = JarvisPyClient.reason(
-        vada_programs=vadalog_programs,
-        vada_params=params,
+        programs=vadalog_programs,
+        params=params,
         to_explain=to_explain,
         to_persist=to_persist
     )
@@ -71,15 +73,23 @@ def reason(vada_file_paths, params={}, measure_time=False, to_explain=False, to_
 
     return virtual_knowledge_graph
 
-def query(virtual_kg, file_path_or_query:str, params={}):
+
+def query(virtual_kg, file_path_or_query: str, params=None):
+    if params is None:
+        params = {}
     if virtual_kg is None:
         raise Exception("Virtual Knowledge Graph is null. Cannot perform query.")
-    
+
     # Check if the query is a string or a file path
-    language_type, vadalog_or_sql_query = parse_input(file_path_or_query)
+    language_type, query_read = parse_input(file_path_or_query)
 
     # Call JarvisPyClient query
-    response = JarvisPyClient.query(virtual_kg, vadalog_or_sql_query, params, language_type)
+    response = JarvisPyClient.query(
+        virtual_kg=virtual_kg,
+        query=query_read,
+        params=params,
+        language_type=language_type
+    )
 
     # Handle response codes
     response_json = response.json()
@@ -93,6 +103,7 @@ def query(virtual_kg, file_path_or_query:str, params={}):
         evaluation_response = response_json.get("data", {})
 
     return evaluation_response.get("query_results", [])
+
 
 def parse_input(file_path_or_query: str):
     """
@@ -115,18 +126,18 @@ def parse_input(file_path_or_query: str):
 
     # 1) Check for Datalog query
     if lower_trimmed.startswith('?-'):
-        return ("vadalog", trimmed)
+        return "vadalog", trimmed
 
     # 2) Check for SQL query
     if lower_trimmed.startswith('select'):
-        return ("sql", trimmed)
+        return "sql", trimmed
 
     # 3) Otherwise, treat it as a file path ending with .vada or .sql
     valid_extensions = ['.vada', '.sql']
     ext = None
     for extension in valid_extensions:
         if lower_trimmed.endswith(extension):
-            ext = extension.replace(".","")
+            ext = extension.replace(".", "")
             if ext == "vada":
                 ext = "vadalog"
             break
@@ -149,4 +160,4 @@ def parse_input(file_path_or_query: str):
         raise Exception(f"Error opening file {trimmed}: {e}")
 
     # If we get here, it's a valid file path with extension .vada or .sql
-    return (ext, vadalog_or_sql_query)
+    return ext, vadalog_or_sql_query

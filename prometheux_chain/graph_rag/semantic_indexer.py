@@ -1,4 +1,3 @@
-# semantic_indexer.py
 from ..client.JarvisPyClient import JarvisPyClient
 
 
