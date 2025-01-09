@@ -3,12 +3,9 @@ import os
 
 
 def chat(text, guardrail=None):
-    # Update LLM configs before any requests FIXME: maybe do this instead of passing to the validate the configs
-    #JarvisPyClient.update_llm_configs()
+    # Update LLM configs before any requests FIXME: maybe do this instead of passing configs to validate
+    # JarvisPyClient.update_llm_configs()
 
-    chat_response = None
-
-    # If guardrail path is provided, read its contents and call the new backend "validate" API
     if guardrail is not None:
         if not os.path.exists(guardrail):
             raise Exception(f"Guardrail file '{guardrail}' does not exist.")
@@ -25,11 +22,24 @@ def chat(text, guardrail=None):
                 f"Validation error. Detail: {chat_response.json().get('message', 'No message available')}"
             )
 
-    else:
-        # Else proceed with the normal chat request (example calls queryExplain)
-        # chat_response = JarvisPyClient.queryExplain(text)
-        # if chat_response.status_code != 200:
-        #    raise Exception(f"Chat error. Detail: {chat_response.json()['message']}")
-        pass
+        # Parse the response
+        validation_data = chat_response.json()["data"]
 
-    return chat_response.json()["data"]
+        # Extract data
+        validation_outcome = validation_data["validation_outcome"]
+        validation_results = [
+            {"outcome": result["outcome"], "explanation": result["explanation"]}
+            for result in validation_data["validation_results"]
+        ]
+        validation_summary = validation_data["validation_summary"]
+
+        # Return structured response
+        return {
+            "validation_outcome": validation_outcome,
+            "validation_results": validation_results,
+            "validation_summary": validation_summary
+        }
+
+    else:
+        # If no guardrail, proceed with other operations (e.g., normal chat query)
+        raise Exception("Guardrail program must be provided for validation.")
