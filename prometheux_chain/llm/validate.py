@@ -2,7 +2,7 @@ from ..client.JarvisPyClient import JarvisPyClient
 import os
 
 
-def chat(text, guardrail=None):
+def validate(text, guardrail):
     # Update LLM configs before any requests FIXME: maybe do this instead of passing configs to validate
     # JarvisPyClient.update_llm_configs()
 
@@ -41,5 +41,4 @@ def chat(text, guardrail=None):
         }
 
     else:
-        # If no guardrail, proceed with other operations (e.g., normal chat query)
         raise Exception("Guardrail program must be provided for validation.")
