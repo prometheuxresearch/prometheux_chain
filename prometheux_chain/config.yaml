@@ -1,9 +1,16 @@
-EMBEDDING_DIMENSIONS: 2048
-EMBEDDING_MODEL_VERSION: text-embedding-3-large
+# =====================
+# Other Services
+# =====================
 JARVISPY_URL: http://localhost:5000
+PMTX_TOKEN: None
+
+# =====================
+# Large Language Models
+# =====================
 LLM_API_KEY: None
-LLM_MAX_TOKENS: 2000
 LLM_PROVIDER: None
 LLM_VERSION: gpt-4o
-PMTX_TOKEN: None
-PMTX_URL: http://localhost:8080
+LLM_TEMPERATURE: 0.50
+LLM_MAX_TOKENS: 2000
+EMBEDDING_MODEL_VERSION: text-embedding-3-large
+EMBEDDING_DIMENSIONS: 2048

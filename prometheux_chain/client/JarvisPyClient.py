@@ -164,6 +164,46 @@ class JarvisPyClient:
         return response
 
     @staticmethod
+    def validate(text, guardrail_program):
+        JARVISPY_URL = config['JARVISPY_URL']
+        PMTX_TOKEN = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
+
+        if not PMTX_TOKEN:
+            raise Exception("PMTX_TOKEN is not set. Please set it in environment variables or config.")
+
+        # Additional LLM-related config
+        llm_api_key = config.get('LLM_API_KEY', None)
+        llm_provider = config.get('LLM_PROVIDER', None)
+        llm_version = config.get('LLM_VERSION', 'gpt-4o')
+        llm_temperature = config.get('LLM_TEMPERATURE', 0.50)
+        llm_max_tokens = config.get('LLM_MAX_TOKENS', 2000)
+
+        url = f"{JARVISPY_URL}/api/validate"
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f"Bearer {PMTX_TOKEN}"
+        }
+        data = {
+            'text': text,
+            'guardrail_program': guardrail_program,
+            'llm_api_key': llm_api_key,
+            'llm_provider': llm_provider,
+            'llm_version': llm_version,
+            'llm_temperature': llm_temperature,
+            'llm_max_tokens': llm_max_tokens
+        }
+
+        response = requests.post(url, headers=headers, json=data)
+        return response
+
+
+
+
+
+
+
+
+    @staticmethod
     def graph_rag(question=None, vadalog_program=None):
         """
         Sends a natural language question to the backend's graph_rag endpoint.
