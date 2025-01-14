@@ -74,23 +74,30 @@ class JarvisPyClient:
             return False
 
     @staticmethod
-    def delete_all_virtual_kg_resources():
+    def delete_virtual_kg_resources(virtual_kg=None):
         """
-        Calls the /api/cleanup endpoint to delete all
-        Virtual Knowledge Graph resources.
+        Sends a DELETE request to /api/cleanup.
+        If `virtual_kg` is provided, the KG JSON is passed in the request body.
+        Otherwise, sends an empty request body.
         """
         JARVISPY_URL = config['JARVISPY_URL']
         PMTX_TOKEN = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
 
         if not PMTX_TOKEN:
-            raise Exception("PMTX_TOKEN is not set. Please set it in the environment variables or config.")
+            raise Exception("PMTX_TOKEN is not set. Please set it in env variables or config.")
 
         url = f"{JARVISPY_URL}/api/cleanup"
         headers = {
-            'Authorization': f"Bearer {PMTX_TOKEN}"
+            'Authorization': f"Bearer {PMTX_TOKEN}",
+            'Content-Type': 'application/json'
         }
 
-        response = requests.delete(url, headers=headers)
+        # If virtual_kg is given, include it as JSON in the DELETE request
+        if virtual_kg:
+            response = requests.delete(url, headers=headers, json=virtual_kg)
+        else:
+            response = requests.delete(url, headers=headers)
+
         return response
 
     @staticmethod

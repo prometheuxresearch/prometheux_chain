@@ -9,7 +9,7 @@ def graph_rag(question=None, vadalog_program=None):
         question (str): The user's natural language question.
         vada_file_path (str): The path to the .vada file.
     """
-    if(not question and not vadalog_program):
+    if not question and not vadalog_program:
         raise Exception("Please provide a question to ask or a vadalog_program for reasoning or both")
     # Read the vadalog program from the file
     if vadalog_program:
