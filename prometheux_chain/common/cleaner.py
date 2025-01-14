@@ -1,12 +1,25 @@
 from ..client.JarvisPyClient import JarvisPyClient
 
 
-def cleanup(kg_path=None):
+def cleanup(virtual_kg=None):
     """
-    Cleanup all virtual kg resources for the user with optional kg_path.
+    Cleanup Virtual KG resources for the user.
+    If `virtual_kg` is provided, it only cleans up resources for that KG.
+    If `virtual_kg` is None, it cleans up all resources for the user associated with the PMTX token.
     """
-    delete_virtual_kg_resource_response = JarvisPyClient.delete_all_virtual_kg_resources()
+    if virtual_kg is not None:
+        delete_virtual_kg_resource_response = JarvisPyClient.delete_virtual_kg_resources(virtual_kg)
+    else:
+        delete_virtual_kg_resource_response = JarvisPyClient.delete_virtual_kg_resources()
+
     if delete_virtual_kg_resource_response.status_code != 200:
-        raise Exception(f"HTTP error! status: {delete_virtual_kg_resource_response.status_code}, "
-                        f"detail: {delete_virtual_kg_resource_response.json()['message']}")
-    print("Virtual Knowledge Graph Resources Cleanup completed")
+        json_resp = delete_virtual_kg_resource_response.json()
+        msg = json_resp.get('message', 'Unknown error')
+        raise Exception(f"HTTP error! status: {delete_virtual_kg_resource_response.status_code}, detail: {msg}")
+
+    if virtual_kg is not None:
+        print(f"Cleanup of virtual knowledge graph ID={virtual_kg.get('id')} "
+              f"for the user associated with the PMTX token completed successfully")
+    else:
+        print("Cleanup of all resources for the user associated with the PMTX token completed successfully")
+
