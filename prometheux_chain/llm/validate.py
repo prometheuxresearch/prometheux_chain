@@ -3,9 +3,6 @@ import os
 
 
 def validate(text, guardrail):
-    # Update LLM configs before any requests FIXME: maybe do this instead of passing configs to validate
-    # JarvisPyClient.update_llm_configs()
-
     if guardrail is not None:
         if not os.path.exists(guardrail):
             raise Exception(f"Guardrail file '{guardrail}' does not exist.")
