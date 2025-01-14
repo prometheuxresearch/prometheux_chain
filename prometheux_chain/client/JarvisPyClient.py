@@ -203,13 +203,6 @@ class JarvisPyClient:
         response = requests.post(url, headers=headers, json=data)
         return response
 
-
-
-
-
-
-
-
     @staticmethod
     def graph_rag(question=None, vadalog_program=None):
         """
