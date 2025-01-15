@@ -1,5 +1,13 @@
 from ..client.JarvisPyClient import JarvisPyClient
 
+"""
+Resource Cleanup Module
+
+Copyright (C) Prometheux Limited. All rights reserved.
+
+Author: Prometheux Limited
+"""
+
 
 def cleanup(virtual_kg=None):
     """

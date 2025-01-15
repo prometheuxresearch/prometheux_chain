@@ -3,6 +3,14 @@ import os
 from ..client.JarvisPyClient import JarvisPyClient
 from typing import Dict
 
+"""
+Virtual Knowledge Graph Reasoning and Querying Module
+
+Copyright (C) Prometheux Limited. All rights reserved.
+
+Author: Prometheux Limited
+"""
+
 
 def reason(vada_file_paths, params=None, measure_time=False, to_explain=False, to_persist=False):
     if params is None:
@@ -124,11 +132,11 @@ def parse_input(file_path_or_query: str):
     trimmed = file_path_or_query.strip()
     lower_trimmed = trimmed.lower()
 
-    # 1) Check for Datalog query
-    if lower_trimmed.startswith('?-'):
+    # Check for Datalog query
+    if lower_trimmed.startswith('?-') or ':-' in lower_trimmed:
         return "vadalog", trimmed
 
-    # 2) Check for SQL query
+    # Check for SQL query
     if lower_trimmed.startswith('select'):
         return "sql", trimmed
 

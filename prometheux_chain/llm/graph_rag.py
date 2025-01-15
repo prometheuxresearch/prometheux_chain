@@ -1,5 +1,13 @@
 from ..client.JarvisPyClient import JarvisPyClient
 
+"""
+Graph RAG Module
+
+Copyright (C) Prometheux Limited. All rights reserved.
+
+Author: Prometheux Limited
+"""
+
 
 def graph_rag(question=None, vadalog_program=None):
     """

@@ -2,6 +2,14 @@ from ..config import config
 import requests
 import os
 
+"""
+JarvisPy Client Module
+
+Copyright (C) Prometheux Limited. All rights reserved.
+
+Author: Prometheux Limited
+"""
+
 
 class JarvisPyClient:
 
