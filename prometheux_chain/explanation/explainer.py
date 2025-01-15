@@ -1,5 +1,13 @@
 from ..client.JarvisPyClient import JarvisPyClient
 
+"""
+Knowledge Graph Explanation Module
+
+Copyright (C) Prometheux Limited. All rights reserved.
+
+Author: Prometheux Limited
+"""
+
 
 def explain(virtual_kg, fact_to_explain):
     if virtual_kg is None:

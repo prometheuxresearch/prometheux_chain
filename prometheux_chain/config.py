@@ -1,6 +1,14 @@
 import yaml
 import os
 
+"""
+Config Management Module
+
+Copyright (C) Prometheux Limited. All rights reserved.
+
+Author: Prometheux Limited
+"""
+
 
 class Config:
     def __init__(self, config_file=None):

@@ -1,6 +1,14 @@
 from ..client.JarvisPyClient import JarvisPyClient
 import os
 
+"""
+LLM Output Validation Module
+
+Copyright (C) Prometheux Limited. All rights reserved.
+
+Author: Prometheux Limited
+"""
+
 
 def validate(text, guardrail):
     if guardrail is not None:
