@@ -4,8 +4,8 @@ from .reasoning.reasoner import reason
 from .reasoning.reasoner import query
 from .explanation.explainer import explain
 from .explanation.visualizer import visualize_schema
-# from .llm.chat import chat
+from .llm.rag import rag
 from .llm.validate import validate
-from .llm.graph_rag import graph_rag
+# from .llm.chat import chat
 # from .translator.schema_translator import infer_from_schema
 # from .analytics.all_pairs_join import all_pairs_join
