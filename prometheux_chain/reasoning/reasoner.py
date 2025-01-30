@@ -1,6 +1,6 @@
 import time
 import os
-from ..client.JarvisPyClient import JarvisPyClient
+from ..client.jarvispy_client import JarvisPyClient
 from typing import Dict
 
 """
@@ -13,6 +13,11 @@ Author: Prometheux Limited
 
 
 def reason(vada_file_paths, params=None, measure_time=False, to_explain=False, to_persist=False):
+    # Check if JarvisPy is reachable
+    if not JarvisPyClient.is_reachable():
+        print("Error: JarvisPy backend is not reachable.")
+        return None
+
     if params is None:
         params = {}
 
@@ -83,13 +88,18 @@ def reason(vada_file_paths, params=None, measure_time=False, to_explain=False, t
 
 
 def query(virtual_kg, file_path_or_query: str, params=None):
+    # Check if JarvisPy is reachable
+    if not JarvisPyClient.is_reachable():
+        print("Error: JarvisPy backend is not reachable.")
+        return None
+
     if params is None:
         params = {}
     if virtual_kg is None:
         raise Exception("Virtual Knowledge Graph is null. Cannot perform query.")
 
     # Check if the query is a string or a file path
-    language_type, query_read = parse_input(file_path_or_query)
+    language_type, query_read = __parse_input(file_path_or_query)
 
     # Call JarvisPyClient query
     response = JarvisPyClient.query(
@@ -113,7 +123,7 @@ def query(virtual_kg, file_path_or_query: str, params=None):
     return evaluation_response.get("query_results", [])
 
 
-def parse_input(file_path_or_query: str):
+def __parse_input(file_path_or_query: str):
     """
     Distinguish whether `file_path_or_query` is:
       - A Datalog query (starts with '?-')

@@ -1,4 +1,4 @@
-from ..client.JarvisPyClient import JarvisPyClient
+from ..client.jarvispy_client import JarvisPyClient
 
 """
 Resource Cleanup Module
@@ -15,6 +15,11 @@ def cleanup(virtual_kg=None):
     If `virtual_kg` is provided, it only cleans up resources for that KG.
     If `virtual_kg` is None, it cleans up all resources for the user associated with the PMTX token.
     """
+    # Check if JarvisPy is reachable
+    if not JarvisPyClient.is_reachable():
+        print("Error: JarvisPy backend is not reachable.")
+        return None
+
     if virtual_kg is not None:
         delete_virtual_kg_resource_response = JarvisPyClient.delete_virtual_kg_resources(virtual_kg)
     else:

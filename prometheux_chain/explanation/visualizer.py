@@ -6,7 +6,7 @@ from IPython import get_ipython
 from IPython.display import display, HTML
 import webbrowser
 
-from prometheux_chain.client.JarvisPyClient import JarvisPyClient
+from prometheux_chain.client.jarvispy_client import JarvisPyClient
 
 """
 Knowledge Graph Visualization Module
@@ -22,30 +22,31 @@ def visualize_schema(vada_file_path: str):
     Reads a Vadalog file, extracts its content, and sends it to the /api/visualize endpoint.
     Automatically chooses the visualization method based on the environment.
     """
+    # Check if JarvisPy is reachable
+    if not JarvisPyClient.is_reachable():
+        print("Error: JarvisPy backend is not reachable.")
+        return None
+
     try:
-        # 1) Read .vada file
         with open(vada_file_path, 'r') as file:
             file_content = file.read()
 
-        # 2) Call the backend for the graph structure
         response = JarvisPyClient.visualize(file_content)
         if response.get('status') == 'success':
             graph_structure = response.get('data')
         else:
             raise Exception(f"Visualization failed: {response.get('message')}")
 
-        # 3) Transform the raw schema_data into final nodes/edges
-        nodes, edges = transform_schema_data(graph_structure)
+        nodes, edges = __transform_schema_data(graph_structure)
 
-        # 4) Choose between cytoscape or pyvis
-        if in_notebook():
+        if __in_notebook():
             try:
-                visualize_with_cytoscape(nodes, edges)
+                __visualize_with_cytoscape(nodes, edges)
             except Exception as e:
                 print(f"Failed to visualize with Cytoscape: {e}. Falling back to Pyvis.")
-                visualize_with_pyvis(nodes, edges)
+                __visualize_with_pyvis(nodes, edges)
         else:
-            visualize_with_pyvis(nodes, edges)
+            __visualize_with_pyvis(nodes, edges)
 
     except IOError as e:
         raise Exception(f"Error opening file {vada_file_path}: {e}")
@@ -53,7 +54,7 @@ def visualize_schema(vada_file_path: str):
         raise Exception(f"Error during schema visualization: {e}")
 
 
-def in_notebook():
+def __in_notebook():
     """Check if running in a Jupyter notebook."""
     try:
         shell = get_ipython().__class__.__name__
@@ -67,7 +68,7 @@ def in_notebook():
         return False
 
 
-def transform_schema_data(schema_data):
+def __transform_schema_data(schema_data):
     raw_nodes = schema_data.get("nodes", [])
     raw_edges = schema_data.get("edges", [])
 
@@ -116,8 +117,8 @@ def transform_schema_data(schema_data):
     return final_nodes, final_edges
 
 
-def visualize_with_pyvis(nodes, edges):
-    net = Network(notebook=in_notebook(), directed=True, cdn_resources='in_line')
+def __visualize_with_pyvis(nodes, edges):
+    net = Network(notebook=__in_notebook(), directed=True, cdn_resources='in_line')
 
     net.toggle_physics(False)
     net.set_options("""
@@ -196,7 +197,7 @@ def visualize_with_pyvis(nodes, edges):
         os.remove(output_file)
     net.write_html(output_file)
 
-    if in_notebook():
+    if __in_notebook():
         with open(output_file, 'r') as f:
             html_content = f.read()
             display(HTML(html_content))
@@ -204,7 +205,7 @@ def visualize_with_pyvis(nodes, edges):
         webbrowser.open('file://' + os.path.realpath(output_file))
 
 
-def visualize_with_cytoscape(nodes, edges):
+def __visualize_with_cytoscape(nodes, edges):
     G = nx.DiGraph()
 
     for node in nodes:
@@ -272,6 +273,6 @@ def visualize_with_cytoscape(nodes, edges):
     cyto_widget.set_style(style_list)
 
     # 'breadthfirst' or 'dagre' or 'cose'
-    cyto_widget.set_layout(name='breadthfirst')
+    cyto_widget.set_layout(name='dagre')
 
     display(cyto_widget)
