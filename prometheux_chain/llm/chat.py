@@ -1,4 +1,4 @@
-from ..client.JarvisPyClient import JarvisPyClient
+from ..client.jarvispy_client import JarvisPyClient
 import os
 
 # def chat(text, guardrail=None):
