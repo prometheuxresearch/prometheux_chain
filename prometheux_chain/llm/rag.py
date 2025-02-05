@@ -28,19 +28,13 @@ def rag(question, virtual_kg, vadalog_params=None, measure_time=False, to_explai
     if not question or not virtual_kg:
         raise Exception("Please provide a question and a virtual knowledge graph.")
 
-    # Process vadalog files into the structured format
-    vadalog_programs = process_vadalog_files(virtual_kg)
-
     # Measure time if needed
     start_time = time.time() if measure_time else None
 
     # Call JarvisPyClient
     response = JarvisPyClient.rag(
         question=question,
-        vadalog_programs=vadalog_programs,
-        vadalog_params=vadalog_params,
-        to_explain=to_explain,
-        to_persist=to_persist
+        virtual_kg=virtual_kg,
     )
 
     # Print timing info if needed
@@ -51,8 +45,8 @@ def rag(question, virtual_kg, vadalog_params=None, measure_time=False, to_explai
     # Extract the context from the RAG response
     rag_result = response.json()
     context = ""
-    output_facts = rag_result.get("data", {}).get("output_facts", {})
-    context = json.dumps(output_facts, indent=2)
+    output_facts_and_explanations = rag_result.get("data", {}).get("output_facts_and_explanations", {})
+    context = json.dumps(output_facts_and_explanations, indent=2)
     
     # Initialize the LLM manager
     llm_manager: LLMManager = OpenAIManager(
@@ -64,8 +58,7 @@ def rag(question, virtual_kg, vadalog_params=None, measure_time=False, to_explai
 
     # Build the system prompt
     system_prompt = f"""
-    You are a helpful assistant. Your job is to answer questions based on the provided context.
-    If the context does not contain the answer, you must say "I am sorry, I do not know the answer to that question. Do not refer explicitly to having received the context."
+    You are a helpful assistant. Your job is to answer questions based on the provided context. Such context is a list of facts extracted from a knowledge graph. It might optionally include explanations of how the facts were derived from the knowledge graph. Do not refer explicitly to having received the context. If the context does not contain the answer, you must say "I am sorry, I do not know the answer to that question.". When providing the answer, make sure to present it as a business report paragraph, without using additional symbols, enumerations, new lines, or other formatting options.
     """
 
     # Build the user prompt
