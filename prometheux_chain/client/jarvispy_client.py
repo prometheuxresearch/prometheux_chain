@@ -43,19 +43,30 @@ class JarvisPyClient:
         return response
 
     @staticmethod
-    def reason(vadalog_programs, vadalog_params, to_explain, to_persist):
+    def reason(vadalog_programs, vadalog_params, to_explain, to_persist, to_embed):
         JARVISPY_URL = config['JARVISPY_URL']
         PMTX_TOKEN = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN'))
 
         if not PMTX_TOKEN:
             raise Exception("PMTX_TOKEN is not set. Please set it in the environment variables or config.")
+        
+        # Additional LLM-related config
+        llm_api_key = config.get('LLM_API_KEY', None)
+        llm_provider = config.get('LLM_PROVIDER', 'OpenAI')
+        embedding_model_version = config.get('EMBEDDING_MODEL_VERSION', 'text-embedding-3-large')
+        embedding_dimensions = config.get('EMBEDDING_DIMENSIONS', 2048)
 
         url = f"{JARVISPY_URL}/api/reason"
         data = {
             'vadalog_programs': vadalog_programs,
             'vadalog_params': vadalog_params,
             'to_explain': to_explain,
-            'to_persist': to_persist
+            'to_persist': to_persist,
+            'to_embed': to_embed,
+            'llm_api_key': llm_api_key,
+            'llm_provider': llm_provider,
+            'embedding_model_version': embedding_model_version,
+            'embedding_dimensions': embedding_dimensions
         }
 
         headers = {
@@ -162,9 +173,9 @@ class JarvisPyClient:
         return response
 
     @staticmethod
-    def rag(question, vadalog_programs, vadalog_params, to_explain, to_persist):
-        if not question and not vadalog_programs:
-            raise Exception("Please provide a question to ask or a vadalog_program for reasoning or both")
+    def rag(question, virtual_kg):
+        if not question and not virtual_kg:
+            raise Exception("Please provide a question to ask and a virtual knowledge graph")
 
         JARVISPY_URL = config['JARVISPY_URL']
         PMTX_TOKEN = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
@@ -185,10 +196,7 @@ class JarvisPyClient:
         }
         data = {
             'question': question,
-            'vadalog_programs': vadalog_programs,
-            'vadalog_params': vadalog_params,
-            'to_explain': to_explain,
-            'to_persist': to_persist,
+            'virtual_kg': virtual_kg,
             'llm_api_key': llm_api_key,
             'llm_provider': llm_provider,
             'embedding_model_version': embedding_model_version,

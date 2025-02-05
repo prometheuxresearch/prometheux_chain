@@ -1,5 +1,7 @@
 import time
 import os
+import warnings
+
 from ..client.jarvispy_client import JarvisPyClient
 from ..common.vadalog_utils import process_vadalog_files
 
@@ -12,11 +14,15 @@ Author: Prometheux Limited
 """
 
 
-def reason(vadalog_file_paths, vadalog_params=None, measure_time=False, to_explain=False, to_persist=False):
+def reason(vadalog_file_paths, vadalog_params=None, measure_time=False, to_explain=False, to_persist=False, to_embed=False):
     # Check if JarvisPy is reachable
     if not JarvisPyClient.is_reachable():
         print("Error: JarvisPy backend is not reachable.")
         return None
+    
+    # Check parameters compatibility
+    if not to_explain and to_embed:
+        warnings.warn("Embedding will be less effective if to_explain is set to False.")
 
     # Process vadalog files into the structured format
     vadalog_programs = process_vadalog_files(vadalog_file_paths)
@@ -29,7 +35,8 @@ def reason(vadalog_file_paths, vadalog_params=None, measure_time=False, to_expla
         vadalog_programs=vadalog_programs,
         vadalog_params=vadalog_params,
         to_explain=to_explain,
-        to_persist=to_persist
+        to_persist=to_persist,
+        to_embed=to_embed
     )
 
     # Handle response codes
