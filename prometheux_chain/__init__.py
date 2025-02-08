@@ -1,9 +1,10 @@
 from .config import config
 from .common.cleaner import cleanup
-from .reasoning.reasoner import reason
-from .reasoning.reasoner import query
-from .explanation.explainer import explain
-from .explanation.visualizer import visualize_schema
+from .virtual_kg.compile import compile
+from .virtual_kg.reason import reason
+from .virtual_kg.query import query
+from .explanation.explain import explain
+from .explanation.visualize import visualize_schema
 from .llm.validate import validate
 from .llm.rag import rag
 # from .llm.chat import chat

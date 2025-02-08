@@ -18,10 +18,6 @@ Author: Prometheux Limited
 
 
 def visualize_schema(vada_file_path: str):
-    """
-    Reads a Vadalog file, extracts its content, and sends it to the /api/visualize endpoint.
-    Automatically chooses the visualization method based on the environment.
-    """
     # Check if JarvisPy is reachable
     if not JarvisPyClient.is_reachable():
         print("Error: JarvisPy backend is not reachable.")
@@ -32,6 +28,7 @@ def visualize_schema(vada_file_path: str):
             file_content = file.read()
 
         response = JarvisPyClient.visualize(file_content)
+
         if response.get('status') == 'success':
             graph_structure = response.get('data')
         else:
