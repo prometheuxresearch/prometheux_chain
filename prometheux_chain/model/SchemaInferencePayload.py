@@ -1,5 +1,6 @@
 class SchemaInferencePayload:
-    def __init__(self, database, username, password, host, port, database_type, add_bind):
+    
+    def __init__(self, database, username, password, host, port, database_type, add_bind, options):
         self.database = database
         self.username = username
         self.password = password
@@ -7,6 +8,7 @@ class SchemaInferencePayload:
         self.port = port
         self.databaseType = database_type
         self.addBind = add_bind
+        self.options = options
 
     def to_dict(self):
         return {
@@ -16,10 +18,10 @@ class SchemaInferencePayload:
             'host': self.host,
             'port': self.port,
             'databaseType': self.databaseType,
-            'addBind': self.addBind
+            'addBind': self.addBind,
+            'options': self.options
         }
-        
-
+    
     @classmethod
     def from_dict(cls, data):
         schema_inference_payload = cls(
@@ -29,6 +31,7 @@ class SchemaInferencePayload:
             host=data['host'],
             port=data['port'],
             database_type=data['databaseType'],
-            add_bind=data['addBind']
+            add_bind=data['addBind'],
+            options=data['options']
         )
         return schema_inference_payload
