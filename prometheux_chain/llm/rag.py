@@ -1,5 +1,4 @@
 import time
-import json
 import warnings
 
 from ..client.jarvispy_client import JarvisPyClient

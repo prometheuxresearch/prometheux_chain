@@ -273,3 +273,27 @@ class JarvisPyClient:
         }
         response = requests.post(url, headers=headers, json=data)
         return response
+    
+    @staticmethod
+    def translate(domain_knowledge):
+        JARVISPY_URL = config['JARVISPY_URL']
+        PMTX_TOKEN = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
+
+        if not PMTX_TOKEN:
+            raise Exception("PMTX_TOKEN is not set. Please set it in environment variables or config.")
+        
+        url = f"{JARVISPY_URL}/api/v1/translate_nl_to_vadalog"
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f"Bearer {PMTX_TOKEN}"
+        }
+        data = {
+            "domain_knowledge": domain_knowledge,
+            "llm_api_key": config.get("LLM_API_KEY"),
+            "llm_version": config.get("LLM_VERSION"),
+            "llm_temperature": config.get("LLM_TEMPERATURE"),
+            "llm_max_tokens": config.get("LLM_MAX_TOKENS")
+        }
+        response = requests.post(url, headers=headers, json=data)
+        return response
+        
