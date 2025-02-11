@@ -1,8 +1,10 @@
 # =====================
 # Other Services
 # =====================
-JARVISPY_URL: http://localhost:5001
-PMTX_TOKEN: None
+JARVISPY_URL: http://localhost:5000
+PMTX_TOKEN: YOUR_PMTX_TOKEN
+CONSTELLATION_BACKEND_URL: http://localhost:8085
+JARVIS_URL: http://localhost:8084
 
 # =====================
 # Large Language Models
