@@ -9,5 +9,5 @@ from .llm.validate import validate
 from .llm.rag import rag
 from .llm.translate import translate
 # from .llm.chat import chat
-# from .translator.schema_translator import infer_from_schema
+from .translator.schema_translator import infer_from_schema
 # from .analytics.all_pairs_join import all_pairs_join
