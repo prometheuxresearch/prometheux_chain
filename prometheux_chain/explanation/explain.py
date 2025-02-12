@@ -10,11 +10,6 @@ Author: Prometheux Limited
 
 
 def explain(virtual_kg, fact_to_explain):
-    # Check if JarvisPy is reachable
-    if not JarvisPyClient.is_reachable():
-        print("Error: JarvisPy backend is not reachable.")
-        return None
-
     if virtual_kg is None:
         raise Exception("Virtual Knowledge Graph is null. Cannot perform explanation.")
 

@@ -15,11 +15,6 @@ Author: Prometheux Limited
 
 
 def reason(vadalog_file_paths, vadalog_params={}, measure_time=False, to_explain=False, to_persist=False, to_embed=False):
-    # Check if JarvisPy is reachable
-    if not JarvisPyClient.is_reachable():
-        print("Error: JarvisPy backend is not reachable.")
-        return None
-    
     # Check parameters compatibility
     if not to_explain and to_embed:
         warnings.warn("Embedding will be less effective if to_explain is set to False.")

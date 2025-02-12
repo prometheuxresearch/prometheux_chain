@@ -11,11 +11,6 @@ Author: Prometheux Limited
 
 
 def query(virtual_kg, file_path_or_query: str, params=None):
-    # Check if JarvisPy is reachable
-    if not JarvisPyClient.is_reachable():
-        print("Error: JarvisPy backend is not reachable.")
-        return None
-
     if params is None:
         params = {}
     if virtual_kg is None:

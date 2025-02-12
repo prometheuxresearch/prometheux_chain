@@ -13,14 +13,6 @@ Author: Prometheux Limited
 
 class JarvisPyClient:
 
-    @staticmethod
-    def is_reachable():
-        try:
-            response = requests.get(config['JARVISPY_URL'] + "/api/v1/hello", timeout=5)
-            response.raise_for_status()
-            return True
-        except requests.exceptions.RequestException as e:
-            return False
 
     @staticmethod
     def delete_virtual_kg_resources(virtual_kg=None):
@@ -251,7 +243,7 @@ class JarvisPyClient:
         return response
     
     @staticmethod
-    def chat(question, facts_and_explanations):
+    def chat(question, facts_and_explanations, translated_question_rules, top_retrieved_facts, predicates_and_models, to_explain):
         JARVISPY_URL = config['JARVISPY_URL']
         PMTX_TOKEN = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
 
@@ -266,6 +258,10 @@ class JarvisPyClient:
         data = {
             "question": question,
             "facts_and_explanations": facts_and_explanations,
+            "translated_question_rules": translated_question_rules,
+            "top_retrieved_facts": top_retrieved_facts,
+            "predicates_and_models": predicates_and_models,
+            "to_explain": to_explain,
             "llm_api_key": config.get("LLM_API_KEY"),
             "llm_version": config.get("LLM_VERSION"),
             "llm_temperature": config.get("LLM_TEMPERATURE"),
