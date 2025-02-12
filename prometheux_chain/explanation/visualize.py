@@ -18,11 +18,6 @@ Author: Prometheux Limited
 
 
 def visualize_schema(vada_file_path: str):
-    # Check if JarvisPy is reachable
-    if not JarvisPyClient.is_reachable():
-        print("Error: JarvisPy backend is not reachable.")
-        return None
-
     try:
         with open(vada_file_path, 'r') as file:
             file_content = file.read()

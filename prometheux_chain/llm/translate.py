@@ -24,10 +24,6 @@ def translate(domain_knowledge):
     if not domain_knowledge:
         raise Exception("Please provide a question to translate.")
 
-    # Check if the JarvisPy backend is reachable
-    if not JarvisPyClient.is_reachable():
-        raise Exception("Error: JarvisPy backend is not reachable.")
-
     # Call the static method to perform the translation
     response = JarvisPyClient.translate(domain_knowledge)
 
