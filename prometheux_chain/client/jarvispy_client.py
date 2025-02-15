@@ -87,7 +87,6 @@ class JarvisPyClient:
         
         # Additional LLM-related config
         llm_api_key = config.get('LLM_API_KEY', None)
-        llm_provider = config.get('LLM_PROVIDER', 'OpenAI')
         embedding_model_version = config.get('EMBEDDING_MODEL_VERSION', 'text-embedding-3-large')
         embedding_dimensions = config.get('EMBEDDING_DIMENSIONS', 2048)
 
@@ -99,7 +98,6 @@ class JarvisPyClient:
             'to_persist': to_persist,
             'to_embed': to_embed,
             'llm_api_key': llm_api_key,
-            'llm_provider': llm_provider,
             'embedding_model_version': embedding_model_version,
             'embedding_dimensions': embedding_dimensions
         }
@@ -184,7 +182,6 @@ class JarvisPyClient:
 
         # Additional LLM-related config
         llm_api_key = config.get('LLM_API_KEY', None)
-        llm_provider = config.get('LLM_PROVIDER', 'OpenAI')
         llm_version = config.get('LLM_VERSION', 'gpt-4o')
         llm_temperature = config.get('LLM_TEMPERATURE', 0.50)
         llm_max_tokens = config.get('LLM_MAX_TOKENS', 2000)
@@ -198,7 +195,6 @@ class JarvisPyClient:
             'text': text,
             'guardrail_program': guardrail_program,
             'llm_api_key': llm_api_key,
-            'llm_provider': llm_provider,
             'llm_version': llm_version,
             'llm_temperature': llm_temperature,
             'llm_max_tokens': llm_max_tokens
@@ -220,7 +216,6 @@ class JarvisPyClient:
 
         # Additional LLM-related config
         llm_api_key = config.get('LLM_API_KEY', None)
-        llm_provider = config.get('LLM_PROVIDER', 'OpenAI')
         embedding_model_version = config.get('EMBEDDING_MODEL_VERSION', 'text-embedding-3-large')
         embedding_dimensions = config.get('EMBEDDING_DIMENSIONS', 2048)
 
@@ -234,7 +229,6 @@ class JarvisPyClient:
             'virtual_kg': virtual_kg,
             'to_explain': to_explain,
             'llm_api_key': llm_api_key,
-            'llm_provider': llm_provider,
             'embedding_model_version': embedding_model_version,
             'embedding_dimensions': embedding_dimensions
         }
