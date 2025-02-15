@@ -1,5 +1,6 @@
 import os
 from typing import List, Dict
+import json
 
 """
 Vadalog Utility Module
@@ -25,12 +26,10 @@ def read_vadalog_file(ontologyPath: str) -> Dict[str, str]:
     """
     try:
         with open(ontologyPath, 'r') as file:
-            content = file.read()
+            return file.read()
     except IOError as e:
         raise Exception(f"Error opening file {ontologyPath}: {e}")
-    return {
-        os.path.basename(ontologyPath): content
-    }
+
 
 def process_vadalog_files(vada_file_paths):
     """
@@ -74,7 +73,8 @@ def process_vadalog_files(vada_file_paths):
         vadalog_programs_serial_evaluation: List[Dict[str, str]] = []
         for ontologyPath in ontologiesPath:
             vadalog_program_single = read_vadalog_file(ontologyPath)
-            vadalog_programs_serial_evaluation.append(vadalog_program_single)
+            dict_single = {os.path.basename(ontologyPath): vadalog_program_single}
+            vadalog_programs_serial_evaluation.append(dict_single)
         vadalog_programs.append(vadalog_programs_serial_evaluation)
 
     return vadalog_programs

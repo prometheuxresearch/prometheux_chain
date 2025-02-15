@@ -1,7 +1,7 @@
 # =====================
 # Other Services
 # =====================
-JARVISPY_URL: http://localhost:5001
+JARVISPY_URL: http://localhost:5000
 PMTX_TOKEN: YOUR_PMTX_TOKEN
 CONSTELLATION_BACKEND_URL: http://localhost:8085
 JARVIS_URL: http://localhost:8084
@@ -10,7 +10,6 @@ JARVIS_URL: http://localhost:8084
 # Large Language Models
 # =====================
 LLM_API_KEY: None
-LLM_PROVIDER: OpenAI
 LLM_VERSION: gpt-4o
 LLM_TEMPERATURE: 0.50
 LLM_MAX_TOKENS: 2000
