@@ -8,21 +8,24 @@ import webbrowser
 
 from prometheux_chain.client.jarvispy_client import JarvisPyClient
 
+
 """
-Knowledge Graph Visualization Module
+Predicate Graph Visualization Module
 
 Copyright (C) Prometheux Limited. All rights reserved.
 
 Author: Prometheux Limited
 """
 
-
-def visualize_schema(vada_file_path: str):
+def visualize_predicate_graph(vada_file_path: str):
+    """
+    Visualizes the 'predicate graph' returned by JarvisPyClient.visualize_predicate_graph(...).
+    """
     try:
         with open(vada_file_path, 'r') as file:
             file_content = file.read()
 
-        response = JarvisPyClient.visualize(file_content)
+        response = JarvisPyClient.visualize_predicate_graph(file_content)
 
         if response.get('status') == 'success':
             graph_structure = response.get('data')

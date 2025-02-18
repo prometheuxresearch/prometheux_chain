@@ -97,7 +97,7 @@ class JarvisPyClient:
             'to_explain': to_explain,
             'to_persist': to_persist,
             'to_embed': to_embed,
-            'llm_api_key': llm_api_key,
+            'embedding_api_key': llm_api_key,
             'embedding_model_version': embedding_model_version,
             'embedding_dimensions': embedding_dimensions
         }
@@ -155,13 +155,13 @@ class JarvisPyClient:
         return response
 
     @staticmethod
-    def visualize(vadalog_program: str):
+    def visualize_predicate_graph(vadalog_program: str):
         JARVISPY_URL = config['JARVISPY_URL']
         PMTX_TOKEN = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
         if not PMTX_TOKEN:
             raise Exception("PMTX_TOKEN is not set. Please set it in the environment variables or config.")
 
-        url = f"{JARVISPY_URL}/api/v1/visualize"
+        url = f"{JARVISPY_URL}/api/v1/visualize/predicate-graph"
         headers = {
             'Content-Type': 'application/json',
             'Authorization': f"Bearer {PMTX_TOKEN}"
@@ -170,6 +170,24 @@ class JarvisPyClient:
             'vadalog_program': vadalog_program
         }
         response = requests.post(url, json=data, headers=headers)
+        return response.json()
+    
+    @staticmethod
+    def visualize_kg_schema(vadalog_program: str):
+        JARVISPY_URL = config['JARVISPY_URL']
+        PMTX_TOKEN = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
+        if not PMTX_TOKEN:
+            raise Exception("PMTX_TOKEN is not set. Please set it in the environment variables or config.")
+
+        url = f"{JARVISPY_URL}/api/v1/visualize/kg-schema"
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f"Bearer {PMTX_TOKEN}"
+        }
+        data = {
+            'vadalog_program': vadalog_program
+        }
+        response = requests.post(url, json=data, headers=headers)    
         return response.json()
 
     @staticmethod
