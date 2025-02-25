@@ -2,7 +2,7 @@ from ..client.ConstellationBackendClient import ConstellationBackendClient
 from ..model.SchemaInferencePayload import SchemaInferencePayload
 import requests
 
-def infer_from_schema(type, user, password, host, port, database, add_bind=False, options=None):
+def infer_from_schema(type, user, password, host, port, database, table=None, query=None, add_bind=False, options=None):
     if options is None:
         options = {}
     
@@ -12,9 +12,11 @@ def infer_from_schema(type, user, password, host, port, database, add_bind=False
         password=password,
         host=host,
         port=port,
-        database= database,
+        database=database,
+        table=table,
+        query=query,
         add_bind=add_bind,
-        options=options
+        options=options,
     )
     try:
         response = ConstellationBackendClient.infer_from_schema(schema_inference_payload)
