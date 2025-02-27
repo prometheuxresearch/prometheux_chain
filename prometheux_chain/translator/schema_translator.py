@@ -1,4 +1,4 @@
-from ..client.ConstellationBackendClient import ConstellationBackendClient
+from ..client.constellation_backend_client import ConstellationBackendClient
 from ..model.schema_inference_payload import SchemaInferencePayload
 import requests
 
