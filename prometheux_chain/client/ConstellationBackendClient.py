@@ -9,5 +9,5 @@ class ConstellationBackendClient:
     def infer_from_schema(schema_inference_payload : SchemaInferencePayload):
         headers = {'Content-Type': 'application/json'}
         data = json.dumps(schema_inference_payload.to_dict())
-        response = requests.post(f"{config['CONSTELLATION_BACKEND_URL']}/schema-info/inferFromSchema", headers=headers, data=data)
+        response = requests.post(f"{config['DATA_MANAGER_URL']}/schema-info/inferFromSchema", headers=headers, data=data)
         return response
