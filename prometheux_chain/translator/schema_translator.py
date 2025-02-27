@@ -1,5 +1,5 @@
 from ..client.ConstellationBackendClient import ConstellationBackendClient
-from ..model.SchemaInferencePayload import SchemaInferencePayload
+from ..model.schema_inference_payload import SchemaInferencePayload
 import requests
 
 def infer_from_schema(type, user, password, host, port, database, table=None, query=None, add_bind=False, options=None):

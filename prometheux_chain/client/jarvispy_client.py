@@ -16,15 +16,15 @@ class JarvisPyClient:
 
     @staticmethod
     def delete_virtual_kg_resources(virtual_kg=None):
-        JARVISPY_URL = config['JARVISPY_URL']
-        PMTX_TOKEN = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
+        jarvispy_url = config['JARVISPY_URL']
+        pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
 
-        if not PMTX_TOKEN:
+        if not pmtx_token:
             raise Exception("PMTX_TOKEN is not set. Please set it in env variables or config.")
 
-        url = f"{JARVISPY_URL}/api/v1/cleanup"
+        url = f"{jarvispy_url}/api/v1/cleanup"
         headers = {
-            'Authorization': f"Bearer {PMTX_TOKEN}",
+            'Authorization': f"Bearer {pmtx_token}",
             'Content-Type': 'application/json'
         }
 
@@ -37,17 +37,17 @@ class JarvisPyClient:
     @staticmethod
     def compile(ontology):
         # Example config usage
-        JARVISPY_URL = config['JARVISPY_URL']
-        PMTX_TOKEN = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN'))
+        jarvispy_url = config['JARVISPY_URL']
+        pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN'))
 
-        if not PMTX_TOKEN:
+        if not pmtx_token:
             raise Exception("PMTX_TOKEN is not set. Please set it in the environment variables or config.")
 
-        url = f"{JARVISPY_URL}/api/v1/compile"
+        url = f"{jarvispy_url}/api/v1/compile"
         data = {'ontology': ontology}
         headers = {
             'Content-Type': 'application/json',
-            'Authorization': f"Bearer {PMTX_TOKEN}"
+            'Authorization': f"Bearer {pmtx_token}"
         }
 
         response = requests.post(url, json=data, headers=headers)
@@ -79,10 +79,10 @@ class JarvisPyClient:
 
     @staticmethod
     def reason(vadalog_programs, vadalog_params, to_explain, to_persist, to_embed):
-        JARVISPY_URL = config['JARVISPY_URL']
-        PMTX_TOKEN = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN'))
+        jarvispy_url = config['JARVISPY_URL']
+        pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN'))
 
-        if not PMTX_TOKEN:
+        if not pmtx_token:
             raise Exception("PMTX_TOKEN is not set. Please set it in the environment variables or config.")
         
         # Additional LLM-related config
@@ -90,7 +90,7 @@ class JarvisPyClient:
         embedding_model_version = config.get('EMBEDDING_MODEL_VERSION', 'text-embedding-3-large')
         embedding_dimensions = config.get('EMBEDDING_DIMENSIONS', 2048)
 
-        url = f"{JARVISPY_URL}/api/v1/reason"
+        url = f"{jarvispy_url}/api/v1/reason"
         data = {
             'vadalog_programs': vadalog_programs,
             'vadalog_params': vadalog_params,
@@ -104,7 +104,7 @@ class JarvisPyClient:
 
         headers = {
             'Content-Type': 'application/json',
-            'Authorization': f"Bearer {PMTX_TOKEN}"
+            'Authorization': f"Bearer {pmtx_token}"
         }
 
         response = requests.post(url, json=data, headers=headers)
@@ -112,13 +112,13 @@ class JarvisPyClient:
 
     @staticmethod
     def query(virtual_kg, query, params, language_type):
-        JARVISPY_URL = config['JARVISPY_URL']
-        PMTX_TOKEN = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
+        jarvispy_url = config['JARVISPY_URL']
+        pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
 
-        if not PMTX_TOKEN:
+        if not pmtx_token:
             raise Exception("PMTX_TOKEN is not set. Please set it in the environment variables or config.")
 
-        url = f"{JARVISPY_URL}/api/v1/query"
+        url = f"{jarvispy_url}/api/v1/query"
         data = {
             'virtual_kg': virtual_kg,
             'query': query,
@@ -127,7 +127,7 @@ class JarvisPyClient:
         }
         headers = {
             'Content-Type': 'application/json',
-            'Authorization': f"Bearer {PMTX_TOKEN}"
+            'Authorization': f"Bearer {pmtx_token}"
         }
 
         response = requests.post(url, json=data, headers=headers)
@@ -135,20 +135,20 @@ class JarvisPyClient:
 
     @staticmethod
     def explain(virtual_kg, fact_to_explain):
-        JARVISPY_URL = config['JARVISPY_URL']
-        PMTX_TOKEN = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
+        jarvispy_url = config['JARVISPY_URL']
+        pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
 
-        if not PMTX_TOKEN:
+        if not pmtx_token:
             raise Exception("PMTX_TOKEN is not set. Please set it in the environment variables or config.")
 
-        url = f"{JARVISPY_URL}/api/v1/explain"
+        url = f"{jarvispy_url}/api/v1/explain"
         data = {
             'fact_to_explain': fact_to_explain,
             'virtual_kg': virtual_kg
         }
         headers = {
             'Content-Type': 'application/json',
-            'Authorization': f"Bearer {PMTX_TOKEN}"
+            'Authorization': f"Bearer {pmtx_token}"
         }
 
         response = requests.post(url, json=data, headers=headers)
@@ -156,15 +156,15 @@ class JarvisPyClient:
 
     @staticmethod
     def visualize_predicate_graph(vadalog_program: str):
-        JARVISPY_URL = config['JARVISPY_URL']
-        PMTX_TOKEN = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
-        if not PMTX_TOKEN:
+        jarvispy_url = config['JARVISPY_URL']
+        pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
+        if not pmtx_token:
             raise Exception("PMTX_TOKEN is not set. Please set it in the environment variables or config.")
 
-        url = f"{JARVISPY_URL}/api/v1/visualize/predicate-graph"
+        url = f"{jarvispy_url}/api/v1/visualize/predicate-graph"
         headers = {
             'Content-Type': 'application/json',
-            'Authorization': f"Bearer {PMTX_TOKEN}"
+            'Authorization': f"Bearer {pmtx_token}"
         }
         data = {
             'vadalog_program': vadalog_program
@@ -174,15 +174,15 @@ class JarvisPyClient:
     
     @staticmethod
     def visualize_kg_schema(vadalog_program: str):
-        JARVISPY_URL = config['JARVISPY_URL']
-        PMTX_TOKEN = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
-        if not PMTX_TOKEN:
+        jarvispy_url = config['JARVISPY_URL']
+        pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
+        if not pmtx_token:
             raise Exception("PMTX_TOKEN is not set. Please set it in the environment variables or config.")
 
-        url = f"{JARVISPY_URL}/api/v1/visualize/kg-schema"
+        url = f"{jarvispy_url}/api/v1/visualize/kg-schema"
         headers = {
             'Content-Type': 'application/json',
-            'Authorization': f"Bearer {PMTX_TOKEN}"
+            'Authorization': f"Bearer {pmtx_token}"
         }
         data = {
             'vadalog_program': vadalog_program
@@ -192,10 +192,10 @@ class JarvisPyClient:
 
     @staticmethod
     def validate(text, guardrail_program):
-        JARVISPY_URL = config['JARVISPY_URL']
-        PMTX_TOKEN = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
+        jarvispy_url = config['JARVISPY_URL']
+        pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
 
-        if not PMTX_TOKEN:
+        if not pmtx_token:
             raise Exception("PMTX_TOKEN is not set. Please set it in environment variables or config.")
 
         # Additional LLM-related config
@@ -204,10 +204,10 @@ class JarvisPyClient:
         llm_temperature = config.get('LLM_TEMPERATURE', 0.50)
         llm_max_tokens = config.get('LLM_MAX_TOKENS', 2000)
 
-        url = f"{JARVISPY_URL}/api/v1/validate"
+        url = f"{jarvispy_url}/api/v1/validate"
         headers = {
             'Content-Type': 'application/json',
-            'Authorization': f"Bearer {PMTX_TOKEN}"
+            'Authorization': f"Bearer {pmtx_token}"
         }
         data = {
             'text': text,
@@ -226,10 +226,10 @@ class JarvisPyClient:
         if not question and not virtual_kg:
             raise Exception("Please provide a question to ask and a virtual knowledge graph")
 
-        JARVISPY_URL = config['JARVISPY_URL']
-        PMTX_TOKEN = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
+        jarvispy_url = config['JARVISPY_URL']
+        pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
 
-        if not PMTX_TOKEN:
+        if not pmtx_token:
             raise Exception("PMTX_TOKEN is not set. Please set it in environment variables or config.")
 
         # Additional LLM-related config
@@ -237,10 +237,10 @@ class JarvisPyClient:
         embedding_model_version = config.get('EMBEDDING_MODEL_VERSION', 'text-embedding-3-large')
         embedding_dimensions = config.get('EMBEDDING_DIMENSIONS', 2048)
 
-        url = f"{JARVISPY_URL}/api/v1/rag"
+        url = f"{jarvispy_url}/api/v1/rag"
         headers = {
             'Content-Type': 'application/json',
-            'Authorization': f"Bearer {PMTX_TOKEN}"
+            'Authorization': f"Bearer {pmtx_token}"
         }
         data = {
             'question': question,
@@ -256,16 +256,16 @@ class JarvisPyClient:
     
     @staticmethod
     def chat(question, facts_and_explanations, translated_question_rules, top_retrieved_facts, predicates_and_models, to_explain):
-        JARVISPY_URL = config['JARVISPY_URL']
-        PMTX_TOKEN = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
+        jarvispy_url = config['JARVISPY_URL']
+        pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
 
-        if not PMTX_TOKEN:
+        if not pmtx_token:
             raise Exception("PMTX_TOKEN is not set. Please set it in environment variables or config.")
 
-        url = f"{JARVISPY_URL}/api/v1/chat"
+        url = f"{jarvispy_url}/api/v1/chat"
         headers = {
             'Content-Type': 'application/json',
-            'Authorization': f"Bearer {PMTX_TOKEN}"
+            'Authorization': f"Bearer {pmtx_token}"
         }
         data = {
             "question": question,
@@ -284,16 +284,16 @@ class JarvisPyClient:
     
     @staticmethod
     def translate(domain_knowledge):
-        JARVISPY_URL = config['JARVISPY_URL']
-        PMTX_TOKEN = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
+        jarvispy_url = config['JARVISPY_URL']
+        pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
 
-        if not PMTX_TOKEN:
+        if not pmtx_token:
             raise Exception("PMTX_TOKEN is not set. Please set it in environment variables or config.")
         
-        url = f"{JARVISPY_URL}/api/v1/translate_nl_to_vadalog"
+        url = f"{jarvispy_url}/api/v1/translate_nl_to_vadalog"
         headers = {
             'Content-Type': 'application/json',
-            'Authorization': f"Bearer {PMTX_TOKEN}"
+            'Authorization': f"Bearer {pmtx_token}"
         }
         data = {
             "domain_knowledge": domain_knowledge,
