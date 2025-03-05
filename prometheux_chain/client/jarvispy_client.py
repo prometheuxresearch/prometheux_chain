@@ -30,7 +30,7 @@ class JarvisPyClient:
         if not PMTX_TOKEN:
             raise Exception("PMTX_TOKEN is not set. Please set it in env variables or config.")
 
-        url = f"{JARVISPY_URL}/api/cleanup"
+        url = f"{JARVISPY_URL}/api/v1/cleanup"
         headers = {
             'Authorization': f"Bearer {PMTX_TOKEN}",
             'Content-Type': 'application/json'
@@ -50,7 +50,7 @@ class JarvisPyClient:
         if not PMTX_TOKEN:
             raise Exception("PMTX_TOKEN is not set. Please set it in the environment variables or config.")
 
-        url = f"{JARVISPY_URL}/api/reason"
+        url = f"{JARVISPY_URL}/api/v1/reason"
         data = {
             'vadalog_programs': vadalog_programs,
             'vadalog_params': vadalog_params,
@@ -74,7 +74,7 @@ class JarvisPyClient:
         if not PMTX_TOKEN:
             raise Exception("PMTX_TOKEN is not set. Please set it in the environment variables or config.")
 
-        url = f"{JARVISPY_URL}/api/query"
+        url = f"{JARVISPY_URL}/api/v1/query"
         data = {
             'virtual_kg': virtual_kg,
             'query': query,
@@ -97,7 +97,7 @@ class JarvisPyClient:
         if not PMTX_TOKEN:
             raise Exception("PMTX_TOKEN is not set. Please set it in the environment variables or config.")
 
-        url = f"{JARVISPY_URL}/api/explain"
+        url = f"{JARVISPY_URL}/api/v1/explain"
         data = {
             'fact_to_explain': fact_to_explain,
             'virtual_kg': virtual_kg
@@ -117,7 +117,7 @@ class JarvisPyClient:
         if not PMTX_TOKEN:
             raise Exception("PMTX_TOKEN is not set. Please set it in the environment variables or config.")
 
-        url = f"{JARVISPY_URL}/api/visualize"
+        url = f"{JARVISPY_URL}/api/v1/visualize"
         headers = {
             'Content-Type': 'application/json',
             'Authorization': f"Bearer {PMTX_TOKEN}"
@@ -143,7 +143,7 @@ class JarvisPyClient:
         llm_temperature = config.get('LLM_TEMPERATURE', 0.50)
         llm_max_tokens = config.get('LLM_MAX_TOKENS', 2000)
 
-        url = f"{JARVISPY_URL}/api/validate"
+        url = f"{JARVISPY_URL}/api/v1/validate"
         headers = {
             'Content-Type': 'application/json',
             'Authorization': f"Bearer {PMTX_TOKEN}"
@@ -178,7 +178,7 @@ class JarvisPyClient:
         embedding_model_version = config.get('EMBEDDING_MODEL_VERSION', 'text-embedding-3-large')
         embedding_dimensions = config.get('EMBEDDING_DIMENSIONS', 2048)
 
-        url = f"{JARVISPY_URL}/api/rag"
+        url = f"{JARVISPY_URL}/api/v1/rag"
         headers = {
             'Content-Type': 'application/json',
             'Authorization': f"Bearer {PMTX_TOKEN}"
@@ -195,5 +195,20 @@ class JarvisPyClient:
             'embedding_dimensions': embedding_dimensions,
         }
 
+        response = requests.post(url, headers=headers, json=data)
+        return response
+
+    @staticmethod
+    def translate_from_rdf(rdf_data):
+        JARVISPY_URL = config['JARVISPY_URL']
+        
+        url = f"{JARVISPY_URL}/api/v1/translate_rdf_to_vadalog"
+        headers = {
+            'Content-Type': 'application/json',
+        }
+        data = {
+            'rdf_data': rdf_data
+        }
+        
         response = requests.post(url, headers=headers, json=data)
         return response
