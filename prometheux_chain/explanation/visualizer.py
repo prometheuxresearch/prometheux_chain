@@ -19,7 +19,7 @@ Author: Prometheux Limited
 
 def visualize_schema(vada_file_path: str):
     """
-    Reads a Vadalog file, extracts its content, and sends it to the /api/visualize endpoint.
+    Reads a Vadalog file, extracts its content, and sends it to the /api/v1/visualize endpoint.
     Automatically chooses the visualization method based on the environment.
     """
     # Check if JarvisPy is reachable
