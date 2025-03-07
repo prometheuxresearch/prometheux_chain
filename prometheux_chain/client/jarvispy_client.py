@@ -305,3 +305,17 @@ class JarvisPyClient:
         response = requests.post(url, headers=headers, json=data)
         return response
         
+    @staticmethod
+    def translate_from_rdf(rdf_data):
+        JARVISPY_URL = config['JARVISPY_URL']
+        
+        url = f"{JARVISPY_URL}/api/v1/translate_rdf_to_vadalog"
+        headers = {
+            'Content-Type': 'application/json',
+        }
+        data = {
+            'rdf_data': rdf_data
+        }
+        
+        response = requests.post(url, headers=headers, json=data)
+        return response
