@@ -10,7 +10,6 @@ JARVIS_URL: http://localhost:8084
 # Large Language Models
 # =====================
 LLM_API_KEY: None
-LLM_PROVIDER: OpenAI
 LLM_VERSION: gpt-4o
 LLM_TEMPERATURE: 0.50
 LLM_MAX_TOKENS: 2000

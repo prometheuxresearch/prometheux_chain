@@ -11,11 +11,6 @@ Author: Prometheux Limited
 
 
 def validate(text, guardrail):
-    # Check if JarvisPy is reachable
-    if not JarvisPyClient.is_reachable():
-        print("Error: JarvisPy backend is not reachable.")
-        return None
-
     if guardrail is not None:
         if not os.path.exists(guardrail):
             raise Exception(f"Guardrail file '{guardrail}' does not exist.")

@@ -1,5 +1,6 @@
 import os
 from typing import List, Dict
+import json
 
 """
 Vadalog Utility Module
@@ -8,6 +9,26 @@ Copyright (C) Prometheux Limited. All rights reserved.
 
 Author: Prometheux Limited
 """
+
+
+def read_vadalog_file(ontologyPath: str) -> Dict[str, str]:
+    """
+    Reads a Vadalog file and returns its content in a dictionary with the filename as the key.
+
+    Parameters:
+        ontologyPath (str): Path to the .vada file.
+
+    Returns:
+        dict: A dictionary with the filename as the key and file content as the value.
+
+    Raises:
+        Exception: If the file cannot be read.
+    """
+    try:
+        with open(ontologyPath, 'r') as file:
+            return file.read()
+    except IOError as e:
+        raise Exception(f"Error opening file {ontologyPath}: {e}")
 
 
 def process_vadalog_files(vada_file_paths):
@@ -51,14 +72,9 @@ def process_vadalog_files(vada_file_paths):
     for ontologiesPath in ontologiesPaths:
         vadalog_programs_serial_evaluation: List[Dict[str, str]] = []
         for ontologyPath in ontologiesPath:
-            try:
-                with open(ontologyPath, 'r') as file:
-                    file_content = file.read()
-                    filename = os.path.basename(ontologyPath)
-                    vadalog_program_single = {filename: file_content}
-                    vadalog_programs_serial_evaluation.append(vadalog_program_single)
-            except IOError as e:
-                raise Exception(f"Error opening file {ontologyPath}: {e}")
+            vadalog_program_single = read_vadalog_file(ontologyPath)
+            dict_single = {os.path.basename(ontologyPath): vadalog_program_single}
+            vadalog_programs_serial_evaluation.append(dict_single)
         vadalog_programs.append(vadalog_programs_serial_evaluation)
 
     return vadalog_programs
