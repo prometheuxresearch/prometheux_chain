@@ -7,7 +7,7 @@ def infer_from_schema(type, user, password, host, port, database, table=None, qu
         options = {}
     
     schema_inference_payload = SchemaInferencePayload(
-        database_type= type,
+        database_type=type,
         username=user,
         password=password,
         host=host,
