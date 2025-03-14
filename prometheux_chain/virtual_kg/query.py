@@ -36,9 +36,13 @@ def query(virtual_kg, file_path_or_query: str, params=None):
     if response.status_code == 504:
         evaluation_response = {}
     else:
-        evaluation_response = response_json.get("data", {})
+        evaluation_response = response_json.get("data", {}).get('resultSet', {})
 
-    return evaluation_response.get("query_results", [])
+    facts = []
+    for key, value in evaluation_response.items():
+        facts.append(f"{key}({', '.join(str(item) for item in value[0])})")
+
+    return facts
 
 
 def _parse_input(file_path_or_query: str):

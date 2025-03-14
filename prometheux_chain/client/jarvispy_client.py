@@ -307,11 +307,16 @@ class JarvisPyClient:
         
     @staticmethod
     def translate_from_rdf(rdf_data):
-        JARVISPY_URL = config['JARVISPY_URL']
+        jarvispy_url = config['JARVISPY_URL']
+        pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
+
+        if not pmtx_token:
+            raise Exception("PMTX_TOKEN is not set. Please set it in environment variables or config.")
         
-        url = f"{JARVISPY_URL}/api/v1/translate_rdf_to_vadalog"
+        url = f"{jarvispy_url}/api/v1/translate_rdf_to_vadalog"
         headers = {
             'Content-Type': 'application/json',
+            'Authorization': f"Bearer {pmtx_token}"
         }
         data = {
             'rdf_data': rdf_data
