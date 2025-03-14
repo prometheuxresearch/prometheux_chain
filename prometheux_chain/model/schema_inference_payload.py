@@ -1,6 +1,6 @@
 class SchemaInferencePayload:
     
-    def __init__(self, database, username, password, host, port, database_type, table, query, add_bind, options):
+    def __init__(self, database, username, password, host, port, database_type, table, schema, catalog, query, add_bind, options):
         self.database = database
         self.username = username
         self.password = password
@@ -10,6 +10,8 @@ class SchemaInferencePayload:
         self.addBind = add_bind
         self.options = options
         self.table = table
+        self.schema = schema
+        self.catalog = catalog
         self.query = query
     
     def to_dict(self):
@@ -23,6 +25,8 @@ class SchemaInferencePayload:
             'addBind': self.addBind,
             'options': self.options,
             'table': self.table,
+            'schema': self.schema,
+            'catalog': self.catalog,
             'query': self.query
         }
     
@@ -38,6 +42,8 @@ class SchemaInferencePayload:
             add_bind=data['addBind'],
             options=data['options'],
             table=data['table'],
+            schema=data['schema'],
+            catalog=data['catalog'],
             query=data['query']
         )
         return schema_inference_payload
