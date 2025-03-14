@@ -8,30 +8,26 @@ import webbrowser
 
 from prometheux_chain.client.jarvispy_client import JarvisPyClient
 
+
 """
-Knowledge Graph Visualization Module
+Predicate Graph Visualization Module
 
 Copyright (C) Prometheux Limited. All rights reserved.
 
 Author: Prometheux Limited
 """
 
-
-def visualize_schema(vada_file_path: str):
+def visualize_predicate_graph(vada_file_path: str):
     """
     Reads a Vadalog file, extracts its content, and sends it to the /api/v1/visualize endpoint.
     Automatically chooses the visualization method based on the environment.
     """
-    # Check if JarvisPy is reachable
-    if not JarvisPyClient.is_reachable():
-        print("Error: JarvisPy backend is not reachable.")
-        return None
-
     try:
         with open(vada_file_path, 'r') as file:
             file_content = file.read()
 
-        response = JarvisPyClient.visualize(file_content)
+        response = JarvisPyClient.visualize_predicate_graph(file_content)
+
         if response.get('status') == 'success':
             graph_structure = response.get('data')
         else:

@@ -1,7 +1,7 @@
 import requests
 import json
 from ..config import config
-from ..model.SchemaInferencePayload import SchemaInferencePayload
+from ..model.schema_inference_payload import SchemaInferencePayload
 
 class ConstellationBackendClient:
 

@@ -1,10 +1,7 @@
 import time
-import json
+import warnings
 
 from ..client.jarvispy_client import JarvisPyClient
-from ..common.vadalog_utils import process_vadalog_files
-from ..llm.llm_manager import LLMManager
-from ..llm.openai_manager import OpenAIManager
 from ..config import config
 
 """
@@ -16,20 +13,16 @@ Author: Prometheux Limited
 """
 
 
-def rag(question, virtual_kg, vadalog_params=None, measure_time=False, to_explain=True, to_persist=True):
+def rag(question, virtual_kg, measure_time=False, to_explain=False):
     """
     Function to process the user's question and output the results.
     """
-    # Check if JarvisPy is reachable
-    if not JarvisPyClient.is_reachable():
-        print("Error: JarvisPy backend is not reachable.")
-        return None
-
     if not question or not virtual_kg:
         raise Exception("Please provide a question and a virtual knowledge graph.")
 
-    # Process vadalog files into the structured format
-    vadalog_programs = process_vadalog_files(virtual_kg)
+    # Check parameters compatibility
+    if not to_explain:
+        warnings.warn("RAG will be slower but more effective if to_explain is set to True.")
 
     # Measure time if needed
     start_time = time.time() if measure_time else None
@@ -37,10 +30,8 @@ def rag(question, virtual_kg, vadalog_params=None, measure_time=False, to_explai
     # Call JarvisPyClient
     response = JarvisPyClient.rag(
         question=question,
-        vadalog_programs=vadalog_programs,
-        vadalog_params=vadalog_params,
-        to_explain=to_explain,
-        to_persist=to_persist
+        virtual_kg=virtual_kg,
+        to_explain=to_explain
     )
 
     # Print timing info if needed
@@ -49,33 +40,37 @@ def rag(question, virtual_kg, vadalog_params=None, measure_time=False, to_explai
         print(f"RAG completed in {elapsed_time:.2f} seconds.")
 
     # Extract the context from the RAG response
-    rag_result = response.json()
-    context = ""
-    output_facts = rag_result.get("data", {}).get("output_facts", {})
-    context = json.dumps(output_facts, indent=2)
-    
-    # Initialize the LLM manager
-    llm_manager: LLMManager = OpenAIManager(
-            llm_api_key=config.get("LLM_API_KEY"),
-            llm_version=config.get("LLM_VERSION"),
-            llm_temperature=config.get("LLM_TEMPERATURE"),
-            llm_max_tokens=config.get("LLM_MAX_TOKENS")
+    response_json = response.json()
+    data_block = response_json.get("data", {})
+
+    output_facts_and_explanations = data_block.get("output_facts_and_explanations", [])
+    translated_question_rules = data_block.get("translated_question_rules", "")
+    top_retrieved_facts = data_block.get("top_retrieved_facts", "")
+    predicates_and_models = data_block.get("predicates_and_models", "")
+
+    # Build just the minimal "facts_and_explanations" structure for the chat call
+    facts_explanations_only = []
+    for item in output_facts_and_explanations:
+        facts_explanations_only.append({
+            "fact": item.get("fact"),
+            "textual_explanation": item.get("textual_explanation")
+        })
+
+
+    # TODO: handle "structured_explanation" (JSON) for better visualization if needed
+
+    # Call the chat function
+    chat_response = JarvisPyClient.chat(
+        question=question,
+        facts_and_explanations=facts_explanations_only,
+        translated_question_rules=translated_question_rules,
+        top_retrieved_facts=top_retrieved_facts,
+        predicates_and_models=predicates_and_models,
+        to_explain=to_explain
     )
 
-    # Build the system prompt
-    system_prompt = f"""
-    You are a helpful assistant. Your job is to answer questions based on the provided context.
-    If the context does not contain the answer, you must say "I am sorry, I do not know the answer to that question. Do not refer explicitly to having received the context."
-    """
-
-    # Build the user prompt
-    user_prompt = f"""
-    Answer the following question based on the provided context.
-    Question: {question}
-    Context: {context}
-    """
+    if chat_response.status_code != 200:
+        return None
     
-    # Call the LLM manager to generate the response
-    response = llm_manager.send_request(system_prompt, user_prompt)
-
-    return response
+    # Return the response
+    return chat_response.json().get("data", {}).get("answer", "")
