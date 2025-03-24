@@ -1,2 +1,3 @@
 include ReadMe.md
+include version.txt
 recursive-include prometheux_chain *.yaml
