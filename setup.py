@@ -18,7 +18,8 @@ setup(
         "pandas",
         "networkx",
         "pyvis",
-        "ipycytoscape"
+        "ipycytoscape",
+        "matplotlib"
     ],
     package_data={
         'prometheux_chain': ['config.yaml'],
