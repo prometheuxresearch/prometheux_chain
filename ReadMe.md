@@ -34,6 +34,11 @@ source myenv/bin/activate  # On Windows: myenv\Scripts\activate
 ```bash
 pip install git+https://github.com/prometheuxresearch/prometheux_chain.git
 ````
+or via pip
+
+```
+pip install prometheux_chain
+```
 
 ## Usage 
 
