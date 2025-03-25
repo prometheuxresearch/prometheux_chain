@@ -3,7 +3,6 @@
 # =====================
 JARVISPY_URL: http://localhost:8000
 PMTX_TOKEN: YOUR_PMTX_TOKEN
-DATA_MANAGER_URL: http://localhost:8085
 JARVIS_URL: http://localhost:8084
 
 # =====================
