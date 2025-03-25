@@ -1,27 +1,10 @@
 from ..client.constellation_backend_client import ConstellationBackendClient
-from ..model.schema_inference_payload import SchemaInferencePayload
+from ..model.database import Database
 import requests
 
-def infer_from_schema(type, user, password, host, port, database, table=None, schema=None, catalog=None, query=None, add_bind=False, options=None):
-    if options is None:
-        options = {}
-    
-    schema_inference_payload = SchemaInferencePayload(
-        database_type=type,
-        username=user,
-        password=password,
-        host=host,
-        port=port,
-        database=database,
-        table=table,
-        schema=schema,
-        catalog=catalog,
-        query=query,
-        add_bind=add_bind,
-        options=options,
-    )
+def infer_schema(database:Database, add_bind=True, add_model=False):
     try:
-        response = ConstellationBackendClient.infer_from_schema(schema_inference_payload)
+        response = ConstellationBackendClient.infer_schema(database, add_bind, add_model)
         if response.status_code == 200:
             return response.json()['data']
         else:

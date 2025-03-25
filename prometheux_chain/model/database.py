@@ -1,30 +1,28 @@
-class SchemaInferencePayload:
+class Database:
     
-    def __init__(self, database, username, password, host, port, database_type, table, schema, catalog, query, add_bind, options):
-        self.database = database
+    def __init__(self, database_type, username, password, host, port, database_name, tables=None, schema=None, catalog=None, query=None, options=None):
+        self.database_type = database_type
         self.username = username
         self.password = password
         self.host = host
         self.port = port
-        self.databaseType = database_type
-        self.addBind = add_bind
+        self.database_name = database_name
         self.options = options
-        self.table = table
+        self.tables = tables
         self.schema = schema
         self.catalog = catalog
         self.query = query
     
     def to_dict(self):
         return {
-            'database': self.database,
+            'databaseType': self.database_type,
             'username': self.username,
             'password': self.password,
             'host': self.host,
             'port': self.port,
-            'databaseType': self.databaseType,
-            'addBind': self.addBind,
+            'databaseName': self.database_name,
             'options': self.options,
-            'table': self.table,
+            'tables': self.tables,
             'schema': self.schema,
             'catalog': self.catalog,
             'query': self.query
@@ -33,15 +31,14 @@ class SchemaInferencePayload:
     @classmethod
     def from_dict(cls, data):
         schema_inference_payload = cls(
-            database=data['database'],
+            database_name=data['databaseName'],
             username="***",
             password="***",
             host=data['host'],
             port=data['port'],
             database_type=data['databaseType'],
-            add_bind=data['addBind'],
             options=data['options'],
-            table=data['table'],
+            tables=data['tables'],
             schema=data['schema'],
             catalog=data['catalog'],
             query=data['query']
