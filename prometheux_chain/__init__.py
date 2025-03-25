@@ -9,7 +9,7 @@ from .visualization.kg_schema_visualization import visualize_kg_schema
 from .llm.validate import validate
 from .llm.rag import rag
 from .llm.translate import translate
+from .translation.translate_from_rdf import translate_from_rdf
 # from .llm.chat import chat
-from .translator.schema_translator import infer_schema
-from .translator.rdf_translator import translate_from_rdf
+from .translation.infer_schema import infer_schema
 from .analytics.all_pairs_join import all_pairs_join
