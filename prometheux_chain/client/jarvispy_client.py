@@ -42,7 +42,7 @@ class JarvisPyClient:
         if not pmtx_token:
             raise Exception("PMTX_TOKEN is not set. Please set it in env variables or config.")
         
-        url = f"{jarvispy_url}/api/v1/save"
+        url = f"{jarvispy_url}/api/v1/save-kg"
         headers = {
             'Authorization': f"Bearer {pmtx_token}",
             'Content-Type': 'application/json'
