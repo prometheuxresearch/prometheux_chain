@@ -10,7 +10,7 @@ Author: Prometheux Limited
 
 
 
-def cleanup(virtual_kg=None):
+def cleanup_kg(virtual_kg=None):
     """
     Cleanup Virtual KG resources for the user.
     If `virtual_kg` is provided, it only cleans up resources for that KG.
@@ -27,7 +27,8 @@ def cleanup(virtual_kg=None):
     else:
         print(delete_virtual_kg_resource_response.json().get('message', 'Unknown error'))
 
-def save(virtual_kg):
+
+def save_kg(virtual_kg):
     """
     Save a virtual knowledge graph.
     """
@@ -56,7 +57,8 @@ def list_kgs():
     else:
         raise Exception(f"An exception occurred during listing knowledge graphs: {response.get('message', 'Unknown error')}")
 
-def load(kg_id):
+
+def load_kg(kg_id):
     """
     Load a knowledge graph by its ID.
     """
@@ -71,5 +73,55 @@ def load(kg_id):
         return response.get('data', None)
     else:
         raise Exception(f"An exception occurred during loading knowledge graph: {response.get('message', 'Unknown error')}")
+
+
+def load_kg_chat(kg_id):
+    """
+    Load chat interactions for a specific knowledge graph by its ID.
+    """
+    response = JarvisPyClient.load_kg_chat(kg_id)
+
+    # Handle response
+    if response.get('status') != 'success':
+        msg = response.get('message', 'Unknown error')
+        raise Exception(f"An exception occurred during loading chat interactions: {msg}")
+    
+    if response.get('status') == 'success':
+        return response.get('data', [])
+    else:
+        raise Exception(f"An exception occurred during loading chat interactions: {response.get('message', 'Unknown error')}")
+
+
+def cleanup_kg_chat(kg_id, chat_ids=None):
+    """
+    Cleanup chat interactions for a specific knowledge graph.
+    If `chat_ids` is provided, it only cleans up those specific chat interactions.
+    If `chat_ids` is None, it cleans up all chat interactions for the knowledge graph.
+    """
+    response = JarvisPyClient.cleanup_kg_chat(kg_id, chat_ids)
+
+    if response.status_code != 200:
+        msg = response.json().get('message', 'Unknown error')
+        raise Exception(f"HTTP error! status: {response.status_code}, detail: {msg}")
+    else:
+        print(response.json().get('message', 'Unknown error'))
+
+
+def save_kg_chat(kg_id, prompt, response_text):
+    """
+    Save a chat interaction for a specific knowledge graph.
+    Returns the chat_id of the saved interaction.
+    """
+    response = JarvisPyClient.save_kg_chat(kg_id, prompt, response_text)
+
+    # Handle response
+    if response.get('status') != 'success':
+        msg = response.get('message', 'Unknown error')
+        raise Exception(f"An exception occurred while saving chat interaction: {msg}")
+    
+    if response.get('status') == 'success':
+        return response.get('data', {}).get('chat_id')
+    else:
+        raise Exception(f"An exception occurred while saving chat interaction: {response.get('message', 'Unknown error')}")
 
 

@@ -410,3 +410,65 @@ class JarvisPyClient:
 
         response = requests.post(url, headers=headers, json=payload)
         return response
+
+    @staticmethod
+    def load_kg_chat(kg_id):
+        jarvispy_url = config['JARVISPY_URL']
+        pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
+
+        if not pmtx_token:
+            raise Exception("PMTX_TOKEN is not set. Please set it in environment variables or config.")
+        
+        url = f"{jarvispy_url}/api/v1/load-kg-chat"
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f"Bearer {pmtx_token}"
+        }
+        
+        response = requests.post(url, headers=headers, json=kg_id)
+        return response.json()
+    
+    @staticmethod
+    def cleanup_kg_chat(kg_id, chat_ids=None):
+        jarvispy_url = config['JARVISPY_URL']
+        pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
+
+        if not pmtx_token:
+            raise Exception("PMTX_TOKEN is not set. Please set it in environment variables or config.")
+        
+        url = f"{jarvispy_url}/api/v1/cleanup-kg-chat"
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f"Bearer {pmtx_token}"
+        }
+        
+        payload = {
+            'kg_id': kg_id,
+            'chat_ids': chat_ids
+        }
+        
+        response = requests.post(url, headers=headers, json=payload)
+        return response
+    
+    @staticmethod
+    def save_kg_chat(kg_id, prompt, response_text):
+        jarvispy_url = config['JARVISPY_URL']
+        pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
+
+        if not pmtx_token:
+            raise Exception("PMTX_TOKEN is not set. Please set it in environment variables or config.")
+        
+        url = f"{jarvispy_url}/api/v1/save-kg-chat"
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f"Bearer {pmtx_token}"
+        }
+        
+        payload = {
+            'kg_id': kg_id,
+            'prompt': prompt,
+            'response': response_text
+        }
+        
+        response = requests.post(url, headers=headers, json=payload)
+        return response.json()
