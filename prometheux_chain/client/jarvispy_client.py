@@ -125,11 +125,6 @@ class JarvisPyClient:
 
         if not pmtx_token:
             raise Exception("PMTX_TOKEN is not set. Please set it in the environment variables or config.")
-        
-        # Additional LLM-related config
-        llm_api_key = None
-        embedding_model_version = None
-        embedding_dimensions = None
 
         url = f"{jarvispy_url}/api/v1/reason"
         payload = {
@@ -138,9 +133,14 @@ class JarvisPyClient:
             'to_explain': to_explain,
             'to_persist': to_persist,
             'to_embed': to_embed,
-            'embedding_api_key': llm_api_key,
-            'embedding_model_version': embedding_model_version,
-            'embedding_dimensions': embedding_dimensions
+            'embedding_config': {
+                'embedding_provider': config.get("EMBEDDING_PROVIDER"),
+                'embedding_api_key': config.get("EMBEDDING_API_KEY"),
+                'embedding_version': config.get("EMBEDDING_VERSION"),
+                'embedding_dimensions': config.get("EMBEDDING_DIMENSIONS"),
+                'azure_embedding_endpoint': config.get("AZURE_EMBEDDING_ENDPOINT"),
+                'azure_embedding_api_version': config.get("AZURE_EMBEDDING_API_VERSION")
+            }
         }
 
         headers = {
@@ -239,12 +239,6 @@ class JarvisPyClient:
         if not pmtx_token:
             raise Exception("PMTX_TOKEN is not set. Please set it in environment variables or config.")
 
-        # Additional LLM-related config
-        llm_api_key = config.get('LLM_API_KEY', None)
-        llm_version = config.get('LLM_VERSION', 'gpt-4o')
-        llm_temperature = config.get('LLM_TEMPERATURE', 0.50)
-        llm_max_tokens = config.get('LLM_MAX_TOKENS', 2000)
-
         url = f"{jarvispy_url}/api/v1/validate"
         headers = {
             'Content-Type': 'application/json',
@@ -253,10 +247,15 @@ class JarvisPyClient:
         payload = {
             'text': text,
             'guardrail_program': guardrail_program,
-            'llm_api_key': llm_api_key,
-            'llm_version': llm_version,
-            'llm_temperature': llm_temperature,
-            'llm_max_tokens': llm_max_tokens
+            'llm_config': {
+                'llm_provider': config.get("LLM_PROVIDER"),
+                'llm_api_key': config.get("LLM_API_KEY"),
+                'llm_version': config.get("LLM_VERSION"),
+                'llm_temperature': config.get("LLM_TEMPERATURE"),
+                'llm_max_tokens': config.get("LLM_MAX_TOKENS"),
+                'azure_llm_endpoint': config.get("AZURE_LLM_ENDPOINT"),
+                'azure_llm_api_version': config.get("AZURE_LLM_API_VERSION")
+            }
         }
 
         response = requests.post(url, headers=headers, json=payload)
@@ -273,11 +272,6 @@ class JarvisPyClient:
         if not pmtx_token:
             raise Exception("PMTX_TOKEN is not set. Please set it in environment variables or config.")
 
-        # Additional LLM-related config
-        llm_api_key = None
-        embedding_model_version = None
-        embedding_dimensions = None
-
         url = f"{jarvispy_url}/api/v1/rag"
         headers = {
             'Content-Type': 'application/json',
@@ -287,23 +281,31 @@ class JarvisPyClient:
             'question': question,
             'virtual_kg': virtual_kg,
             'to_explain': to_explain,
-            'llm_api_key': llm_api_key,
-            'embedding_model_version': embedding_model_version,
-            'embedding_dimensions': embedding_dimensions
+            'embedding_config': {
+                'embedding_provider': config.get("EMBEDDING_PROVIDER"),
+                'embedding_api_key': config.get("EMBEDDING_API_KEY"),
+                'embedding_model_version': config.get("EMBEDDING_VERSION"),
+                'embedding_dimensions': config.get("EMBEDDING_DIMENSIONS"),
+                'azure_embedding_endpoint': config.get("AZURE_EMBEDDING_ENDPOINT"),
+                'azure_embedding_api_version': config.get("AZURE_EMBEDDING_API_VERSION")
+            }
         }
-
         response = requests.post(url, headers=headers, json=payload)
         return response
     
     @staticmethod
-    def chat(question, facts_and_explanations, translated_question_rules, top_retrieved_facts, predicates_and_models, to_explain):
+    def chat(question = None, facts_and_explanations = None, translated_question_rules = None, top_retrieved_facts = None, predicates_and_models = None, to_explain = None, stream = False):
         jarvispy_url = config['JARVISPY_URL']
         pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
 
         if not pmtx_token:
             raise Exception("PMTX_TOKEN is not set. Please set it in environment variables or config.")
+                
+        if stream:
+            url = f"{jarvispy_url}/api/v1/chat/stream"
+        else:
+            url = f"{jarvispy_url}/api/v1/chat"
 
-        url = f"{jarvispy_url}/api/v1/chat"
         headers = {
             'Content-Type': 'application/json',
             'Authorization': f"Bearer {pmtx_token}"
@@ -315,11 +317,15 @@ class JarvisPyClient:
             "top_retrieved_facts": top_retrieved_facts,
             "predicates_and_models": predicates_and_models,
             "to_explain": to_explain,
-            "llm_api_key": None,
-            "llm_version": None,
-            "llm_temperature": None,
-            "llm_max_tokens": None
+            "llm_config": {
+                "llm_provider": config.get("LLM_PROVIDER"),
+                "llm_api_key": config.get("LLM_API_KEY"),
+                "llm_version": config.get("LLM_VERSION"),
+                "llm_temperature": config.get("LLM_TEMPERATURE"),
+                "llm_max_tokens": config.get("LLM_MAX_TOKENS")
+            }
         }
+
         response = requests.post(url, headers=headers, json=payload)
         return response
     
@@ -338,10 +344,6 @@ class JarvisPyClient:
         }
         payload = {
             "domain_knowledge": domain_knowledge,
-            "llm_api_key": config.get("LLM_API_KEY"),
-            "llm_version": config.get("LLM_VERSION"),
-            "llm_temperature": config.get("LLM_TEMPERATURE"),
-            "llm_max_tokens": config.get("LLM_MAX_TOKENS")
         }
         response = requests.post(url, headers=headers, json=payload)
         return response
@@ -408,3 +410,65 @@ class JarvisPyClient:
 
         response = requests.post(url, headers=headers, json=payload)
         return response
+
+    @staticmethod
+    def load_kg_chat(kg_id):
+        jarvispy_url = config['JARVISPY_URL']
+        pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
+
+        if not pmtx_token:
+            raise Exception("PMTX_TOKEN is not set. Please set it in environment variables or config.")
+        
+        url = f"{jarvispy_url}/api/v1/load-kg-chat"
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f"Bearer {pmtx_token}"
+        }
+        
+        response = requests.post(url, headers=headers, json=kg_id)
+        return response.json()
+    
+    @staticmethod
+    def cleanup_kg_chat(kg_id, chat_ids=None):
+        jarvispy_url = config['JARVISPY_URL']
+        pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
+
+        if not pmtx_token:
+            raise Exception("PMTX_TOKEN is not set. Please set it in environment variables or config.")
+        
+        url = f"{jarvispy_url}/api/v1/cleanup-kg-chat"
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f"Bearer {pmtx_token}"
+        }
+        
+        payload = {
+            'kg_id': kg_id,
+            'chat_ids': chat_ids
+        }
+        
+        response = requests.post(url, headers=headers, json=payload)
+        return response
+    
+    @staticmethod
+    def save_kg_chat(kg_id, prompt, response_text):
+        jarvispy_url = config['JARVISPY_URL']
+        pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
+
+        if not pmtx_token:
+            raise Exception("PMTX_TOKEN is not set. Please set it in environment variables or config.")
+        
+        url = f"{jarvispy_url}/api/v1/save-kg-chat"
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f"Bearer {pmtx_token}"
+        }
+        
+        payload = {
+            'kg_id': kg_id,
+            'prompt': prompt,
+            'response': response_text
+        }
+        
+        response = requests.post(url, headers=headers, json=payload)
+        return response.json()
