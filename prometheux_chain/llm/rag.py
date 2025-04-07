@@ -3,6 +3,7 @@ import warnings
 
 from ..client.jarvispy_client import JarvisPyClient
 from ..config import config
+from ..virtual_kg.manage import save_kg_chat
 
 """
 Reasoning-Augmented Generation Module
@@ -72,5 +73,10 @@ def rag(question, virtual_kg, measure_time=False, to_explain=False):
     if chat_response.status_code != 200:
         return None
     
+    chat_response = chat_response.json().get("data", {}).get("answer", "")
+    
+    # Save the chat prompt and response to the KG
+    JarvisPyClient.save_kg_chat(virtual_kg, question, chat_response)
+
     # Return the response
-    return chat_response.json().get("data", {}).get("answer", "")
+    return chat_response
