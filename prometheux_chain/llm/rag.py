@@ -76,7 +76,7 @@ def rag(question, virtual_kg, measure_time=False, to_explain=False):
     chat_response = chat_response.json().get("data", {}).get("answer", "")
     
     # Save the chat prompt and response to the KG
-    JarvisPyClient.save_kg_chat(virtual_kg, question, chat_response)
+    JarvisPyClient.save_kg_chat(virtual_kg["id"], question, chat_response)
 
     # Return the response
     return chat_response
