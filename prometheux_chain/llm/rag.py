@@ -73,10 +73,5 @@ def rag(question, virtual_kg, measure_time=False, to_explain=False):
     if chat_response.status_code != 200:
         return None
     
-    chat_response = chat_response.json().get("data", {}).get("answer", "")
-    
-    # Save the chat prompt and response to the KG
-    JarvisPyClient.save_kg_chat(virtual_kg["id"], question, chat_response)
-
     # Return the response
-    return chat_response
+    return chat_response.json().get("data", {}).get("answer", "")
