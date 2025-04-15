@@ -13,7 +13,7 @@ Author: Prometheux Limited
 """
 
 
-def reason(vadalog_file_paths, vadalog_params={}, measure_time=False, to_explain=False, to_persist=False, to_embed=False):
+def reason(vadalog_file_paths, vadalog_params={}, measure_time=False, to_explain=False, to_persist=False, to_embed=False, scope="user"):
     # Check parameters compatibility
     if not to_explain and to_embed:
         warnings.warn("Embedding will be less effective if to_explain is set to False.")
@@ -30,7 +30,8 @@ def reason(vadalog_file_paths, vadalog_params={}, measure_time=False, to_explain
         vadalog_params=vadalog_params,
         to_explain=to_explain,
         to_persist=to_persist,
-        to_embed=to_embed
+        to_embed=to_embed,
+        scope=scope
     )
 
     # Handle response codes
