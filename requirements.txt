@@ -6,4 +6,4 @@ pyvis
 ipycytoscape
 networkx
 openai
-matplotlib
+python-jose

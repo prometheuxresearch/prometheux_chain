@@ -16,7 +16,7 @@ Author: Prometheux Limited
 class JarvisPyClient:
 
     @staticmethod
-    def cleanup(virtual_kg=None):
+    def cleanup(virtual_kg_id=None, scope=None):
         jarvispy_url = config['JARVISPY_URL']
         pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
 
@@ -24,18 +24,16 @@ class JarvisPyClient:
             raise Exception("PMTX_TOKEN is not set. Please set it in env variables or config.")
 
         url = f"{jarvispy_url}/api/v1/cleanup"
+        payload = {'virtual_kg': {'id': virtual_kg_id, 'scope': scope}}
         headers = {
             'Authorization': f"Bearer {pmtx_token}",
             'Content-Type': 'application/json'
         }
-        if virtual_kg:
-            response = requests.post(url, headers=headers, json=virtual_kg)
-        else:
-            response = requests.post(url, headers=headers)
+        response = requests.post(url, headers=headers, json=payload)
         return response
     
     @staticmethod
-    def save(virtual_kg):
+    def save_kg(virtual_kg):
         jarvispy_url = config['JARVISPY_URL']
         pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
 
@@ -43,15 +41,16 @@ class JarvisPyClient:
             raise Exception("PMTX_TOKEN is not set. Please set it in env variables or config.")
         
         url = f"{jarvispy_url}/api/v1/save-kg"
+        payload = {'virtual_kg': virtual_kg}
         headers = {
             'Authorization': f"Bearer {pmtx_token}",
             'Content-Type': 'application/json'
         }
-        response = requests.post(url, headers=headers, json=virtual_kg)
+        response = requests.post(url, headers=headers, json=payload)
         return response
 
     @staticmethod
-    def list_kgs():
+    def list_kgs(scopes):
         jarvispy_url = config['JARVISPY_URL']
         pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
 
@@ -63,11 +62,14 @@ class JarvisPyClient:
             'Authorization': f"Bearer {pmtx_token}",
             'Content-Type': 'application/json'
         }
-        response = requests.get(url, headers=headers)
+        payload = {
+            'scopes': scopes
+        }
+        response = requests.post(url, headers=headers, json=payload)
         return response.json()
 
     @staticmethod
-    def load(kg_id):
+    def load_kg(kg_id, scope):
         jarvispy_url = config['JARVISPY_URL']
         pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
 
@@ -75,11 +77,17 @@ class JarvisPyClient:
             raise Exception("PMTX_TOKEN is not set. Please set it in env variables or config.")
         
         url = f"{jarvispy_url}/api/v1/load-kg"
+        payload = {
+            'virtual_kg': {
+                'id': kg_id,
+                'scope': scope
+            }
+        }
         headers = {
             'Authorization': f"Bearer {pmtx_token}",
             'Content-Type': 'application/json'
         }
-        response = requests.post(url, headers=headers, json=kg_id)
+        response = requests.post(url, headers=headers, json=payload)
         return response.json()
     
     @staticmethod
@@ -119,7 +127,7 @@ class JarvisPyClient:
         return response_json
 
     @staticmethod
-    def reason(vadalog_programs, vadalog_params, to_explain, to_persist, to_embed):
+    def reason(vadalog_programs, vadalog_params, to_explain, to_persist, to_embed, scope):
         jarvispy_url = config['JARVISPY_URL']
         pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN'))
 
@@ -140,7 +148,8 @@ class JarvisPyClient:
                 'embedding_dimensions': config.get("EMBEDDING_DIMENSIONS"),
                 'azure_embedding_endpoint': config.get("AZURE_EMBEDDING_ENDPOINT"),
                 'azure_embedding_api_version': config.get("AZURE_EMBEDDING_API_VERSION")
-            }
+            },
+            'scope': scope
         }
 
         headers = {
@@ -410,48 +419,9 @@ class JarvisPyClient:
 
         response = requests.post(url, headers=headers, json=payload)
         return response
-
-    @staticmethod
-    def load_kg_chat(kg_id):
-        jarvispy_url = config['JARVISPY_URL']
-        pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
-
-        if not pmtx_token:
-            raise Exception("PMTX_TOKEN is not set. Please set it in environment variables or config.")
-        
-        url = f"{jarvispy_url}/api/v1/load-kg-chat"
-        headers = {
-            'Content-Type': 'application/json',
-            'Authorization': f"Bearer {pmtx_token}"
-        }
-        
-        response = requests.post(url, headers=headers, json=kg_id)
-        return response.json()
     
     @staticmethod
-    def cleanup_kg_chat(kg_id, chat_ids=None):
-        jarvispy_url = config['JARVISPY_URL']
-        pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
-
-        if not pmtx_token:
-            raise Exception("PMTX_TOKEN is not set. Please set it in environment variables or config.")
-        
-        url = f"{jarvispy_url}/api/v1/cleanup-kg-chat"
-        headers = {
-            'Content-Type': 'application/json',
-            'Authorization': f"Bearer {pmtx_token}"
-        }
-        
-        payload = {
-            'kg_id': kg_id,
-            'chat_ids': chat_ids
-        }
-        
-        response = requests.post(url, headers=headers, json=payload)
-        return response
-    
-    @staticmethod
-    def save_kg_chat(kg_id, prompt, response_text):
+    def save_kg_chat(kg_id, scope, prompt, response_text):
         jarvispy_url = config['JARVISPY_URL']
         pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
 
@@ -465,9 +435,159 @@ class JarvisPyClient:
         }
         
         payload = {
-            'kg_id': kg_id,
-            'prompt': prompt,
-            'response': response_text
+            'virtual_kg': {
+                'id': kg_id,
+                'scope': scope
+            },
+            'chat': {
+                'prompt': prompt,
+                'response': response_text
+            }
+        }
+        
+        response = requests.post(url, headers=headers, json=payload)
+        return response.json()
+
+    @staticmethod
+    def load_kg_chat(kg_id, scope):
+        jarvispy_url = config['JARVISPY_URL']
+        pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
+
+        if not pmtx_token:
+            raise Exception("PMTX_TOKEN is not set. Please set it in environment variables or config.")
+        
+        url = f"{jarvispy_url}/api/v1/load-kg-chat"
+        payload = {
+            'virtual_kg': {
+                'id': kg_id,
+                'scope': scope
+            }
+        }
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f"Bearer {pmtx_token}"
+        }
+        
+        response = requests.post(url, headers=headers, json=payload)
+        return response.json()
+    
+    @staticmethod
+    def cleanup_kg_chat(kg_id, scope, chat_ids=None):
+        jarvispy_url = config['JARVISPY_URL']
+        pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
+
+        if not pmtx_token:
+            raise Exception("PMTX_TOKEN is not set. Please set it in environment variables or config.")
+        
+        url = f"{jarvispy_url}/api/v1/cleanup-kg-chat"
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f"Bearer {pmtx_token}"
+        }
+        
+        payload = {
+            'virtual_kg': {
+                'id': kg_id,
+                'scope': scope
+            },
+            'chat_ids': chat_ids
+        }
+        
+        response = requests.post(url, headers=headers, json=payload)
+        return response
+    
+    @staticmethod
+    def save_kg_query(kg_id, scope, query):
+        jarvispy_url = config['JARVISPY_URL']
+        pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
+
+        if not pmtx_token:
+            raise Exception("PMTX_TOKEN is not set. Please set it in environment variables or config.")
+        
+        url = f"{jarvispy_url}/api/v1/save-kg-query"
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f"Bearer {pmtx_token}"
+        }
+
+        payload = {
+            'virtual_kg': {
+                'id': kg_id,
+                'scope': scope
+            },
+            'query': {
+                'query_id': None,
+                'query_logic': query
+            }
+        }
+        
+        response = requests.post(url, headers=headers, json=payload)    
+        return response.json()
+    
+    @staticmethod
+    def load_kg_queries(kg_id, scope):
+        jarvispy_url = config['JARVISPY_URL']
+        pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', '')) 
+
+        if not pmtx_token:
+            raise Exception("PMTX_TOKEN is not set. Please set it in environment variables or config.")
+        
+        url = f"{jarvispy_url}/api/v1/load-kg-queries"
+        payload = {
+            'virtual_kg': {
+                'id': kg_id,
+                'scope': scope
+            }
+        }
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f"Bearer {pmtx_token}"
+        }
+
+        response = requests.post(url, headers=headers, json=payload)
+        return response.json()
+    
+    @staticmethod
+    def cleanup_kg_queries(kg_id, scope, query_ids=None):
+        jarvispy_url = config['JARVISPY_URL']
+        pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
+
+        if not pmtx_token:
+            raise Exception("PMTX_TOKEN is not set. Please set it in environment variables or config.")
+        
+        url = f"{jarvispy_url}/api/v1/cleanup-kg-queries"
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f"Bearer {pmtx_token}" 
+        }
+        
+        payload = {
+            'virtual_kg': {
+                'id': kg_id,
+                'scope': scope
+            },
+            'query_ids': query_ids
+        }   
+        
+        response = requests.post(url, headers=headers, json=payload)
+        return response
+    
+    @staticmethod
+    def kg_overview(virtual_kg):
+        jarvispy_url = config['JARVISPY_URL']
+        pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
+
+        if not pmtx_token:
+            raise Exception("PMTX_TOKEN is not set. Please set it in environment variables or config.")
+        
+        url = f"{jarvispy_url}/api/v1/kg-overview"
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f"Bearer {pmtx_token}"
+        }
+        
+        payload = {
+            'virtual_kg': virtual_kg
         }
         
         response = requests.post(url, headers=headers, json=payload)

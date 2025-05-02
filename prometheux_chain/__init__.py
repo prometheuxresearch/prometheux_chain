@@ -6,6 +6,9 @@ from .virtual_kg.manage import cleanup_kg
 from .virtual_kg.manage import save_kg_chat
 from .virtual_kg.manage import load_kg_chat
 from .virtual_kg.manage import cleanup_kg_chat
+from .virtual_kg.manage import save_kg_query
+from .virtual_kg.manage import load_kg_queries
+from .virtual_kg.manage import cleanup_kg_queries
 from .virtual_kg.compile import compile
 from .virtual_kg.reason import reason
 from .virtual_kg.query import query
@@ -19,3 +22,4 @@ from .llm.chat import chat
 from .translation.translate_from_rdf import translate_from_rdf
 from .analytics.infer_schema import infer_schema
 from .analytics.all_pairs_join import all_pairs_join
+from .analytics.kg_overview import kg_overview

@@ -29,6 +29,7 @@ def query(virtual_kg, file_path_or_query: str, params=None):
 
     # Handle response codes
     response_json = response.json()
+
     if response.status_code not in (200, 504):
         msg = response_json.get('message', 'Unknown error')
         raise Exception(f"An exception occurred during querying: {msg}")
@@ -39,8 +40,9 @@ def query(virtual_kg, file_path_or_query: str, params=None):
         evaluation_response = response_json.get("data", {}).get('resultSet', {})
 
     facts = []
-    for key, value in evaluation_response.items():
-        facts.append(f"{key}({', '.join(str(item) for item in value[0])})")
+    for result_set_key, result_set_values in evaluation_response.items():
+        for value in result_set_values:
+            facts.append(f"{result_set_key}({', '.join(str(item) for item in value)})")
 
     return facts
 
