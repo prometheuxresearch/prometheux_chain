@@ -9,6 +9,13 @@ from .virtual_kg.manage import cleanup_kg_chat
 from .virtual_kg.manage import save_kg_query
 from .virtual_kg.manage import load_kg_queries
 from .virtual_kg.manage import cleanup_kg_queries
+from .virtual_kg.manage import load_kg_notebooks
+from .virtual_kg.manage import save_kg_notebook
+from .virtual_kg.manage import cleanup_kg_notebooks
+from .virtual_kg.manage import load_kg_cells
+from .virtual_kg.manage import save_kg_cell
+from .virtual_kg.manage import run_kg_cell
+from .virtual_kg.manage import cleanup_kg_cells
 from .virtual_kg.compile import compile
 from .virtual_kg.reason import reason
 from .virtual_kg.query import query
