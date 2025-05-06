@@ -3,7 +3,6 @@ import warnings
 
 from ..client.jarvispy_client import JarvisPyClient
 from ..config import config
-from ..virtual_kg.manage import save_kg_chat
 
 """
 Reasoning-Augmented Generation Module
