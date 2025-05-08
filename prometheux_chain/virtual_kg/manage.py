@@ -182,12 +182,12 @@ def load_kg_notebooks(virtual_kg):
         raise Exception(f"An exception occurred during loading notebooks: {response.get('message', 'Unknown error')}")
 
 
-def save_kg_notebook(virtual_kg, notebook):
+def save_kg_notebook(virtual_kg, notebook_name, notebook_id = None):
     """
     Save a notebook for a specific knowledge graph.
     Returns the notebook_id of the saved notebook.
     """
-    response = JarvisPyClient.save_kg_notebook(virtual_kg, notebook)
+    response = JarvisPyClient.save_kg_notebook(virtual_kg, notebook_id, notebook_name)
 
     if response.get('status') != 'success':
         msg = response.get('message', 'Unknown error')
@@ -230,12 +230,12 @@ def load_kg_cells(virtual_kg, notebook_id):
         raise Exception(f"An exception occurred during loading cells: {response.get('message', 'Unknown error')}")
 
 
-def save_kg_cell(virtual_kg, cell):
+def save_kg_cell(virtual_kg, notebook_id, cell_content, cell_position=1, cell_id=None):
     """
     Save a cell for a specific notebook.
     Returns the cell_id of the saved cell.
     """
-    response = JarvisPyClient.save_kg_cell(virtual_kg, cell)
+    response = JarvisPyClient.save_kg_cell(virtual_kg, notebook_id, cell_id, cell_content, cell_position)
 
     if response.get('status') != 'success':
         msg = response.get('message', 'Unknown error')
@@ -247,19 +247,19 @@ def save_kg_cell(virtual_kg, cell):
         raise Exception(f"An exception occurred while saving cell: {response.get('message', 'Unknown error')}")
 
 
-def run_kg_cell(virtual_kg, cell):
+def run_kg_cell(virtual_kg, notebook_id, cell_content, cell_position=1, cell_id=None):
     """
     Execute a cell in a notebook.
     Returns the cell_id of the executed cell.
     """
-    response = JarvisPyClient.run_kg_cell(virtual_kg, cell)
+    response = JarvisPyClient.run_kg_cell(virtual_kg, notebook_id, cell_content, cell_position, cell_id)
 
     if response.get('status') != 'success':
         msg = response.get('message', 'Unknown error')
         raise Exception(f"An exception occurred while executing cell: {msg}")
     
     if response.get('status') == 'success':
-        return response.get('data', {}).get('cell_id')
+        return response.get('data', {})
     else:
         raise Exception(f"An exception occurred while executing cell: {response.get('message', 'Unknown error')}")
 
