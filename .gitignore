@@ -142,3 +142,5 @@ myvenv
 # Others
 .DS_Store
 Thumbs.db
+
+prometheux_chain/config.yaml

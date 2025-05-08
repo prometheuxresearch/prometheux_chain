@@ -9,6 +9,13 @@ from .virtual_kg.manage import cleanup_kg_chat
 from .virtual_kg.manage import save_kg_query
 from .virtual_kg.manage import load_kg_queries
 from .virtual_kg.manage import cleanup_kg_queries
+from .virtual_kg.manage import load_kg_notebooks
+from .virtual_kg.manage import save_kg_notebook
+from .virtual_kg.manage import cleanup_kg_notebooks
+from .virtual_kg.manage import load_kg_cells
+from .virtual_kg.manage import save_kg_cell
+from .virtual_kg.manage import run_kg_cell
+from .virtual_kg.manage import cleanup_kg_cells
 from .virtual_kg.compile import compile
 from .virtual_kg.reason import reason
 from .virtual_kg.query import query
@@ -20,6 +27,9 @@ from .llm.rag import rag
 from .llm.translate import translate
 from .llm.chat import chat
 from .translation.translate_from_rdf import translate_from_rdf
-from .analytics.infer_schema import infer_schema
-from .analytics.all_pairs_join import all_pairs_join
-from .analytics.kg_overview import kg_overview
+from .virtual_kg.analytics import connect_kg_sources
+from .virtual_kg.analytics import load_kg_sources
+from .virtual_kg.analytics import cleanup_kg_sources
+from .virtual_kg.analytics import infer_schema
+from .virtual_kg.analytics import all_pairs_join
+from .virtual_kg.analytics import kg_overview
