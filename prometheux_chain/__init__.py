@@ -27,6 +27,9 @@ from .llm.rag import rag
 from .llm.translate import translate
 from .llm.chat import chat
 from .translation.translate_from_rdf import translate_from_rdf
-from .analytics.infer_schema import infer_schema
-from .analytics.all_pairs_join import all_pairs_join
-from .analytics.kg_overview import kg_overview
+from .virtual_kg.analytics import connect_kg_sources
+from .virtual_kg.analytics import load_kg_sources
+from .virtual_kg.analytics import cleanup_kg_sources
+from .virtual_kg.analytics import infer_schema
+from .virtual_kg.analytics import all_pairs_join
+from .virtual_kg.analytics import kg_overview
