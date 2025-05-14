@@ -14,6 +14,446 @@ Author: Prometheux Limited
 
 
 class JarvisPyClient:
+
+
+    @staticmethod
+    def cleanup_projects(project_id, project_scope):
+        jarvispy_url = config['JARVISPY_URL']
+        pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
+
+        if not pmtx_token:
+            raise Exception("PMTX_TOKEN is not set. Please set it in environment variables or config.")
+        
+        url = f"{jarvispy_url}/api/v1/projects/cleanup"
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f"Bearer {pmtx_token}"
+        }
+        payload = {
+            'project': {
+                'id': project_id,
+                'scope': project_scope
+            }
+        }
+        
+        response = requests.post(url, headers=headers, json=payload)
+        return response.json()
+    
+
+    @staticmethod
+    def save_project(project_id, project_scope, to_persist):
+        jarvispy_url = config['JARVISPY_URL']
+        pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
+
+        if not pmtx_token:
+            raise Exception("PMTX_TOKEN is not set. Please set it in environment variables or config.")
+        
+        url = f"{jarvispy_url}/api/v1/projects/save"
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f"Bearer {pmtx_token}"
+        }
+        payload = {
+            'project': {
+                'id': project_id,
+                'scope': project_scope,
+                'to_persist': to_persist
+            }
+        }
+        
+        response = requests.post(url, headers=headers, json=payload)
+        return response.json()
+
+
+    @staticmethod
+    def list_projects(scope="user"):
+        jarvispy_url = config['JARVISPY_URL']
+        pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
+
+        if not pmtx_token:
+            raise Exception("PMTX_TOKEN is not set. Please set it in environment variables or config.")
+        
+        url = f"{jarvispy_url}/api/v1/projects/list"
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f"Bearer {pmtx_token}"
+        }
+        payload = {
+            'scopes': [scope]
+        }
+        
+        response = requests.post(url, headers=headers, json=payload)
+        return response.json()
+
+    @staticmethod
+    def load_project(project_id, scope="user"):
+        jarvispy_url = config['JARVISPY_URL']
+        pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
+
+        if not pmtx_token:
+            raise Exception("PMTX_TOKEN is not set. Please set it in environment variables or config.")
+        
+        url = f"{jarvispy_url}/api/v1/projects/load"
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f"Bearer {pmtx_token}"
+        }
+        payload = {
+            'project': {
+                'id': project_id,
+                'scope': scope
+            }
+        }
+        
+        response = requests.post(url, headers=headers, json=payload)
+        return response.json()
+
+
+    @staticmethod
+    def cleanup_sources(project_id, project_scope, source_ids):
+        jarvispy_url = config['JARVISPY_URL']
+        pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
+
+        if not pmtx_token:
+            raise Exception("PMTX_TOKEN is not set. Please set it in environment variables or config.")
+        
+        url = f"{jarvispy_url}/api/v1/data/{project_id}/cleanup"
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f"Bearer {pmtx_token}"
+        }
+        payload = {
+            'project': {
+                'scope': project_scope
+            },
+            'source_ids': source_ids
+        }
+        
+        response = requests.post(url, headers=headers, json=payload)
+        return response.json()
+
+
+    @staticmethod
+    def connect_sources(project_id, project_scope, database_payload: Database, add_model=False):
+        jarvispy_url = config['JARVISPY_URL']
+        pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
+
+        if not pmtx_token:
+            raise Exception("PMTX_TOKEN is not set. Please set it in environment variables or config.")
+        
+        url = f"{jarvispy_url}/api/v1/data/{project_id}/connect"
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f"Bearer {pmtx_token}"
+        }
+        payload = {
+            'project': {
+                'scope': project_scope
+            },
+            'database': database_payload.to_dict(),
+            'addModel': add_model
+        }
+        
+        response = requests.post(url, headers=headers, json=payload)
+        return response.json()
+    
+    @staticmethod
+    def list_sources(project_id, project_scope):
+        jarvispy_url = config['JARVISPY_URL']
+        pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
+
+        if not pmtx_token:
+            raise Exception("PMTX_TOKEN is not set. Please set it in environment variables or config.")
+        
+        url = f"{jarvispy_url}/api/v1/data/{project_id}/list"
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f"Bearer {pmtx_token}"
+        }
+        payload = {
+            'project': {
+                'scope': project_scope
+            }
+        }
+        
+        response = requests.post(url, headers=headers, json=payload)
+        return response.json()
+    
+
+    @staticmethod
+    def cleanup_notebooks(project_id, project_scope, notebook_ids=None):
+        jarvispy_url = config['JARVISPY_URL']
+        pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
+
+        if not pmtx_token:
+            raise Exception("PMTX_TOKEN is not set. Please set it in environment variables or config.")
+        
+        url = f"{jarvispy_url}/api/v1/notebooks/{project_id}/cleanup"
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f"Bearer {pmtx_token}"
+        }
+        payload = {
+            'project': {
+                'scope': project_scope
+            },
+            'notebook_ids': notebook_ids
+        }
+        
+        response = requests.post(url, headers=headers, json=payload)
+        return response.json()
+    
+
+    @staticmethod
+    def save_notebook(project_id, project_scope, notebook_id, notebook_name):
+        jarvispy_url = config['JARVISPY_URL']
+        pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
+
+        if not pmtx_token:
+            raise Exception("PMTX_TOKEN is not set. Please set it in environment variables or config.")
+        
+        url = f"{jarvispy_url}/api/v1/notebooks/{project_id}/save"
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f"Bearer {pmtx_token}"
+        }
+        payload = {
+            'project': {
+                'scope': project_scope
+            },
+            'notebook': {
+                'id': notebook_id,
+                'name': notebook_name
+            }
+        }
+        
+        response = requests.post(url, headers=headers, json=payload)
+        return response.json()
+    
+
+    @staticmethod
+    def list_notebooks(project_id, project_scope):
+        jarvispy_url = config['JARVISPY_URL']
+        pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
+
+        if not pmtx_token:
+            raise Exception("PMTX_TOKEN is not set. Please set it in environment variables or config.")
+        
+        url = f"{jarvispy_url}/api/v1/notebooks/{project_id}/list"
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f"Bearer {pmtx_token}"
+        }
+        payload = {
+            'project': {
+                'scope': project_scope
+            }
+        }
+        
+        response = requests.post(url, headers=headers, json=payload)
+        return response.json()
+    
+
+    @staticmethod
+    def load_notebook(project_id, notebook_id, project_scope):
+        jarvispy_url = config['JARVISPY_URL']
+        pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
+
+        if not pmtx_token:
+            raise Exception("PMTX_TOKEN is not set. Please set it in environment variables or config.")
+        
+        url = f"{jarvispy_url}/api/v1/notebooks/{project_id}/load"
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f"Bearer {pmtx_token}"
+        }
+        payload = {
+            'project': {
+                'scope': project_scope
+            },
+            'notebook': {
+                'id': notebook_id
+            }
+        }
+        
+        response = requests.post(url, headers=headers, json=payload)
+        return response.json()
+
+
+    @staticmethod
+    def cleanup_cells(project_id, project_scope, notebook_id, cell_ids=None):
+        jarvispy_url = config['JARVISPY_URL']
+        pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
+
+        if not pmtx_token:
+            raise Exception("PMTX_TOKEN is not set. Please set it in environment variables or config.")
+        
+        url = f"{jarvispy_url}/api/v1/notebooks/{project_id}/{notebook_id}/cleanup-cells"
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f"Bearer {pmtx_token}"
+        }
+        payload = {
+            'project': {
+                'scope': project_scope
+            },
+            'cell_ids': cell_ids
+        }
+        
+        response = requests.post(url, headers=headers, json=payload)
+        return response.json()
+    
+    
+    @staticmethod
+    def save_cell(project_id, project_scope, notebook_id, cell_content, cell_position, cell_id=None):
+        jarvispy_url = config['JARVISPY_URL']
+        pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
+
+        if not pmtx_token:
+            raise Exception("PMTX_TOKEN is not set. Please set it in environment variables or config.")
+        
+        url = f"{jarvispy_url}/api/v1/notebooks/{project_id}/{notebook_id}/save-cell"
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f"Bearer {pmtx_token}"
+        }
+        
+        payload = {
+            'project': {
+                'scope': project_scope
+            },
+            'cell': {
+                'notebook_id': notebook_id,
+                'id': cell_id,
+                'content': cell_content,
+                'position': cell_position
+            }
+        }
+        
+        response = requests.post(url, headers=headers, json=payload)
+        return response.json()
+
+    
+    @staticmethod
+    def run_cell(project_id, notebook_id, project_scope, cell_content, cell_position, cell_id=None):
+        jarvispy_url = config['JARVISPY_URL']
+        pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
+
+        if not pmtx_token:
+            raise Exception("PMTX_TOKEN is not set. Please set it in environment variables or config.")
+        
+        url = f"{jarvispy_url}/api/v1/notebooks/{project_id}/{notebook_id}/run-cell"
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f"Bearer {pmtx_token}"
+        }
+        payload = {
+            'project': {
+                'scope': project_scope
+            },
+            'cell': {
+                'notebook_id': notebook_id,
+                'content': cell_content,
+                'position': cell_position,
+                'id': cell_id
+            }
+        }
+        
+        response = requests.post(url, headers=headers, json=payload)
+        return response.json()
+
+
+    @staticmethod
+    def list_cells(project_id, project_scope, notebook_id):
+        jarvispy_url = config['JARVISPY_URL']
+        pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
+
+        if not pmtx_token:
+            raise Exception("PMTX_TOKEN is not set. Please set it in environment variables or config.")
+        
+        url = f"{jarvispy_url}/api/v1/notebooks/{project_id}/{notebook_id}/list-cells"
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f"Bearer {pmtx_token}"
+        }
+        payload = {
+            'project': {
+                'scope': project_scope
+            }
+        }
+        
+        response = requests.post(url, headers=headers, json=payload)
+        return response.json()
+    
+
+    @staticmethod
+    def list_concepts(project_id, project_scope):
+        jarvispy_url = config['JARVISPY_URL']
+        pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
+
+        if not pmtx_token:
+            raise Exception("PMTX_TOKEN is not set. Please set it in environment variables or config.")
+        
+        url = f"{jarvispy_url}/api/v1/concepts/{project_id}/list"
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f"Bearer {pmtx_token}"
+        }
+        payload = {
+            'project': {
+                'scope': project_scope
+            }
+        }
+        
+        response = requests.post(url, headers=headers, json=payload)
+        return response.json()
+    
+    
+    @staticmethod
+    def cleanup_kgs(project_id, project_scope, kg_ids):
+        jarvispy_url = config['JARVISPY_URL']
+        pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
+
+        if not pmtx_token:
+            raise Exception("PMTX_TOKEN is not set. Please set it in env variables or config.")
+
+        url = f"{jarvispy_url}/api/v1/kgs/{project_id}/cleanup"
+        payload = {
+            'project': {
+                'scope': project_scope
+            },
+            'kg_ids': kg_ids
+        }
+        headers = {
+            'Authorization': f"Bearer {pmtx_token}",
+            'Content-Type': 'application/json'
+        }
+        response = requests.post(url, headers=headers, json=payload)
+        return response.json()
+    
+        
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     
     @staticmethod
     def save_kg(virtual_kg):
@@ -73,26 +513,6 @@ class JarvisPyClient:
         }
         response = requests.post(url, headers=headers, json=payload)
         return response.json()
-    
-
-    @staticmethod
-    def cleanup_kg(virtual_kg=None):
-        jarvispy_url = config['JARVISPY_URL']
-        pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
-
-        if not pmtx_token:
-            raise Exception("PMTX_TOKEN is not set. Please set it in env variables or config.")
-
-        url = f"{jarvispy_url}/api/v1/cleanup"
-        payload = {
-            'virtual_kg': virtual_kg
-        }
-        headers = {
-            'Authorization': f"Bearer {pmtx_token}",
-            'Content-Type': 'application/json'
-        }
-        response = requests.post(url, headers=headers, json=payload)
-        return response
     
 
     @staticmethod
@@ -595,230 +1015,11 @@ class JarvisPyClient:
         return response
     
 
-    @staticmethod
-    def load_kg_notebooks(virtual_kg):
-        jarvispy_url = config['JARVISPY_URL']
-        pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
-
-        if not pmtx_token:
-            raise Exception("PMTX_TOKEN is not set. Please set it in environment variables or config.")
-        
-        url = f"{jarvispy_url}/api/v1/load-kg-notebooks"
-        headers = {
-            'Content-Type': 'application/json',
-            'Authorization': f"Bearer {pmtx_token}"
-        }
-        payload = {
-            'virtual_kg': virtual_kg
-        }
-        
-        response = requests.post(url, headers=headers, json=payload)
-        return response.json()
-    
-    @staticmethod
-    def save_kg_notebook(virtual_kg, notebook_id, notebook_name):
-        jarvispy_url = config['JARVISPY_URL']
-        pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
-
-        if not pmtx_token:
-            raise Exception("PMTX_TOKEN is not set. Please set it in environment variables or config.")
-        
-        url = f"{jarvispy_url}/api/v1/save-kg-notebook"
-        headers = {
-            'Content-Type': 'application/json',
-            'Authorization': f"Bearer {pmtx_token}"
-        }
-        payload = {
-            'virtual_kg': virtual_kg,
-            'notebook': {
-                'notebook_id': notebook_id,
-                'notebook_name': notebook_name
-            }
-        }
-        
-        response = requests.post(url, headers=headers, json=payload)
-        return response.json()
-    
-    @staticmethod
-    def cleanup_kg_notebooks(virtual_kg, notebook_ids=None):
-        jarvispy_url = config['JARVISPY_URL']
-        pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
-
-        if not pmtx_token:
-            raise Exception("PMTX_TOKEN is not set. Please set it in environment variables or config.")
-        
-        url = f"{jarvispy_url}/api/v1/cleanup-kg-notebooks"
-        headers = {
-            'Content-Type': 'application/json',
-            'Authorization': f"Bearer {pmtx_token}"
-        }
-        payload = {
-            'virtual_kg': virtual_kg,
-            'notebook_ids': notebook_ids
-        }
-        
-        response = requests.post(url, headers=headers, json=payload)
-        return response
-    
-    @staticmethod
-    def load_kg_cells(virtual_kg, notebook_id):
-        jarvispy_url = config['JARVISPY_URL']
-        pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
-
-        if not pmtx_token:
-            raise Exception("PMTX_TOKEN is not set. Please set it in environment variables or config.")
-        
-        url = f"{jarvispy_url}/api/v1/load-kg-cells"
-        headers = {
-            'Content-Type': 'application/json',
-            'Authorization': f"Bearer {pmtx_token}"
-        }
-        payload = {
-            'virtual_kg': virtual_kg,
-            'notebook_id': notebook_id
-        }
-        
-        response = requests.post(url, headers=headers, json=payload)
-        return response.json()
-    
-    @staticmethod
-    def save_kg_cell(virtual_kg, notebook_id, cell_id, cell_content, cell_position):
-        jarvispy_url = config['JARVISPY_URL']
-        pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
-
-        if not pmtx_token:
-            raise Exception("PMTX_TOKEN is not set. Please set it in environment variables or config.")
-        
-        url = f"{jarvispy_url}/api/v1/save-kg-cell"
-        headers = {
-            'Content-Type': 'application/json',
-            'Authorization': f"Bearer {pmtx_token}"
-        }
-        payload = {
-            'virtual_kg': virtual_kg,
-            'cell': {
-                'notebook_id': notebook_id,
-                'cell_id': cell_id,
-                'cell_content': cell_content,
-                'cell_position': cell_position
-            }
-        }
-        headers = {
-            'Content-Type': 'application/json',
-            'Authorization': f"Bearer {pmtx_token}"
-        }
-
-        response = requests.post(url, headers=headers, json=payload)
-        return response.json()
 
     
-    @staticmethod
-    def run_kg_cell(virtual_kg, notebook_id, cell_content, cell_position, cell_id):
-        jarvispy_url = config['JARVISPY_URL']
-        pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
-
-        if not pmtx_token:
-            raise Exception("PMTX_TOKEN is not set. Please set it in environment variables or config.")
-        
-        url = f"{jarvispy_url}/api/v1/run-kg-cell"
-        headers = {
-            'Content-Type': 'application/json',
-            'Authorization': f"Bearer {pmtx_token}"
-        }
-        payload = {
-            'virtual_kg': virtual_kg,
-            'cell': {
-                'notebook_id': notebook_id,
-                'cell_content': cell_content,
-                'cell_position': cell_position,
-                'cell_id': cell_id
-            }
-        }
-        
-        response = requests.post(url, headers=headers, json=payload)
-        return response.json()
     
-    @staticmethod
-    def cleanup_kg_cells(virtual_kg, notebook_id=None, cell_ids=None):
-        jarvispy_url = config['JARVISPY_URL']
-        pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
-
-        if not pmtx_token:
-            raise Exception("PMTX_TOKEN is not set. Please set it in environment variables or config.")
-        
-        url = f"{jarvispy_url}/api/v1/cleanup-kg-cells"
-        headers = {
-            'Content-Type': 'application/json',
-            'Authorization': f"Bearer {pmtx_token}"
-        }
-        payload = {
-            'virtual_kg': virtual_kg,
-            'notebook_id': notebook_id,
-            'cell_ids': cell_ids
-        }
-        
-        response = requests.post(url, headers=headers, json=payload)
-        return response
-        
-    @staticmethod
-    def connect_kg_sources(virtual_kg, database_payload: Database, add_model=False):
-        jarvispy_url = config['JARVISPY_URL']
-        pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
-
-        if not pmtx_token:
-            raise Exception("PMTX_TOKEN is not set. Please set it in environment variables or config.")
-        
-        url = f"{jarvispy_url}/api/v1/connect-kg-sources"
-        headers = {
-            'Content-Type': 'application/json',
-            'Authorization': f"Bearer {pmtx_token}"
-        }
-        payload = {
-            'virtual_kg': virtual_kg,
-            'database': database_payload.to_dict(),
-            'addModel': add_model
-        }
-        
-        response = requests.post(url, headers=headers, json=payload)
-        return response
     
-    @staticmethod
-    def load_kg_sources(virtual_kg):
-        jarvispy_url = config['JARVISPY_URL']
-        pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
-
-        if not pmtx_token:
-            raise Exception("PMTX_TOKEN is not set. Please set it in environment variables or config.")
-        
-        url = f"{jarvispy_url}/api/v1/load-kg-sources"
-        headers = {
-            'Content-Type': 'application/json',
-            'Authorization': f"Bearer {pmtx_token}"
-        }
-        payload = {
-            'virtual_kg': virtual_kg
-        }
-        
-        response = requests.post(url, headers=headers, json=payload)
-        return response
     
-    @staticmethod
-    def cleanup_kg_sources(virtual_kg, source_ids=None):
-        jarvispy_url = config['JARVISPY_URL']
-        pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
-
-        if not pmtx_token:
-            raise Exception("PMTX_TOKEN is not set. Please set it in environment variables or config.")
-        
-        url = f"{jarvispy_url}/api/v1/cleanup-kg-sources"
-        headers = {
-            'Content-Type': 'application/json',
-            'Authorization': f"Bearer {pmtx_token}"
-        }
-        payload = {
-            'virtual_kg': virtual_kg,
-            'source_ids': source_ids
-        }
-        
-        response = requests.post(url, headers=headers, json=payload)
-        return response
+    
+    
+    
