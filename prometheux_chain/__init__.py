@@ -17,6 +17,7 @@ from .project.manage_notebooks import load_notebook
 from .project.manage_notebooks import cleanup_cells
 from .project.manage_notebooks import save_cell
 from .project.manage_notebooks import run_cell
+from .project.manage_notebooks import list_cell_outputs
 from .project.manage_notebooks import list_cells
 
 from .project.manage_concepts import list_concepts
