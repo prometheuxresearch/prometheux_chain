@@ -17,6 +17,8 @@ def cleanup_notebooks(project_id, project_scope="user", notebook_ids=None):
     """
     response = JarvisPyClient.cleanup_notebooks(project_id, project_scope, notebook_ids)
 
+    print(response)
+
     if response.get('status') != 'success':
         msg = response.get('message', 'Unknown error')
         raise Exception(f"An exception occurred while cleaning up notebooks: {msg}")
@@ -34,6 +36,8 @@ def save_notebook(project_id, project_scope="user", notebook_name=None, notebook
     """
     response = JarvisPyClient.save_notebook(project_id, project_scope, notebook_id, notebook_name)
 
+    print(response)
+
     if response.get('status') != 'success':
         msg = response.get('message', 'Unknown error')
         raise Exception(f"An exception occurred while saving notebook: {msg}")
@@ -49,6 +53,8 @@ def list_notebooks(project_id, project_scope="user"):
     List all notebooks for a specific project.
     """
     response = JarvisPyClient.list_notebooks(project_id, project_scope)
+
+    print(response)
 
     if response.get('status') != 'success':
         msg = response.get('message', 'Unknown error')
@@ -84,6 +90,8 @@ def cleanup_cells(project_id, notebook_id, project_scope="user", cell_ids=None):
     """
     response = JarvisPyClient.cleanup_cells(project_id, project_scope, notebook_id, cell_ids)
 
+    print(response)
+
     if response.get('status') != 'success':
         msg = response.get('message', 'Unknown error')
         raise Exception(f"An exception occurred while cleaning up cells: {msg}")
@@ -101,12 +109,14 @@ def save_cell(project_id, project_scope, notebook_id, cell_content, cell_positio
     """
     response = JarvisPyClient.save_cell(project_id, project_scope, notebook_id, cell_content, cell_position, cell_id)
 
+    print(response)
+
     if response.get('status') != 'success':
         msg = response.get('message', 'Unknown error')
         raise Exception(f"An exception occurred while saving cell: {msg}")
     
     if response.get('status') == 'success':
-        return response.get('data', {}).get('cell_id')
+        return response.get('data', {}).get('id')
     else:
         raise Exception(f"An exception occurred while saving cell: {response.get('message', 'Unknown error')}")
 
@@ -117,6 +127,8 @@ def run_cell(project_id, notebook_id, project_scope, cell_content, cell_position
     Returns the cell_id of the executed cell.
     """
     response = JarvisPyClient.run_cell(project_id, notebook_id, project_scope, cell_content, cell_position, cell_id)
+
+    print(response)
 
     if response.get('status') != 'success':
         msg = response.get('message', 'Unknown error')
@@ -134,6 +146,8 @@ def list_cells(project_id, notebook_id, project_scope="user"):
     """
     response = JarvisPyClient.list_cells(project_id, project_scope, notebook_id)
 
+    print(response)
+
     if response.get('status') != 'success':
         msg = response.get('message', 'Unknown error')
         raise Exception(f"An exception occurred during listing cells: {msg}")
@@ -142,6 +156,34 @@ def list_cells(project_id, notebook_id, project_scope="user"):
         return response.get('data', [])
     else:
         raise Exception(f"An exception occurred during listing cells: {response.get('message', 'Unknown error')}")
+
+
+def list_cell_outputs(project_id, notebook_id, cell_id, output_predicate, project_scope="user", page=1):
+    """
+    Retrieve output facts from a specific cell in a notebook.
+    
+    Args:
+        project_id (str): The ID of the project
+        notebook_id (str): The ID of the notebook
+        cell_id (str): The ID of the cell
+        output_predicate (str): The predicate to filter output facts
+        project_scope (str, optional): The project scope. Defaults to "user".
+        
+    Returns:
+        The output facts from the cell
+    """
+    response = JarvisPyClient.list_cell_outputs(project_id, project_scope, notebook_id, cell_id, output_predicate, page)
+
+    print(response)
+
+    if response.get('status') != 'success':
+        msg = response.get('message', 'Unknown error')
+        raise Exception(f"An exception occurred while retrieving cell output facts: {msg}")
+    
+    if response.get('status') == 'success':
+        return response.get('data', {})
+    else:
+        raise Exception(f"An exception occurred while retrieving cell output facts: {response.get('message', 'Unknown error')}")
 
 
 
