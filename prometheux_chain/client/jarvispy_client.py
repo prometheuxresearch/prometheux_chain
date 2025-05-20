@@ -978,7 +978,7 @@ class JarvisPyClient:
         if not pmtx_token:
             raise Exception("PMTX_TOKEN is not set. Please set it in environment variables or config.")
         
-        url = f"{jarvispy_url}/api/v1/infer-schema"
+        url = f"{jarvispy_url}/api/v1/data/infer-schema"
         headers = {
             'Content-Type': 'application/json',
             'Authorization': f"Bearer {pmtx_token}"
@@ -993,7 +993,7 @@ class JarvisPyClient:
 
 
     @staticmethod
-    def all_pairs_join(databases: list[Database], to_evaluate: bool, parallel: bool):
+    def all_pairs_join(databases: list[Database], lhs_databases: list[Database], rhs_databases: list[Database], to_evaluate: bool, parallel: bool, output_type: str):
         jarvispy_url = config['JARVISPY_URL']
         pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
 
@@ -1007,8 +1007,11 @@ class JarvisPyClient:
         }
         payload = {
             "databasePayloads": [db.to_dict() for db in databases],
+            "lhsDatabasePayloads": [db.to_dict() for db in lhs_databases],
+            "rhsDatabasePayloads": [db.to_dict() for db in rhs_databases],
             "toEvaluate": to_evaluate,
-            "parallel": parallel
+            "parallel": parallel,
+            "outputType": output_type
         }
 
         response = requests.post(url, headers=headers, json=payload)

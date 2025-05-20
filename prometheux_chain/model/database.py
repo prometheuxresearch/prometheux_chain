@@ -1,6 +1,6 @@
 class Database:
     
-    def __init__(self, database_type, username, password, host, port, database_name, tables=None, schema=None, catalog=None, query=None, options=None):
+    def __init__(self, database_type, username, password, host, port, database_name, selected_tables=None, schema=None, catalog=None, query=None, options=None, selected_columns=None, ignore_columns=None, ignore_tables=None):
         self.database_type = database_type
         self.username = username
         self.password = password
@@ -8,11 +8,14 @@ class Database:
         self.port = port
         self.database_name = database_name
         self.options = options
-        self.tables = tables
+        self.selected_tables = selected_tables
         self.schema = schema
         self.catalog = catalog
         self.query = query
-    
+        self.selected_columns = selected_columns
+        self.ignore_columns = ignore_columns
+        self.ignore_tables = ignore_tables
+        
     def to_dict(self):
         return {
             'databaseType': self.database_type,
@@ -22,10 +25,13 @@ class Database:
             'port': self.port,
             'databaseName': self.database_name,
             'options': self.options,
-            'tables': self.tables,
             'schema': self.schema,
             'catalog': self.catalog,
-            'query': self.query
+            'query': self.query,
+            'selectedColumns': self.selected_columns,
+            'ignoreColumns': self.ignore_columns,
+            'ignoreTables': self.ignore_tables,
+            'selectedTables': self.selected_tables
         }
     
     @classmethod
@@ -38,9 +44,12 @@ class Database:
             port=data['port'],
             database_type=data['databaseType'],
             options=data['options'],
-            tables=data['tables'],
+            selected_tables=data['selectedTables'],
             schema=data['schema'],
             catalog=data['catalog'],
-            query=data['query']
+            query=data['query'],
+            selected_columns=data['selectedColumns'],
+            ignore_columns=data['ignoreColumns'],
+            ignore_tables=data['ignoreTables']
         )
         return schema_inference_payload
