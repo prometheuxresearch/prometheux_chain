@@ -984,7 +984,7 @@ class JarvisPyClient:
             'Authorization': f"Bearer {pmtx_token}"
         }
         payload = {
-            "database": database.to_dict(),
+            "database_payload": database.to_dict(),
             "addBind": add_bind,
             "addModel": add_model
         }
