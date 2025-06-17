@@ -387,6 +387,29 @@ class JarvisPyClient:
     
 
     @staticmethod
+    def list_cell_outputs(project_id, project_scope, notebook_id, cell_id, output_predicate, page):
+        jarvispy_url = config['JARVISPY_URL']
+        pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
+
+        if not pmtx_token:
+            raise Exception("PMTX_TOKEN is not set. Please set it in environment variables or config.")
+        
+        url = f"{jarvispy_url}/api/v1/notebooks/{project_id}/{notebook_id}/{cell_id}/list-output-facts/{output_predicate}/{page}"
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f"Bearer {pmtx_token}"
+        }
+        payload = {
+            'project': {
+                'scope': project_scope
+            }
+        }
+        
+        response = requests.post(url, headers=headers, json=payload)
+        return response.json()
+    
+
+    @staticmethod
     def list_concepts(project_id, project_scope):
         jarvispy_url = config['JARVISPY_URL']
         pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
