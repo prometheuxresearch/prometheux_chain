@@ -18,7 +18,8 @@ def infer_schema(database:Database, add_bind=True, add_model=False):
         if response.status_code == 200:
             return response.json()['data']
         else:
-            return f"Error: Received status code {response.status_code} with error {response.json()['message']}"
+            message = response.json().get('message', response)
+            return f"Error: Received status code {response.status_code} with error {message}"
     except requests.exceptions.RequestException as e:
         return f"Request failed: {e}"
 
@@ -29,7 +30,8 @@ def all_pairs_join(databases : list[Database], to_evaluate: bool=True, parallel:
         if response.status_code == 200:
            return response.json()['data']
         else:
-            return f"Error: Received status code {response.status_code} with error {response.json()['message']}"
+            message = response.json().get('message', response)
+            return f"Error: Received status code {response.status_code} with error {message}"
     except requests.exceptions.RequestException as e:
         return f"Request failed: {e}"
     
