@@ -1,3 +1,12 @@
+"""
+Database Module
+
+Copyright (C) Prometheux Limited. All rights reserved.
+
+Author: Prometheux Limited
+"""
+
+
 class Database:
     
     def __init__(self, database_type, username, password, host, port, database_name, selected_tables=None, schema=None, catalog=None, query=None, options=None, selected_columns=None, ignore_columns=None, ignore_tables=None):

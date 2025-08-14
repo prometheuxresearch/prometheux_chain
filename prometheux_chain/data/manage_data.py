@@ -9,26 +9,27 @@ Author: Prometheux Limited
 """
 
 
-def cleanup_sources(project_id, project_scope="user", source_ids=None):
+def cleanup_sources(workspace_id="workspace_id", source_ids=None):
     """
-    Cleanup kg sources for a project.
+    Cleanup sources for a workspace.
     """
-    response = JarvisPyClient.cleanup_sources(project_id, project_scope, source_ids)
-
-    print(response)
+    response = JarvisPyClient.cleanup_sources(workspace_id, source_ids)
 
     if response.get('status') != 'success':
         msg = response.get('message', 'Unknown error')
-        raise Exception(f"An exception occurred during cleaning up kg sources: {msg}")
+        raise Exception(f"An exception occurred during cleaning up sources: {msg}")
     
     if response.get('status') == 'success':
         print(response.get('message', 'Project sources cleaned up successfully'))
     else:
-        raise Exception(f"An exception occurred during cleaning up kg sources: {response.get('message', 'Unknown error')}")
+        raise Exception(f"An exception occurred during cleaning up sources: {response.get('message', 'Unknown error')}")
 
 
-def connect_sources(project_id, project_scope, database_payload, add_model=False):
-    response = JarvisPyClient.connect_sources(project_id, project_scope, database_payload, add_model)
+def connect_sources(workspace_id="workspace_id", database_payload=None, compute_row_count=False):
+    """
+    Connect a source to a workspace.
+    """
+    response = JarvisPyClient.connect_sources(workspace_id, database_payload, compute_row_count)
     
     if response.get('status') != 'success':
         msg = response.get('message', 'Unknown error')
@@ -40,14 +41,17 @@ def connect_sources(project_id, project_scope, database_payload, add_model=False
         raise Exception(f"An exception occurred during connecting sources: {response.get('message', 'Unknown error')}")
     
 
-def list_sources(project_id, project_scope):
-    response = JarvisPyClient.list_sources(project_id, project_scope)
+def list_sources(workspace_id="workspace_id"):
+    """
+    List sources for a workspace.
+    """
+    response = JarvisPyClient.list_sources(workspace_id)
 
     if response.get('status') != 'success':
         msg = response.get('message', 'Unknown error')
         raise Exception(f"An exception occurred during listing sources: {msg}")
     
     if response.get('status') == 'success':
-        return response.get('data', None)
+        return response.get('data', [])
     else:
         raise Exception(f"An exception occurred during listing sources: {response.get('message', 'Unknown error')}")

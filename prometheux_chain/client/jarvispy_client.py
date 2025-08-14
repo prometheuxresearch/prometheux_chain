@@ -2,7 +2,7 @@ from ..config import config
 import requests
 import os
 
-from ..model.database import Database
+from ..data.database import Database
 
 """
 JarvisPy Client Module
@@ -110,42 +110,20 @@ class JarvisPyClient:
         return response.json()
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     @staticmethod
-    def cleanup_sources(project_id, project_scope, source_ids):
+    def cleanup_sources(workspace_id, source_ids):
         jarvispy_url = config['JARVISPY_URL']
         pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
 
         if not pmtx_token:
             raise Exception("PMTX_TOKEN is not set. Please set it in environment variables or config.")
         
-        url = f"{jarvispy_url}/api/v1/data/{project_id}/cleanup"
+        url = f"{jarvispy_url}/api/v1/data/{workspace_id}/cleanup"
         headers = {
             'Content-Type': 'application/json',
             'Authorization': f"Bearer {pmtx_token}"
         }
         payload = {
-            'project': {
-                'scope': project_scope
-            },
             'source_ids': source_ids
         }
         
@@ -154,50 +132,64 @@ class JarvisPyClient:
 
 
     @staticmethod
-    def connect_sources(project_id, project_scope, database_payload: Database, add_model=False):
+    def connect_sources(workspace_id, database_payload: Database, compute_row_count=False):
         jarvispy_url = config['JARVISPY_URL']
         pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
 
         if not pmtx_token:
             raise Exception("PMTX_TOKEN is not set. Please set it in environment variables or config.")
         
-        url = f"{jarvispy_url}/api/v1/data/{project_id}/connect"
+        url = f"{jarvispy_url}/api/v1/data/{workspace_id}/connect"
         headers = {
             'Content-Type': 'application/json',
             'Authorization': f"Bearer {pmtx_token}"
         }
         payload = {
-            'project': {
-                'scope': project_scope
-            },
             'database': database_payload.to_dict(),
-            'addModel': add_model
+            'computeRowCount': compute_row_count
         }
         
         response = requests.post(url, headers=headers, json=payload)
         return response.json()
     
     @staticmethod
-    def list_sources(project_id, project_scope):
+    def list_sources(workspace_id):
         jarvispy_url = config['JARVISPY_URL']
         pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
 
         if not pmtx_token:
             raise Exception("PMTX_TOKEN is not set. Please set it in environment variables or config.")
         
-        url = f"{jarvispy_url}/api/v1/data/{project_id}/list"
+        url = f"{jarvispy_url}/api/v1/data/{workspace_id}/list"
         headers = {
             'Content-Type': 'application/json',
             'Authorization': f"Bearer {pmtx_token}"
         }
         payload = {
-            'project': {
-                'scope': project_scope
-            }
+            'scope': 'user'
         }
         
         response = requests.post(url, headers=headers, json=payload)
         return response.json()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     
 
     @staticmethod
