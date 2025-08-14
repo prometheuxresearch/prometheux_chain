@@ -36,8 +36,3 @@ def all_pairs_join(databases : list[Database], to_evaluate: bool=True, parallel:
         return f"Request failed: {e}"
     
 
-def kg_overview(virtual_kg):
-    if not virtual_kg:
-        raise ValueError("Missing 'virtual_kg' parameter")
-    
-    return JarvisPyClient.kg_overview(virtual_kg)
