@@ -98,3 +98,44 @@ def list_concepts(workspace_id="workspace_id", project_id=None, project_scope="u
         raise Exception(f"An exception occurred during listing concepts: {response.get('message', 'Unknown error')}") 
     
 
+def graph_rag(
+    workspace_id="workspace_id",
+    project_id=None,
+    question=None,
+    graph_concepts=None,
+    rag_concepts=None,
+    project_scope="user",
+    llm=None,
+):
+    """
+    Unified GraphRAG wrapper with clean params.
+    - graph_concepts: list[str] → added as graph.concepts if not empty
+    - rag_concepts: list[{"concept": str, "field_to_embed": str}] → added as rag.embedding_to_retrieve if not empty
+    - llm: optional LLM config dict; included if provided
+    """
+    if not question:
+        raise Exception("question is required")
+
+    graph_payload = None
+    if graph_concepts:
+        graph_payload = { 'concepts': graph_concepts }
+
+    rag_payload = None
+    if rag_concepts:
+        rag_payload = { 'embedding_to_retrieve': rag_concepts }
+
+    response = JarvisPyClient.graph_rag(
+        workspace_id=workspace_id,
+        project_id=project_id,
+        question=question,
+        graph=graph_payload,
+        rag=rag_payload,
+        llm=llm,
+        project_scope=project_scope,
+    )
+
+    if response.get('status') != 'success':
+        msg = response.get('message', 'Unknown error')
+        raise Exception(f"An exception occurred during GraphRAG query: {msg}")
+    
+    return response.get('data', None)
