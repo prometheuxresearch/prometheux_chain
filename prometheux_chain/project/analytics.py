@@ -1,6 +1,6 @@
 import requests
 from ..client.jarvispy_client import JarvisPyClient
-from ..model.database import Database
+from ..data.database import Database
 
 
 """

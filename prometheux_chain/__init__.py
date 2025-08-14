@@ -5,16 +5,9 @@ from .project.manage_projects import save_project
 from .project.manage_projects import list_projects
 from .project.manage_projects import load_project
 
-
-
-
-
-
-
-
-# from .project.manage_data import cleanup_sources
-# from .project.manage_data import connect_sources
-# from .project.manage_data import list_sources
+from .data.manage_data import cleanup_sources
+from .data.manage_data import connect_sources
+from .data.manage_data import list_sources
 
 
 
@@ -27,6 +20,6 @@ from .project.manage_projects import load_project
 
 
 
-
+# from .project.manage_data import graph_rag
 # from .project.analytics import infer_schema
 # from .project.analytics import all_pairs_join
