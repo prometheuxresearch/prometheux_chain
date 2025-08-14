@@ -29,7 +29,7 @@ def connect_sources(workspace_id="workspace_id", database_payload=None, compute_
     """
     Connect a source to a workspace.
     """
-    response = JarvisPyClient.connect_sources(workspace_id, database_payload, compute_row_count)
+    response = JarvisPyClient.connect_sources(workspace_id=workspace_id, database_payload=database_payload, compute_row_count=compute_row_count)
     
     if response.get('status') != 'success':
         msg = response.get('message', 'Unknown error')
@@ -45,7 +45,7 @@ def list_sources(workspace_id="workspace_id"):
     """
     List sources for a workspace.
     """
-    response = JarvisPyClient.list_sources(workspace_id)
+    response = JarvisPyClient.list_sources(workspace_id=workspace_id)
 
     if response.get('status') != 'success':
         msg = response.get('message', 'Unknown error')
