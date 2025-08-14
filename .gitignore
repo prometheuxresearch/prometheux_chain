@@ -80,7 +80,6 @@ target/
 
 # Jupyter Notebook
 .ipynb_checkpoints
-*.ipynb
 
 # Vada files
 *.vada
@@ -142,5 +141,4 @@ myvenv
 # Others
 .DS_Store
 Thumbs.db
-
-prometheux_chain/config.yaml
+test/

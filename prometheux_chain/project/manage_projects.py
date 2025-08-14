@@ -27,11 +27,11 @@ def cleanup_projects(project_id=None, project_scope="user"):
         raise Exception(f"An exception occurred during cleaning up project: {response.get('message', 'Unknown error')}") 
     
 
-def save_project(project_id=None, project_scope="user", to_persist=True):
+def save_project(project_id=None, project_name=None, project_scope="user", to_persist=True):
     """
     Save a project.
     """
-    response = JarvisPyClient.save_project(project_id=project_id, project_scope=project_scope, to_persist=to_persist)
+    response = JarvisPyClient.save_project(project_id=project_id, project_name=project_name, project_scope=project_scope, to_persist=to_persist)
 
     if response.get('status') != 'success':
         msg = response.get('message', 'Unknown error')
