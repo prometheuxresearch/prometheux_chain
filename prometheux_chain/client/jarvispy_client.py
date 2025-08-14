@@ -280,6 +280,40 @@ class JarvisPyClient:
         return response.json()
 
 
+    @staticmethod
+    def graph_rag(
+        workspace_id,
+        project_id,
+        question,
+        graph=None,
+        rag=None,
+        llm=None,
+        project_scope="user",
+    ):
+        jarvispy_url = config['JARVISPY_URL']
+        pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
+
+        if not pmtx_token:
+            raise Exception("PMTX_TOKEN is not set. Please set it in environment variables or config.")
+
+        url = f"{jarvispy_url}/api/v1/graphrag/{workspace_id}/{project_id}/query"
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f"Bearer {pmtx_token}"
+        }
+        payload = {
+            'question': question,
+            'project_scope': project_scope
+        }
+        if graph:
+            payload['graph'] = graph
+        if rag:
+            payload['rag'] = rag
+        if llm:
+            payload['llm'] = llm
+
+        response = requests.post(url, headers=headers, json=payload)
+        return response.json()
     
     
 
@@ -350,6 +384,8 @@ class JarvisPyClient:
 
     #     response = requests.post(url, headers=headers, json=payload)
     #     return response
+    
+    
     
 
 
