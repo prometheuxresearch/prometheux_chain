@@ -17,14 +17,14 @@ class JarvisPyClient:
 
 
     @staticmethod
-    def cleanup_projects(project_id, project_scope):
+    def cleanup_projects(workspace_id, project_id, project_scope):
         jarvispy_url = config['JARVISPY_URL']
         pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
 
         if not pmtx_token:
             raise Exception("PMTX_TOKEN is not set. Please set it in environment variables or config.")
         
-        url = f"{jarvispy_url}/api/v1/projects/cleanup"
+        url = f"{jarvispy_url}/api/v1/projects/{workspace_id}/cleanup"
         headers = {
             'Content-Type': 'application/json',
             'Authorization': f"Bearer {pmtx_token}"
@@ -41,14 +41,14 @@ class JarvisPyClient:
     
 
     @staticmethod
-    def save_project(project_id, project_name, project_scope, to_persist):
+    def save_project(workspace_id, project_id, project_name, project_scope):
         jarvispy_url = config['JARVISPY_URL']
         pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
 
         if not pmtx_token:
             raise Exception("PMTX_TOKEN is not set. Please set it in environment variables or config.")
         
-        url = f"{jarvispy_url}/api/v1/projects/save"
+        url = f"{jarvispy_url}/api/v1/projects/{workspace_id}/save"
         headers = {
             'Content-Type': 'application/json',
             'Authorization': f"Bearer {pmtx_token}"
@@ -58,7 +58,6 @@ class JarvisPyClient:
                 'id': project_id,
                 'name': project_name,
                 'scope': project_scope,
-                'to_persist': to_persist
             }
         }
         
@@ -67,34 +66,35 @@ class JarvisPyClient:
 
 
     @staticmethod
-    def list_projects(scope="user"):
+    def list_projects(workspace_id, project_scopes):
         jarvispy_url = config['JARVISPY_URL']
         pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
 
         if not pmtx_token:
             raise Exception("PMTX_TOKEN is not set. Please set it in environment variables or config.")
         
-        url = f"{jarvispy_url}/api/v1/projects/list"
+        url = f"{jarvispy_url}/api/v1/projects/{workspace_id}/list"
         headers = {
             'Content-Type': 'application/json',
             'Authorization': f"Bearer {pmtx_token}"
         }
         payload = {
-            'scopes': [scope]
+            'scopes': project_scopes
         }
         
         response = requests.post(url, headers=headers, json=payload)
         return response.json()
 
+
     @staticmethod
-    def load_project(project_id, scope="user"):
+    def load_project(workspace_id, project_id, project_scope):
         jarvispy_url = config['JARVISPY_URL']
         pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
 
         if not pmtx_token:
             raise Exception("PMTX_TOKEN is not set. Please set it in environment variables or config.")
         
-        url = f"{jarvispy_url}/api/v1/projects/load"
+        url = f"{jarvispy_url}/api/v1/projects/{workspace_id}/load"
         headers = {
             'Content-Type': 'application/json',
             'Authorization': f"Bearer {pmtx_token}"
@@ -102,12 +102,31 @@ class JarvisPyClient:
         payload = {
             'project': {
                 'id': project_id,
-                'scope': scope
+                'scope': project_scope
             }
         }
         
         response = requests.post(url, headers=headers, json=payload)
         return response.json()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
     @staticmethod
