@@ -104,6 +104,7 @@ def graph_rag(
     question=None,
     graph_concepts=None,
     rag_concepts=None,
+    rag_embeddings=None,
     project_scope="user",
     llm=None,
 ):
@@ -123,6 +124,11 @@ def graph_rag(
     rag_payload = None
     if rag_concepts:
         rag_payload = { 'embedding_to_retrieve': rag_concepts }
+    if rag_embeddings:
+        # If both are provided, include both keys; backend can decide precedence
+        if rag_payload is None:
+            rag_payload = {}
+        rag_payload['embedding_retrieved'] = rag_embeddings
 
     response = JarvisPyClient.graph_rag(
         workspace_id=workspace_id,
