@@ -25,7 +25,7 @@ def cleanup_concepts(workspace_id="workspace_id", project_id=None, project_scope
         raise Exception(f"An exception occurred during cleaning up concepts: {response.get('message', 'Unknown error')}")
 
 
-def save_concept(workspace_id="workspace_id", project_id=None, concept_logic=None, scope="user"):
+def save_concept(workspace_id="workspace_id", project_id=None, concept_logic=None, concept_type="api", scope="user"):
     """
     Save concept logic for a specific project.
     """
@@ -33,6 +33,7 @@ def save_concept(workspace_id="workspace_id", project_id=None, concept_logic=Non
         workspace_id=workspace_id,
         project_id=project_id,
         concept_logic=concept_logic,
+        concept_type=concept_type,
         scope=scope
     )
 

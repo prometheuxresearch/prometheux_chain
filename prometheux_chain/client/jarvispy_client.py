@@ -199,7 +199,7 @@ class JarvisPyClient:
 
     
     @staticmethod
-    def save_concept(workspace_id, project_id, concept_logic, scope="user"):
+    def save_concept(workspace_id, project_id, concept_logic, concept_type, scope="user"):
         jarvispy_url = config['JARVISPY_URL']
         pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
 
@@ -213,7 +213,8 @@ class JarvisPyClient:
         }
         payload = {
             'scope': scope,
-            'concept_logic': concept_logic
+            'concept_logic': concept_logic,
+            'concept_type': concept_type
         }
         
         response = requests.post(url, headers=headers, json=payload)
