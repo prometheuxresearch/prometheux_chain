@@ -107,12 +107,14 @@ def graph_rag(
     rag_records=None,
     project_scope="user",
     llm=None,
+    top_k=5,
 ):
     """
     Unified GraphRAG wrapper with clean params.
     - graph_concepts: list[str] → added as graph.concepts if not empty
     - rag_concepts: list[{"concept": str, "field_to_embed": str}] → added as rag.embedding_to_retrieve if not empty
     - llm: optional LLM config dict; included if provided
+    - top_k: optional int, defaults to 5 → added to rag config to control number of retrieved results
     """
     if not question:
         raise Exception("question is required")
@@ -122,13 +124,14 @@ def graph_rag(
         graph_payload = { 'concepts': graph_concepts }
 
     rag_payload = None
-    if rag_concepts:
-        rag_payload = { 'embedding_to_retrieve': rag_concepts }
-    if rag_records:
-        # If both are provided, include both keys; backend can decide precedence
-        if rag_payload is None:
-            rag_payload = {} 
-        rag_payload['embedding_retrieved'] = rag_records
+    if rag_concepts or rag_records or top_k != 5:
+        rag_payload = {}
+        if rag_concepts:
+            rag_payload['embedding_to_retrieve'] = rag_concepts
+        if rag_records:
+            rag_payload['embedding_retrieved'] = rag_records
+        if top_k != 5:
+            rag_payload['top_k'] = top_k
 
     response = JarvisPyClient.graph_rag(
         workspace_id=workspace_id,
