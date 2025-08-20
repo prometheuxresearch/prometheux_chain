@@ -1,14 +1,16 @@
-CONSTELLATION_BACKEND_URL: http://localhost:8085
-EMBEDDING_DIMENSIONS: 2048
-EMBEDDING_MODEL: text-embedding-3-large
-JARVISPY_URL: http://localhost:5000
+# =====================
+# Other Services
+# =====================
+JARVISPY_URL: http://localhost:8000
+PMTX_TOKEN: YOUR_PMTX_TOKEN
 JARVIS_URL: http://localhost:8084
-LLM: NoNe
-MAX_TOKENS: 2000
-MODEL: gpt-4o
-NEO4J_PASSWORD: neo4j@prometheux
-NEO4J_URI: neo4j://localhost:7687
-NEO4J_USERNAME: neo4j
-OPENAI_API_KEY: None
-PMTX_TOKEN: MyToken
-PMTX_URL: https://engine.prometheux.ai
+
+# =====================
+# Large Language Models
+# =====================
+LLM_API_KEY: None
+LLM_VERSION: gpt-4o
+LLM_TEMPERATURE: 0.50
+LLM_MAX_TOKENS: 2000
+EMBEDDING_MODEL_VERSION: text-embedding-3-large
+EMBEDDING_DIMENSIONS: 2048
