@@ -81,6 +81,9 @@ target/
 # Jupyter Notebook
 .ipynb_checkpoints
 
+# Vada files
+*.vada
+
 # IPython
 profile_default/
 ipython_config.py
@@ -110,6 +113,7 @@ celerybeat.pid
 .venv
 env/
 venv/
+myenv/
 ENV/
 env.bak/
 venv.bak/
@@ -137,3 +141,4 @@ myvenv
 # Others
 .DS_Store
 Thumbs.db
+test/

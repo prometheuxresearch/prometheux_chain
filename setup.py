@@ -1,6 +1,10 @@
 import os
 from setuptools import setup, find_packages
 
+# Read version from version.txt
+with open("version.txt", "r") as f:
+    version = f.read().strip()
+    
 # Get the directory where setup.py is located
 this_directory = os.path.abspath(os.path.dirname(__file__))
 
@@ -10,7 +14,7 @@ with open(os.path.join(this_directory, 'ReadMe.md'), encoding='utf-8') as f:
 
 setup(
     name="prometheux_chain",
-    version="0.2",
+    version=version,
     packages=find_packages(),
     install_requires=[
         "requests",
@@ -18,7 +22,8 @@ setup(
         "pandas",
         "networkx",
         "pyvis",
-        "ipycytoscape"
+        "ipycytoscape",
+        "matplotlib"
     ],
     package_data={
         'prometheux_chain': ['config.yaml'],

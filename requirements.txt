@@ -5,3 +5,5 @@ pandas
 pyvis
 ipycytoscape
 networkx
+openai
+python-jose
