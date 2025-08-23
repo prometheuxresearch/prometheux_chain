@@ -1,9 +1,2 @@
-jupyter
 requests
 pyyaml
-pandas
-pyvis
-ipycytoscape
-networkx
-openai
-python-jose

@@ -19,11 +19,6 @@ setup(
     install_requires=[
         "requests",
         "pyyaml",
-        "pandas",
-        "networkx",
-        "pyvis",
-        "ipycytoscape",
-        "matplotlib"
     ],
     package_data={
         'prometheux_chain': ['config.yaml'],
