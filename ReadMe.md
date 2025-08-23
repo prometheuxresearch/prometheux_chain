@@ -29,12 +29,7 @@ python3 -m venv myenv
 source myenv/bin/activate  # On Windows: myenv\Scripts\activate
 ```
 
-2. Install the SDK from GitHub:
-
-```bash
-pip install git+https://github.com/prometheuxresearch/prometheux_chain.git
-````
-or via pip
+2. Install the SDK via pip:
 
 ```
 pip install --upgrade prometheux_chain
