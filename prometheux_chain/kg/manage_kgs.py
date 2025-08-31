@@ -53,3 +53,55 @@ def load_kg(workspace_id="workspace_id", project_id=None, scope="user"):
         raise ValueError("project_id is required")
     
     return JarvisPyClient.load_kg(workspace_id, project_id, scope)
+
+
+def graph_rag(
+    workspace_id="workspace_id",
+    project_id=None,
+    question=None,
+    graph_concepts=None,
+    rag_concepts=None,
+    rag_records=None,
+    project_scope="user",
+    llm=None,
+    top_k=5,
+):
+    """
+    Unified GraphRAG wrapper with clean params.
+    - graph_concepts: list[str] → added as graph.concepts if not empty
+    - rag_concepts: list[{"concept": str, "field_to_embed": str}] → added as rag.embedding_to_retrieve if not empty
+    - llm: optional LLM config dict; included if provided
+    - top_k: optional int, defaults to 5 → added to rag config to control number of retrieved results
+    """
+    if not question:
+        raise Exception("question is required")
+
+    graph_payload = None
+    if graph_concepts:
+        graph_payload = { 'concepts': graph_concepts }
+
+    rag_payload = None
+    if rag_concepts or rag_records or top_k != 5:
+        rag_payload = {}
+        if rag_concepts:
+            rag_payload['embedding_to_retrieve'] = rag_concepts
+        if rag_records:
+            rag_payload['embedding_retrieved'] = rag_records
+        if top_k != 5:
+            rag_payload['top_k'] = top_k
+
+    response = JarvisPyClient.graph_rag(
+        workspace_id=workspace_id,
+        project_id=project_id,
+        question=question,
+        graph=graph_payload,
+        rag=rag_payload,
+        llm=llm,
+        project_scope=project_scope,
+    )
+
+    if response.get('status') != 'success':
+        msg = response.get('message', 'Unknown error')
+        raise Exception(f"An exception occurred during GraphRAG query: {msg}")
+    
+    return response.get('data', None)
