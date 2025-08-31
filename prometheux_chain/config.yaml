@@ -3,14 +3,3 @@
 # =====================
 JARVISPY_URL: http://localhost:8000
 PMTX_TOKEN: YOUR_PMTX_TOKEN
-JARVIS_URL: http://localhost:8084
-
-# =====================
-# Large Language Models
-# =====================
-LLM_API_KEY: None
-LLM_VERSION: gpt-4o
-LLM_TEMPERATURE: 0.50
-LLM_MAX_TOKENS: 2000
-EMBEDDING_MODEL_VERSION: text-embedding-3-large
-EMBEDDING_DIMENSIONS: 2048
