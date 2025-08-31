@@ -8,6 +8,8 @@ from .project.manage_projects import load_project
 from .data.manage_data import cleanup_sources
 from .data.manage_data import connect_sources
 from .data.manage_data import list_sources
+from .data.manage_data import infer_schema
+# from .data.manage_data import all_pairs_join
 
 from .concept.manage_concepts import cleanup_concepts
 from .concept.manage_concepts import list_concepts
@@ -16,8 +18,4 @@ from .concept.manage_concepts import save_concept
 
 from .kg.manage_kgs import save_kg
 from .kg.manage_kgs import load_kg
-
-from .concept.manage_concepts import graph_rag
-
-# from .project.analytics import infer_schema
-# from .project.analytics import all_pairs_join
+from .kg.manage_kgs import graph_rag
