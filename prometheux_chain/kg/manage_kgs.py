@@ -59,7 +59,8 @@ def graph_rag(
     workspace_id="workspace_id",
     project_id=None,
     question=None,
-    graph_concepts=None,
+    graph_selected_concepts=None,
+    graph_available_concepts=None,
     rag_concepts=None,
     rag_records=None,
     project_scope="user",
@@ -68,7 +69,8 @@ def graph_rag(
 ):
     """
     Unified GraphRAG wrapper with clean params.
-    - graph_concepts: list[str] → added as graph.concepts if not empty
+    - graph_selected_concepts: list[str] → added as graph.selected_concepts if not empty (concepts to be executed directly)
+    - graph_available_concepts: list[str] → added as graph.available_concepts if not empty (concepts available to orchestrator)
     - rag_concepts: list[{"concept": str, "field_to_embed": str}] → added as rag.embedding_to_retrieve if not empty
     - llm: optional LLM config dict; included if provided
     - top_k: optional int, defaults to 5 → added to rag config to control number of retrieved results
@@ -77,8 +79,12 @@ def graph_rag(
         raise Exception("question is required")
 
     graph_payload = None
-    if graph_concepts:
-        graph_payload = { 'concepts': graph_concepts }
+    if graph_selected_concepts or graph_available_concepts:
+        graph_payload = {}
+        if graph_selected_concepts:
+            graph_payload['selected_concepts'] = graph_selected_concepts
+        if graph_available_concepts:
+            graph_payload['available_concepts'] = graph_available_concepts
 
     rag_payload = None
     if rag_concepts or rag_records or top_k != 5:
