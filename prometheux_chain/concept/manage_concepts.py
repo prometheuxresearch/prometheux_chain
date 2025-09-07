@@ -55,7 +55,8 @@ def run_concept(
     step_by_step=False,
     materialize_intermediate_concepts=False,
     force_rerun=True,
-    persist_outputs=False
+    persist_outputs=False,
+    python_scripts=None
 ):
     """
     Run a concept for a specific project.
@@ -69,7 +70,8 @@ def run_concept(
         step_by_step=step_by_step,
         materialize_intermediate_concepts=materialize_intermediate_concepts,
         force_rerun=force_rerun,
-        persist_outputs=persist_outputs
+        persist_outputs=persist_outputs,
+        python_scripts=python_scripts
     )
 
     if response.get('status') != 'success':
