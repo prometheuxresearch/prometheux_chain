@@ -252,7 +252,8 @@ class JarvisPyClient:
         step_by_step=False,
         materialize_intermediate_concepts=False,
         force_rerun=True,
-        persist_outputs=False
+        persist_outputs=False,
+        python_scripts=None
     ):
         jarvispy_url = config['JARVISPY_URL']
         pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
@@ -274,6 +275,10 @@ class JarvisPyClient:
             'step_by_step': step_by_step,
             'materialize_intermediate_concepts': materialize_intermediate_concepts
         }
+        
+        # Add python_scripts to payload if provided
+        if python_scripts is not None:
+            payload['python_scripts'] = python_scripts
         
         response = requests.post(url, headers=headers, json=payload)
         return response.json()
