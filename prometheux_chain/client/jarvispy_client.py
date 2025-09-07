@@ -15,6 +15,27 @@ Author: Prometheux Limited
 
 class JarvisPyClient:
 
+    @staticmethod
+    def _handle_response(response):
+        """
+        Handle HTTP response and check for errors.
+        Returns parsed JSON response or raises appropriate exception.
+        """
+        # Check HTTP status code first
+        if response.status_code == 401:
+            raise Exception("Unauthorized: Invalid or expired token. Please check your PMTX_TOKEN.")
+        elif response.status_code == 403:
+            raise Exception("Forbidden: You don't have permission to perform this action.")
+        elif response.status_code == 404:
+            raise Exception("Not Found: The requested resource was not found.")
+        elif response.status_code >= 400:
+            raise Exception(f"HTTP Error {response.status_code}: {response.text}")
+        
+        # Try to parse JSON response
+        try:
+            return response.json()
+        except ValueError:
+            raise Exception(f"Invalid JSON response from server: {response.text}")
 
     @staticmethod
     def cleanup_projects(workspace_id, project_id, project_scope):
@@ -37,7 +58,7 @@ class JarvisPyClient:
         }
         
         response = requests.post(url, headers=headers, json=payload)
-        return response.json()
+        return JarvisPyClient._handle_response(response)
     
 
     @staticmethod
@@ -62,7 +83,7 @@ class JarvisPyClient:
         }
         
         response = requests.post(url, headers=headers, json=payload)
-        return response.json()
+        return JarvisPyClient._handle_response(response)
 
 
     @staticmethod
@@ -83,7 +104,7 @@ class JarvisPyClient:
         }
         
         response = requests.post(url, headers=headers, json=payload)
-        return response.json()
+        return JarvisPyClient._handle_response(response)
 
 
     @staticmethod
@@ -107,7 +128,7 @@ class JarvisPyClient:
         }
         
         response = requests.post(url, headers=headers, json=payload)
-        return response.json()
+        return JarvisPyClient._handle_response(response)
 
 
     @staticmethod
@@ -128,7 +149,7 @@ class JarvisPyClient:
         }
         
         response = requests.post(url, headers=headers, json=payload)
-        return response.json()
+        return JarvisPyClient._handle_response(response)
 
 
     @staticmethod
@@ -150,7 +171,7 @@ class JarvisPyClient:
         }
         
         response = requests.post(url, headers=headers, json=payload)
-        return response.json()
+        return JarvisPyClient._handle_response(response)
 
 
     @staticmethod
@@ -171,7 +192,7 @@ class JarvisPyClient:
         }
         
         response = requests.post(url, headers=headers, json=payload)
-        return response.json()
+        return JarvisPyClient._handle_response(response)
 
 
     @staticmethod
@@ -193,7 +214,7 @@ class JarvisPyClient:
             "addModel": add_model
         }
         response = requests.post(url, headers=headers, json=payload)
-        return response.json()
+        return JarvisPyClient._handle_response(response)
 
 
     @staticmethod
@@ -216,7 +237,7 @@ class JarvisPyClient:
         }
 
         response = requests.post(url, headers=headers, json=payload)
-        return response.json()
+        return JarvisPyClient._handle_response(response)
 
 
     
@@ -239,7 +260,7 @@ class JarvisPyClient:
         }
         
         response = requests.post(url, headers=headers, json=payload)
-        return response.json()
+        return JarvisPyClient._handle_response(response)
 
 
     @staticmethod
@@ -281,7 +302,7 @@ class JarvisPyClient:
             payload['python_scripts'] = python_scripts
         
         response = requests.post(url, headers=headers, json=payload)
-        return response.json()
+        return JarvisPyClient._handle_response(response)
 
 
     @staticmethod
@@ -304,7 +325,7 @@ class JarvisPyClient:
         }
         
         response = requests.post(url, headers=headers, json=payload)
-        return response.json()
+        return JarvisPyClient._handle_response(response)
 
 
     @staticmethod
@@ -330,7 +351,7 @@ class JarvisPyClient:
         }
         
         response = requests.post(url, headers=headers, json=payload)
-        return response.json()
+        return JarvisPyClient._handle_response(response)
 
 
     @staticmethod
@@ -353,7 +374,7 @@ class JarvisPyClient:
         }
         
         response = requests.post(url, headers=headers, json=payload)
-        return response.json()
+        return JarvisPyClient._handle_response(response)
 
 
     @staticmethod
@@ -389,7 +410,7 @@ class JarvisPyClient:
             payload['llm'] = llm
 
         response = requests.post(url, headers=headers, json=payload)
-        return response.json()
+        return JarvisPyClient._handle_response(response)
     
     
     
