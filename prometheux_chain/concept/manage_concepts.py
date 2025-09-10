@@ -25,7 +25,7 @@ def cleanup_concepts(workspace_id="workspace_id", project_id=None, project_scope
         raise Exception(f"An exception occurred during cleaning up concepts: {response.get('message', 'Unknown error')}")
 
 
-def save_concept(workspace_id="workspace_id", project_id=None, concept_logic=None, scope="user"):
+def save_concept(workspace_id="workspace_id", project_id=None, concept_logic=None, python_scripts=None, scope="user"):
     """
     Save concept logic for a specific project.
     """
@@ -33,6 +33,7 @@ def save_concept(workspace_id="workspace_id", project_id=None, concept_logic=Non
         workspace_id=workspace_id,
         project_id=project_id,
         concept_logic=concept_logic,
+        python_scripts=python_scripts,
         scope=scope
     )
 
@@ -55,8 +56,7 @@ def run_concept(
     step_by_step=False,
     materialize_intermediate_concepts=False,
     force_rerun=True,
-    persist_outputs=False,
-    python_scripts=None
+    persist_outputs=False
 ):
     """
     Run a concept for a specific project.
@@ -71,7 +71,6 @@ def run_concept(
         materialize_intermediate_concepts=materialize_intermediate_concepts,
         force_rerun=force_rerun,
         persist_outputs=persist_outputs,
-        python_scripts=python_scripts
     )
 
     if response.get('status') != 'success':
