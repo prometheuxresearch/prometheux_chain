@@ -75,6 +75,27 @@ def load_project(project_id, workspace_id="workspace_id", project_scope = "user"
         raise Exception(f"An exception occurred while loading project: {response.get('message', 'Unknown error')}")
 
 
+def copy_project(project_id, workspace_id="workspace_id", target_scope="user", new_project_name=None):
+    """
+    Copy a project.
+    """
+    response = JarvisPyClient.copy_project(
+        project_id=project_id,
+        workspace_id=workspace_id,
+        target_scope=target_scope,
+        new_project_name=new_project_name
+    )
+
+    if response.get('status') != 'success':
+        msg = response.get('message', 'Unknown error')
+        raise Exception(f"An exception occurred while copying project: {msg}")
+    
+    if response.get('status') == 'success':
+        return response.get('data', {})
+    else:
+        raise Exception(f"An exception occurred while copying project: {response.get('message', 'Unknown error')}")
+
+
 
 
 
