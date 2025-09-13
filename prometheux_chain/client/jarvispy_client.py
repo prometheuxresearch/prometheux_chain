@@ -407,64 +407,26 @@ class JarvisPyClient:
 
         response = requests.post(url, headers=headers, json=payload)
         return JarvisPyClient._handle_response(response)
-    
-    
-    
-    
 
-    
+    @staticmethod
+    def copy_project(project_id, workspace_id, target_scope="user", new_project_name=None):
+        jarvispy_url = config['JARVISPY_URL']
+        pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    # @staticmethod
-    # def all_pairs_join(databases: list[Database], lhs_databases: list[Database], rhs_databases: list[Database], to_evaluate: bool, parallel: bool, output_type: str):
-    #     jarvispy_url = config['JARVISPY_URL']
-    #     pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
-
-    # #     if not pmtx_token:
-    # #         raise Exception("PMTX_TOKEN is not set. Please set it in environment variables or config.")
+        if not pmtx_token:
+            raise Exception("PMTX_TOKEN is not set. Please set it in environment variables or config.")
         
-    #     url = f"{jarvispy_url}/api/v1/all-pairs-join"
-    #     headers = {
-    #         'Content-Type': 'application/json',
-    #         'Authorization': f"Bearer {pmtx_token}"
-    #     }
-    #     payload = {
-    #         "databasePayloads": [db.to_dict() for db in databases],
-    #         "lhsDatabasePayloads": [db.to_dict() for db in lhs_databases],
-    #         "rhsDatabasePayloads": [db.to_dict() for db in rhs_databases],
-    #         "toEvaluate": to_evaluate,
-    #         "parallel": parallel,
-    #         "outputType": output_type
-    #     }
-
-    # #     response = requests.post(url, headers=headers, json=payload)
-    # #     return response
-
-    
-    
-    
-
-
-    
-    
-    
-    
-    
-    
-    
+        url = f"{jarvispy_url}/api/v1/projects/{workspace_id}/copy"
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f"Bearer {pmtx_token}"
+        }
+        payload = {
+            'project_id': project_id,
+            'workspace_id': workspace_id,
+            'target_scope': target_scope,
+            'new_project_name': new_project_name
+        }
+        
+        response = requests.post(url, headers=headers, json=payload)
+        return JarvisPyClient._handle_response(response)  
