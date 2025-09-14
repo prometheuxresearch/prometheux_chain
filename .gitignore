@@ -142,3 +142,4 @@ myvenv
 .DS_Store
 Thumbs.db
 test/
+!test/notebooks/test_pipeline.ipynb
