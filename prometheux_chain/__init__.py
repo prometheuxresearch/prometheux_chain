@@ -1,5 +1,8 @@
 from .config import config
 
+from .workspace.manage_workspaces import export_workspace
+from .workspace.manage_workspaces import import_workspace
+
 from .project.manage_projects import cleanup_projects
 from .project.manage_projects import save_project
 from .project.manage_projects import list_projects
