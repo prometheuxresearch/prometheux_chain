@@ -38,6 +38,69 @@ class JarvisPyClient:
             raise Exception(f"Invalid JSON response from server: {response.text}")
 
     @staticmethod
+    def export_workspace(workspace_id, scope="user"):
+        """
+        Export all tables from a workspace.
+        
+        Args:
+            workspace_id (str): The ID of the workspace to export
+            scope (str): The scope of the export (default: "user")
+        
+        Returns:
+            dict: Response containing exported table data
+        """
+        jarvispy_url = config['JARVISPY_URL']
+        pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
+
+        if not pmtx_token:
+            raise Exception("PMTX_TOKEN is not set. Please set it in environment variables or config.")
+        
+        url = f"{jarvispy_url}/api/v1/workspaces/{workspace_id}/export-tables"
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f"Bearer {pmtx_token}"
+        }
+        payload = {
+            'scope': scope
+        }
+        
+        response = requests.post(url, headers=headers, json=payload)
+        return JarvisPyClient._handle_response(response)
+
+    @staticmethod
+    def import_workspace(export_data, workspace_id="workspace_id", scope="user"):
+        """
+        Import tables into a workspace from exported data.
+        
+        Args:
+            export_data (dict): The complete export data from the export endpoint
+            workspace_id (str): The ID of the target workspace (default: "workspace_id")
+            scope (str): The target scope for the import (default: "user")
+        
+        Returns:
+            dict: Response containing import status
+        """
+        jarvispy_url = config['JARVISPY_URL']
+        pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
+
+        if not pmtx_token:
+            raise Exception("PMTX_TOKEN is not set. Please set it in environment variables or config.")
+        
+        url = f"{jarvispy_url}/api/v1/workspaces/import-tables"
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f"Bearer {pmtx_token}"
+        }
+        payload = {
+            'export_data': export_data,
+            'workspace_id': workspace_id,
+            'scope': scope
+        }
+        
+        response = requests.post(url, headers=headers, json=payload)
+        return JarvisPyClient._handle_response(response)  
+
+    @staticmethod
     def cleanup_projects(workspace_id, project_id, project_scope):
         jarvispy_url = config['JARVISPY_URL']
         pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
@@ -429,4 +492,6 @@ class JarvisPyClient:
         }
         
         response = requests.post(url, headers=headers, json=payload)
-        return JarvisPyClient._handle_response(response)  
+        return JarvisPyClient._handle_response(response)
+
+    
