@@ -68,12 +68,25 @@ def graph_rag(
     top_k=5,
 ):
     """
-    Unified GraphRAG wrapper with clean params.
-    - graph_selected_concepts: list[str] → added as graph.selected_concepts if not empty (concepts to be executed directly)
-    - graph_available_concepts: list[str] → added as graph.available_concepts if not empty (concepts available to orchestrator)
-    - rag_concepts: list[{"concept": str, "field_to_embed": str}] → added as rag.embedding_to_retrieve if not empty
-    - llm: optional LLM config dict; included if provided
-    - top_k: optional int, defaults to 5 → added to rag config to control number of retrieved results
+    Unified GraphRAG wrapper with clean parameters for knowledge graph retrieval and generation.
+    
+    Args:
+        workspace_id (str): The ID of the workspace (default: "workspace_id")
+        project_id (str, optional): The ID of the project
+        question (str, optional): The question to ask the GraphRAG system
+        graph_selected_concepts (list, optional): List of concept names to be executed directly
+        graph_available_concepts (list, optional): List of concept names available to the orchestrator
+        rag_concepts (list, optional): List of dicts with concept and field_to_embed for retrieval
+        rag_records (list, optional): List of records for RAG embedding retrieval
+        project_scope (str): The scope of the project (default: "user")
+        llm (dict, optional): LLM configuration dictionary
+        top_k (int): Number of top results to retrieve (default: 5)
+    
+    Returns:
+        dict: Response data from the GraphRAG query or None
+    
+    Raises:
+        Exception: If the question is not provided or the GraphRAG query fails
     """
     if not question:
         raise Exception("question is required")
