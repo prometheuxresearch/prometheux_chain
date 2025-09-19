@@ -494,4 +494,64 @@ class JarvisPyClient:
         response = requests.post(url, headers=headers, json=payload)
         return JarvisPyClient._handle_response(response)
 
+    @staticmethod
+    def save_user_config(config_data, scope="user"):
+        """
+        Save user configuration data.
+        
+        Args:
+            config_data (dict): The configuration data to save
+            scope (str): The scope of the configuration (default: "user")
+        
+        Returns:
+            dict: Response containing save status
+        """
+        jarvispy_url = config['JARVISPY_URL']
+        pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
+
+        if not pmtx_token:
+            raise Exception("PMTX_TOKEN is not set. Please set it in environment variables or config.")
+        
+        url = f"{jarvispy_url}/api/v1/users/save-config"
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f"Bearer {pmtx_token}"
+        }
+        payload = {
+            'config_data': config_data,
+            'scope': scope
+        }
+        
+        response = requests.post(url, headers=headers, json=payload)
+        return JarvisPyClient._handle_response(response)
+
+    @staticmethod
+    def load_user_config(scope="user"):
+        """
+        Load user configuration data.
+        
+        Args:
+            scope (str): The scope of the configuration to load (default: "user")
+        
+        Returns:
+            dict: Response containing configuration data
+        """
+        jarvispy_url = config['JARVISPY_URL']
+        pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
+
+        if not pmtx_token:
+            raise Exception("PMTX_TOKEN is not set. Please set it in environment variables or config.")
+        
+        url = f"{jarvispy_url}/api/v1/users/load-config"
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f"Bearer {pmtx_token}"
+        }
+        payload = {
+            'scope': scope
+        }
+        
+        response = requests.post(url, headers=headers, json=payload)
+        return JarvisPyClient._handle_response(response)
+
     
