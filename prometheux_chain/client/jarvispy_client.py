@@ -162,11 +162,11 @@ class JarvisPyClient:
             'Content-Type': 'application/json',
             'Authorization': f"Bearer {pmtx_token}"
         }
-        payload = {
-            'scopes': project_scopes
+        params = {
+            'scopes': ','.join(project_scopes) if isinstance(project_scopes, (list, tuple)) else project_scopes
         }
         
-        response = requests.post(url, headers=headers, json=payload)
+        response = requests.get(url, headers=headers, params=params)
         return JarvisPyClient._handle_response(response)
 
 
@@ -183,14 +183,12 @@ class JarvisPyClient:
             'Content-Type': 'application/json',
             'Authorization': f"Bearer {pmtx_token}"
         }
-        payload = {
-            'project': {
-                'id': project_id,
-                'scope': project_scope
-            }
+        params = {
+            'project_id': project_id,
+            'scope': project_scope
         }
         
-        response = requests.post(url, headers=headers, json=payload)
+        response = requests.get(url, headers=headers, params=params)
         return JarvisPyClient._handle_response(response)
 
 
@@ -250,11 +248,11 @@ class JarvisPyClient:
             'Content-Type': 'application/json',
             'Authorization': f"Bearer {pmtx_token}"
         }
-        payload = {
+        params = {
             'scope': 'user'
         }
         
-        response = requests.post(url, headers=headers, json=payload)
+        response = requests.get(url, headers=headers, params=params)
         return JarvisPyClient._handle_response(response)
 
 
@@ -377,13 +375,11 @@ class JarvisPyClient:
             'Content-Type': 'application/json',
             'Authorization': f"Bearer {pmtx_token}"
         }
-        payload = {
-            'project': {
-                'scope': project_scope
-            }
+        params = {
+            'scope': project_scope
         }
         
-        response = requests.post(url, headers=headers, json=payload)
+        response = requests.get(url, headers=headers, params=params)
         return JarvisPyClient._handle_response(response)
 
 
@@ -426,13 +422,11 @@ class JarvisPyClient:
             'Content-Type': 'application/json',
             'Authorization': f"Bearer {pmtx_token}"
         }
-        payload = {
-            'project': {
-                'scope': scope
-            }
+        params = {
+            'scope': scope
         }
         
-        response = requests.post(url, headers=headers, json=payload)
+        response = requests.get(url, headers=headers, params=params)
         return JarvisPyClient._handle_response(response)
 
 
@@ -547,11 +541,11 @@ class JarvisPyClient:
             'Content-Type': 'application/json',
             'Authorization': f"Bearer {pmtx_token}"
         }
-        payload = {
+        params = {
             'scope': scope
         }
         
-        response = requests.post(url, headers=headers, json=payload)
+        response = requests.get(url, headers=headers, params=params)
         return JarvisPyClient._handle_response(response)
 
     
