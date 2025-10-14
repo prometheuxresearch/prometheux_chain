@@ -63,9 +63,12 @@ def graph_rag(
     graph_available_concepts=None,
     rag_concepts=None,
     rag_records=None,
-    project_scope="user",
     llm=None,
-    top_k=5,
+    top_k=None,
+    threshold=None,
+    embedding_config=None,
+    force_recreate=False,
+    project_scope="user",
 ):
     """
     Unified GraphRAG wrapper with clean parameters for knowledge graph retrieval and generation.
@@ -80,13 +83,20 @@ def graph_rag(
         rag_records (list, optional): List of records for RAG embedding retrieval
         project_scope (str): The scope of the project (default: "user")
         llm (dict, optional): LLM configuration dictionary
-        top_k (int): Number of top results to retrieve (default: 5)
+        top_k (int, optional): Number of top results to retrieve (default: 5 if threshold not provided)
+        threshold (float, optional): Similarity threshold for retrieval (alternative to top_k)
+        embedding_config (dict, optional): Configuration for embedding provider and model
+        force_recreate (bool): Force recreation of embeddings (default: False)
     
     Returns:
         dict: Response data from the GraphRAG query or None
     
     Raises:
         Exception: If the question is not provided or the GraphRAG query fails
+    
+    Note:
+        Only one of top_k or threshold should be provided. If threshold is provided, it takes
+        precedence. If neither is provided, defaults to top_k=5.
     """
     if not question:
         raise Exception("question is required")
@@ -100,14 +110,31 @@ def graph_rag(
             graph_payload['available_concepts'] = graph_available_concepts
 
     rag_payload = None
-    if rag_concepts or rag_records or top_k != 5:
+    if rag_concepts or rag_records or threshold is not None or top_k is not None or embedding_config or force_recreate:
         rag_payload = {}
+        
+        # Add embedding retrieval configuration
         if rag_concepts:
             rag_payload['embedding_to_retrieve'] = rag_concepts
         if rag_records:
             rag_payload['embedding_retrieved'] = rag_records
-        if top_k != 5:
+        
+        # Add embedding config if provided
+        if embedding_config:
+            rag_payload['embedding_config'] = embedding_config
+        
+        # Handle retrieval mode: threshold takes precedence, otherwise use top_k (default 5)
+        if threshold is not None:
+            rag_payload['threshold'] = threshold
+        elif top_k is not None:
             rag_payload['top_k'] = top_k
+        else:
+            # Default to top_k=5 if neither is provided
+            rag_payload['top_k'] = 5
+        
+        # Add force_recreate flag if set to True
+        if force_recreate:
+            rag_payload['force_recreate'] = force_recreate
 
     response = JarvisPyClient.graph_rag(
         workspace_id=workspace_id,

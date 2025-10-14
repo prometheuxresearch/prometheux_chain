@@ -18,7 +18,7 @@ For more information refer to the [documentation](https://docs.prometheux.ai/sdk
 ## Installation
 
 ### Requirements
-- Python 3.7 or higher
+- Python 3.9 or higher (Python 3.13 recommended)
 
 ### Install Using pip
 
