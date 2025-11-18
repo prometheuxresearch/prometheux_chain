@@ -8,12 +8,11 @@ Copyright (C) Prometheux Limited. All rights reserved.
 Author: Prometheux Limited
 """
 
-def save_kg(workspace_id="workspace_id", project_id=None, concepts=None, scope="user"):
+def save_kg(project_id=None, concepts=None, scope="user"):
     """
     Save a virtual knowledge graph for a project.
     
     Args:
-        workspace_id (str): The ID of the workspace
         project_id (str): The ID of the project
         kg_name (str): The name of the knowledge graph
         kg_concepts (list): List of concept names to include in the KG
@@ -28,15 +27,14 @@ def save_kg(workspace_id="workspace_id", project_id=None, concepts=None, scope="
     if not concepts or not isinstance(concepts, list):
         raise ValueError("kg_concepts must be a non-empty list")
     
-    return JarvisPyClient.save_kg(workspace_id=workspace_id, project_id=project_id, concepts=concepts, scope=scope)
+    return JarvisPyClient.save_kg(project_id=project_id, concepts=concepts, scope=scope)
 
 
-def load_kg(workspace_id="workspace_id", project_id=None, scope="user"):
+def load_kg(project_id=None, scope="user"):
     """
     Load a virtual knowledge graph for a project.
     
     Args:
-        workspace_id (str): The ID of the workspace
         project_id (str): The ID of the project
         scope (str): The scope of the project (default: "user")
     
@@ -52,18 +50,16 @@ def load_kg(workspace_id="workspace_id", project_id=None, scope="user"):
     if not project_id:
         raise ValueError("project_id is required")
     
-    return JarvisPyClient.load_kg(workspace_id, project_id, scope)
+    return JarvisPyClient.load_kg(project_id, scope)
 
 
 def graph_rag(
-    workspace_id="workspace_id",
     project_id=None,
     question=None,
     graph_selected_concepts=None,
     graph_available_concepts=None,
     rag_concepts=None,
     rag_records=None,
-    llm=None,
     top_k=None,
     threshold=None,
     embedding_config=None,
@@ -74,7 +70,6 @@ def graph_rag(
     Unified GraphRAG wrapper with clean parameters for knowledge graph retrieval and generation.
     
     Args:
-        workspace_id (str): The ID of the workspace (default: "workspace_id")
         project_id (str, optional): The ID of the project
         question (str, optional): The question to ask the GraphRAG system
         graph_selected_concepts (list, optional): List of concept names to be executed directly
@@ -82,7 +77,6 @@ def graph_rag(
         rag_concepts (list, optional): List of dicts with concept and field_to_embed for retrieval
         rag_records (list, optional): List of records for RAG embedding retrieval
         project_scope (str): The scope of the project (default: "user")
-        llm (dict, optional): LLM configuration dictionary
         top_k (int, optional): Number of top results to retrieve (default: 5 if threshold not provided)
         threshold (float, optional): Similarity threshold for retrieval (alternative to top_k)
         embedding_config (dict, optional): Configuration for embedding provider and model
@@ -137,12 +131,10 @@ def graph_rag(
             rag_payload['force_recreate'] = force_recreate
 
     response = JarvisPyClient.graph_rag(
-        workspace_id=workspace_id,
         project_id=project_id,
         question=question,
         graph=graph_payload,
         rag=rag_payload,
-        llm=llm,
         project_scope=project_scope,
     )
 
@@ -151,3 +143,95 @@ def graph_rag(
         raise Exception(f"An exception occurred during GraphRAG query: {msg}")
     
     return response.get('data', None)
+
+
+def query(
+    project_id=None,
+    question=None,
+    selected_concepts=None,
+    available_concepts=None,
+    retrieval_concepts=None,
+    retrieval_records=None,
+    top_k=None,
+    threshold=None,
+    embedding_config=None,
+    force_recreate=False,
+    project_scope="user",
+):
+    """
+    Unified knowledge query wrapper with clean parameters for knowledge retrieval and generation.
+    
+    Args:
+        project_id (str, optional): The ID of the project
+        question (str, optional): The question to ask the knowledge query system
+        selected_concepts (list, optional): List of concept names to be executed directly
+        available_concepts (list, optional): List of concept names available to the orchestrator
+        retrieval_concepts (list, optional): List of dicts with concept and field_to_embed for retrieval
+        retrieval_records (list, optional): List of records for embedding retrieval
+        project_scope (str): The scope of the project (default: "user")
+        top_k (int, optional): Number of top results to retrieve (default: 5 if threshold not provided)
+        threshold (float, optional): Similarity threshold for retrieval (alternative to top_k)
+        embedding_config (dict, optional): Configuration for embedding provider and model
+        force_recreate (bool): Force recreation of embeddings (default: False)
+    
+    Returns:
+        dict: Response data from the knowledge query or None
+    
+    Raises:
+        Exception: If the question is not provided or the knowledge query fails
+    
+    Note:
+        Only one of top_k or threshold should be provided. If threshold is provided, it takes
+        precedence. If neither is provided, defaults to top_k=5.
+    """
+    if not question:
+        raise Exception("question is required")
+
+    concept_payload = None
+    if selected_concepts or available_concepts:
+        concept_payload = {}
+        if selected_concepts:
+            concept_payload['selected_concepts'] = selected_concepts
+        if available_concepts:
+            concept_payload['available_concepts'] = available_concepts
+
+    retrieval_payload = None
+    if retrieval_concepts or retrieval_records or threshold is not None or top_k is not None or embedding_config or force_recreate:
+        retrieval_payload = {}
+        
+        # Add embedding retrieval configuration
+        if retrieval_concepts:
+            retrieval_payload['embedding_to_retrieve'] = retrieval_concepts
+        if retrieval_records:
+            retrieval_payload['embedding_retrieved'] = retrieval_records
+        
+        # Add embedding config if provided
+        if embedding_config:
+            retrieval_payload['embedding_config'] = embedding_config
+        
+        # Handle retrieval mode: threshold takes precedence, otherwise use top_k (default 5)
+        if threshold is not None:
+            retrieval_payload['threshold'] = threshold
+        elif top_k is not None:
+            retrieval_payload['top_k'] = top_k
+        else:
+            # Default to top_k=5 if neither is provided
+            retrieval_payload['top_k'] = 5
+        
+        # Add force_recreate flag if set to True
+        if force_recreate:
+            retrieval_payload['force_recreate'] = force_recreate
+
+    response = JarvisPyClient.graph_rag(
+        project_id=project_id,
+        question=question,
+        graph=concept_payload,
+        rag=retrieval_payload,
+        project_scope=project_scope,
+    )
+
+    if response.get('status') != 'success':
+        msg = response.get('message', 'Unknown error')
+        raise Exception(f"An exception occurred during knowledge query: {msg}")
+    
+    return response.get('data', {}).get('graph_rag_results')
