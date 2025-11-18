@@ -10,12 +10,11 @@ Author: Prometheux Limited
 """
 
 
-def cleanup_sources(workspace_id="workspace_id", source_ids=None):
+def cleanup_sources(source_ids=None):
     """
     Cleanup sources for a workspace.
     
     Args:
-        workspace_id (str): The ID of the workspace (default: "workspace_id")
         source_ids (list, optional): List of source IDs to cleanup. If None, cleans up all sources
     
     Returns:
@@ -24,7 +23,7 @@ def cleanup_sources(workspace_id="workspace_id", source_ids=None):
     Raises:
         Exception: If the cleanup fails or returns an error status
     """
-    response = JarvisPyClient.cleanup_sources(workspace_id, source_ids)
+    response = JarvisPyClient.cleanup_sources(source_ids)
 
     if response.get('status') != 'success':
         msg = response.get('message', 'Unknown error')
@@ -36,12 +35,11 @@ def cleanup_sources(workspace_id="workspace_id", source_ids=None):
         raise Exception(f"An exception occurred during cleaning up sources: {response.get('message', 'Unknown error')}")
 
 
-def connect_sources(workspace_id="workspace_id", database_payload:Database=None, compute_row_count=False):
+def connect_sources(database_payload:Database=None, compute_row_count=False):
     """
     Connect a source to a workspace.
     
     Args:
-        workspace_id (str): The ID of the workspace (default: "workspace_id")
         database_payload (Database, optional): Database configuration object
         compute_row_count (bool): Whether to compute row count during connection (default: False)
     
@@ -51,7 +49,7 @@ def connect_sources(workspace_id="workspace_id", database_payload:Database=None,
     Raises:
         Exception: If the connection fails or returns an error status
     """
-    response = JarvisPyClient.connect_sources(workspace_id=workspace_id, database_payload=database_payload, compute_row_count=compute_row_count)
+    response = JarvisPyClient.connect_sources(database_payload=database_payload, compute_row_count=compute_row_count)
     
     if response.get('status') != 'success':
         msg = response.get('message', 'Unknown error')
@@ -63,12 +61,11 @@ def connect_sources(workspace_id="workspace_id", database_payload:Database=None,
         raise Exception(f"An exception occurred during connecting sources: {response.get('message', 'Unknown error')}")
     
 
-def list_sources(workspace_id="workspace_id"):
+def list_sources():
     """
     List sources for a workspace.
     
     Args:
-        workspace_id (str): The ID of the workspace (default: "workspace_id")
     
     Returns:
         list: List of source data dictionaries
@@ -76,7 +73,7 @@ def list_sources(workspace_id="workspace_id"):
     Raises:
         Exception: If the list operation fails or returns an error status
     """
-    response = JarvisPyClient.list_sources(workspace_id=workspace_id)
+    response = JarvisPyClient.list_sources()
 
     if response.get('status') != 'success':
         msg = response.get('message', 'Unknown error')
