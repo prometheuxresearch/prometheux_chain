@@ -92,7 +92,7 @@ px.run_concept(project_id=project_id, concept_name="location")
 
 The Prometheux backend is required to use this SDK. To request access:
 
-- 📧 **Email**: davben@prometheux.co.uk or support@prometheux.co.uk
+- 📧 **Email**: davben@prometheux.co.uk, teodoro.baldazzi@prometheux.co.uk, or support@prometheux.co.uk
 - 🌐 **Website**: https://www.prometheux.ai
 
 ## License
@@ -116,7 +116,7 @@ For issues, questions, or access requests:
 
 - **Homepage**: https://www.prometheux.ai
 - **PyPI**: https://pypi.org/project/prometheux-chain/
-- **Email**: davben@prometheux.co.uk or support@prometheux.co.uk
+- **Email**: davben@prometheux.co.uk, teodoro.baldazzi@prometheux.co.uk, or support@prometheux.co.uk
 - **Documentation**: https://docs.prometheux.ai/sdk
 - **Issues**: [GitHub Issues](https://github.com/prometheuxresearch/prometheux_chain/issues)
 
