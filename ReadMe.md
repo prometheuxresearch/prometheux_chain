@@ -85,3 +85,43 @@ px.save_concept(project_id=project_id, concept_logic=concept_logic)
 ```python
 px.run_concept(project_id=project_id, concept_name="location")
 ```
+
+---
+
+## Access to Prometheux Backend
+
+The Prometheux backend is required to use this SDK. To request access:
+
+- 📧 **Email**: davben@prometheux.co.uk or support@prometheux.co.uk
+- 🌐 **Website**: https://www.prometheux.ai
+
+## License
+
+BSD 3-Clause License — see [LICENSE](LICENSE) file for details.
+
+## About Prometheux
+
+Prometheux is an **ontology native data engine** that processes data anywhere it lives. Define ontologies once and unlock knowledge that spans databases, warehouses, and platforms—built on the Vadalog reasoning engine.
+
+**Key capabilities:**
+- **Connect**: Query across Snowflake, Databricks, Neo4j, SQL, CSV, and more without ETL or vendor lock-in
+- **Think**: Replace 100+ lines of PySpark/SQL with simple declarative logic. Power graph analytics without GraphDBs
+- **Explain**: Full lineage & traceability with deterministic, repeatable results. Ground AI in structured, explainable context
+
+Exponentially faster and simpler than traditional approaches. Learn more at [prometheux.ai](https://prometheux.ai/).
+
+## Support
+
+For issues, questions, or access requests:
+
+- **Homepage**: https://www.prometheux.ai
+- **PyPI**: https://pypi.org/project/prometheux-chain/
+- **Email**: davben@prometheux.co.uk or support@prometheux.co.uk
+- **Documentation**: https://docs.prometheux.ai/sdk
+- **Issues**: [GitHub Issues](https://github.com/prometheuxresearch/prometheux_chain/issues)
+
+## Related Projects
+
+- [Prometheux MCP](https://pypi.org/project/prometheux-mcp/) — MCP client for AI agents
+- [Vadalog Extension](https://pypi.org/project/vadalog-extension/) — JupyterLab extension for Vadalog
+- [Vadalog Jupyter Kernel](https://pypi.org/project/vadalog-jupyter-kernel/) — Jupyter kernel for Vadalog
