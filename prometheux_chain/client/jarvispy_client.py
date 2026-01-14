@@ -184,7 +184,7 @@ class JarvisPyClient:
     
 
     @staticmethod
-    def save_project(project_id, project_name, project_scope):
+    def save_project(project_id, project_name, project_scope, description=None):
         jarvispy_url = config['JARVISPY_URL']
         pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
 
@@ -203,6 +203,8 @@ class JarvisPyClient:
                 'scope': project_scope,
             }
         }
+        if description is not None:
+            payload['project']['description'] = description
         
         response = requests.post(url, headers=headers, json=payload)
         return JarvisPyClient._handle_response(response)
