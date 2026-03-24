@@ -489,37 +489,6 @@ class JarvisPyClient:
 
 
     @staticmethod
-    def graph_rag(
-        project_id,
-        question,
-        graph=None,
-        rag=None,
-        project_scope="user",
-    ):
-        jarvispy_url = config['JARVISPY_URL']
-        pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
-
-        if not pmtx_token:
-            raise Exception("PMTX_TOKEN is not set. Please set it in environment variables or config.")
-
-        url = f"{jarvispy_url}/api/v1/graphrag/{project_id}/query"
-        headers = {
-            'Content-Type': 'application/json',
-            'Authorization': f"Bearer {pmtx_token}"
-        }
-        payload = {
-            'question': question,
-            'project_scope': project_scope
-        }
-        if graph:
-            payload['graph'] = graph
-        if rag:
-            payload['rag'] = rag
-
-        response = requests.post(url, headers=headers, json=payload)
-        return JarvisPyClient._handle_response(response)
-
-    @staticmethod
     def copy_project(project_id, target_scope="user", new_project_name=None):
         jarvispy_url = config['JARVISPY_URL']
         pmtx_token = os.environ.get('PMTX_TOKEN', config.get('PMTX_TOKEN', ''))
