@@ -19,10 +19,7 @@ from .concept.manage_concepts import cleanup_concepts
 from .concept.manage_concepts import list_concepts
 from .concept.manage_concepts import run_concept
 from .concept.manage_concepts import save_concept
-
-from .kg.manage_kgs import save_kg
-from .kg.manage_kgs import load_kg
-from .kg.manage_kgs import graph_rag
+from .concept.manage_concepts import fetch_results
 
 from .user.manage_users import save_user_config
 from .user.manage_users import load_user_config
