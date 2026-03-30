@@ -16,13 +16,13 @@ def _check(response, action="operation"):
     return response.get('data')
 
 
-def save_concept(project_id, code, python_scripts=None, scope="user",
+def save_concept(project_id, definition, python_scripts=None, scope="user",
                  description=None, concept_type="logic", concept_name=None,
                  binds=None, output_predicate="", existing_name=None,
                  position=None, group="group_id", compute=None):
-    """Save a concept. Only ``code`` is required; everything else has defaults."""
+    """Save a concept. Only ``definition`` is required; everything else has defaults."""
     return _check(JarvisPyClient.save_concept(
-        project_id=project_id, code=code, python_scripts=python_scripts,
+        project_id=project_id, definition=definition, python_scripts=python_scripts,
         scope=scope, description=description, concept_type=concept_type,
         concept_name=concept_name, binds=binds, output_predicate=output_predicate,
         existing_name=existing_name, position=position, group=group, compute=compute,

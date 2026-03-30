@@ -125,11 +125,11 @@ class JarvisPyClient:
     # ── Concepts ──────────────────────────────────────────────────────────
 
     @staticmethod
-    def save_concept(project_id, code, python_scripts=None, scope="user",
+    def save_concept(project_id, definition, python_scripts=None, scope="user",
                      description=None, concept_type="logic", concept_name=None,
                      binds=None, output_predicate="", existing_name=None,
                      position=None, group="group_id", compute=None):
-        payload = {'code': code, 'scope': scope, 'concept_type': concept_type}
+        payload = {'definition': definition, 'scope': scope, 'concept_type': concept_type}
         if python_scripts:
             payload['python_scripts'] = python_scripts
         if description:
