@@ -1,5 +1,3 @@
-from prometheux_chain.client.jarvispy_client import JarvisPyClient
-
 """
 Concept Management Module
 
@@ -8,134 +6,57 @@ Copyright (C) Prometheux Limited. All rights reserved.
 Author: Prometheux Limited
 """
 
+from ..client.jarvispy_client import JarvisPyClient
 
-def cleanup_concepts(project_id=None, project_scope="user"):
-    """
-    Cleanup concepts for a specific project.
-    
-    Args:
-        project_id (str, optional): The ID of the project to cleanup concepts for
-        project_scope (str): The scope of the project (default: "user")
-    
-    Returns:
-        dict: Response data from the cleanup operation or None
-    
-    Raises:
-        Exception: If the cleanup fails or returns an error status
-    """
-    response = JarvisPyClient.cleanup_concepts(project_id=project_id, project_scope=project_scope)
 
+def _check(response, action="operation"):
+    """Raise on error, return data on success."""
     if response.get('status') != 'success':
-        msg = response.get('message', 'Unknown error')
-        raise Exception(f"An exception occurred during cleaning up concepts: {msg}")
-    
-    if response.get('status') == 'success':
-        return response.get('data', None)
-    else:
-        raise Exception(f"An exception occurred during cleaning up concepts: {response.get('message', 'Unknown error')}")
+        raise Exception(f"Concept {action} failed: {response.get('message', 'Unknown error')}")
+    return response.get('data')
 
 
-def save_concept(project_id=None, concept_logic=None, python_scripts=None, scope="user"):
-    """
-    Save concept logic for a specific project.
-    
-    Args:
-        project_id (str, optional): The ID of the project to save the concept for
-        concept_logic (str, optional): The concept logic to save
-        python_scripts (str, optional): Python scripts associated with the concept
-        scope (str): The scope of the project (default: "user")
-    
-    Returns:
-        dict: Response data from the save operation or None
-    
-    Raises:
-        Exception: If the save operation fails or returns an error status
-    """
-    response = JarvisPyClient.save_concept(
-        project_id=project_id,
-        concept_logic=concept_logic,
-        python_scripts=python_scripts,
-        scope=scope
-    )
-
-    if response.get('status') != 'success':
-        msg = response.get('message', 'Unknown error')
-        raise Exception(f"An exception occurred during saving concepts: {msg}")
-    
-    if response.get('status') == 'success':
-        return response.get('data', None)
-    else:
-        raise Exception(f"An exception occurred during saving concepts: {response.get('message', 'Unknown error')}")
+def save_concept(project_id, code, python_scripts=None, scope="user",
+                 description=None, concept_type="logic", concept_name=None,
+                 binds=None, output_predicate="", existing_name=None,
+                 position=None, group="group_id", compute=None):
+    """Save a concept. Only ``code`` is required; everything else has defaults."""
+    return _check(JarvisPyClient.save_concept(
+        project_id=project_id, code=code, python_scripts=python_scripts,
+        scope=scope, description=description, concept_type=concept_type,
+        concept_name=concept_name, binds=binds, output_predicate=output_predicate,
+        existing_name=existing_name, position=position, group=group, compute=compute,
+    ), "save")
 
 
-def run_concept(
-    project_id=None,
-    concept_name=None,
-    params=None,
-    project_scope="user",
-    materialize_intermediate_concepts=False,
-    force_rerun=True,
-    persist_outputs=False
-):
-    """
-    Run a concept for a specific project.
-    
-    Args:
-        project_id (str, optional): The ID of the project to run the concept in
-        concept_name (str, optional): The name of the concept to run
-        params (dict, optional): Parameters to pass to the concept
-        project_scope (str): The scope of the project (default: "user")
-        materialize_intermediate_concepts (bool): Whether to materialize intermediate concepts (default: False)
-        force_rerun (bool): Whether to force rerun the concept (default: True)
-        persist_outputs (bool): Whether to persist outputs (default: False)
-    
-    Returns:
-        dict: Response data from the concept execution or None
-    
-    Raises:
-        Exception: If the concept execution fails or returns an error status
-    """
-    response = JarvisPyClient.run_concept(
-        project_id=project_id,
-        concept_name=concept_name,
-        params=params or {},
-        project_scope=project_scope,
-        materialize_intermediate_concepts=materialize_intermediate_concepts,
-        force_rerun=force_rerun,
-        persist_outputs=persist_outputs,
-    )
-
-    if response.get('status') != 'success':
-        msg = response.get('message', 'Unknown error')
-        raise Exception(f"An exception occurred during running concept: {msg}")
-    
-    if response.get('status') == 'success':
-        return response.get('data', None)
-    else:
-        raise Exception(f"An exception occurred during running concept: {response.get('message', 'Unknown error')}")
+def run_concept(project_id, concept_name, params=None, scope="user",
+                force_rerun=True, persist_outputs=False, compute=None):
+    """Run a concept. Only ``project_id`` and ``concept_name`` are required."""
+    return _check(JarvisPyClient.run_concept(
+        project_id=project_id, concept_name=concept_name,
+        params=params or {}, scope=scope, force_rerun=force_rerun,
+        persist_outputs=persist_outputs, compute=compute,
+    ), "run")
 
 
-def list_concepts(project_id=None, project_scope="user"):
-    """
-    List all concepts for a specific project.
-    
-    Args:
-        project_id (str, optional): The ID of the project to list concepts for
-        project_scope (str): The scope of the project (default: "user")
-    
-    Returns:
-        dict: Response data containing the list of concepts or None
-    
-    Raises:
-        Exception: If the list operation fails or returns an error status
-    """
-    response = JarvisPyClient.list_concepts(project_id=project_id, project_scope=project_scope)
+def list_concepts(project_id, scope="user"):
+    """List all concepts in a project."""
+    return _check(JarvisPyClient.list_concepts(
+        project_id=project_id, scope=scope,
+    ), "list")
 
-    if response.get('status') != 'success':
-        msg = response.get('message', 'Unknown error')
-        raise Exception(f"An exception occurred during listing concepts: {msg}")
-    
-    if response.get('status') == 'success':
-        return response.get('data', None)
-    else:
-        raise Exception(f"An exception occurred during listing concepts: {response.get('message', 'Unknown error')}") 
+
+def cleanup_concepts(project_id, scope="user", concept_names=None):
+    """Delete concepts from a project. If ``concept_names`` is None, deletes all."""
+    return _check(JarvisPyClient.cleanup_concepts(
+        project_id=project_id, scope=scope, concept_names=concept_names,
+    ), "cleanup")
+
+
+def fetch_results(project_id, output_predicate, page=1, page_size=10,
+                  scope="user", order_by=None):
+    """Fetch paginated results for a populated predicate."""
+    return _check(JarvisPyClient.fetch_results(
+        project_id=project_id, output_predicate=output_predicate,
+        page=page, page_size=page_size, scope=scope, order_by=order_by,
+    ), "fetch")

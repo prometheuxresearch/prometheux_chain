@@ -64,7 +64,7 @@ project_id = px.save_project(project_name="test_project")
 
 #### Define concept logic using Vadalog syntax and save it
 ```python
-concept_logic = """
+code = """
 company("Apple", "Redwood City, CA").
 company("Google", "Mountain View, CA").
 company("Microsoft", "Redmond, WA").
@@ -78,7 +78,7 @@ location(Location) :- company(_,Location).
 
 @output("location").
 """
-px.save_concept(project_id=project_id, concept_logic=concept_logic)
+px.save_concept(project_id=project_id, code=code)
 ```
 
 #### Run the concept to generate results
