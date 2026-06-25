@@ -19,6 +19,7 @@ setup(
     install_requires=[
         "requests",
         "pyyaml",
+        "websocket-client",
     ],
     package_data={
         'prometheux_chain': ['config.yaml'],

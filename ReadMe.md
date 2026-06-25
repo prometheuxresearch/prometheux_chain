@@ -64,7 +64,7 @@ project_id = px.save_project(project_name="test_project")
 
 #### Define concept logic using Vadalog syntax and save it
 ```python
-code = """
+definition = """
 company("Apple", "Redwood City, CA").
 company("Google", "Mountain View, CA").
 company("Microsoft", "Redmond, WA").
@@ -78,12 +78,111 @@ location(Location) :- company(_,Location).
 
 @output("location").
 """
-px.save_concept(project_id=project_id, code=code)
+px.save_concept(project_id=project_id, definition=definition)
 ```
 
 #### Run the concept to generate results
 ```python
 px.run_concept(project_id=project_id, concept_name="location")
+```
+
+#### Fetch the produced facts
+```python
+results = px.fetch_results(project_id=project_id, output_predicate="location")
+```
+
+---
+
+## Domains
+
+The SDK exposes a flat, function-based API (`import prometheux_chain as px`)
+covering the user-facing JarvisPy backend:
+
+- **Projects** — `save_project`, `list_projects`, `load_project`, `copy_project`,
+  `export_project` / `import_project`, `export_workspace` / `import_workspace`,
+  `list_templates`, `import_template`, `create_project_from_context`,
+  `create_snapshot`, `list_snapshots`, `restore_snapshot`, `delete_snapshot`.
+- **Data sources** — `connect_sources`, `list_sources`, `infer_schema`,
+  `list_sheets`, `list_demo_sources`, `refresh_sources`, `preview_datasource`,
+  `all_pairs_join`, `cleanup_sources`.
+- **Files (disk/)** — `upload_file`, `list_files`, `make_directory`,
+  `delete_files`, `move_file`, `download_file`.
+- **Concepts** — `save_concept`, `rename_concept`, `run_concept`,
+  `run_concept_stream`, `list_concepts`, `reorder_concepts`, `fetch_results`,
+  `search_results`, `llm_analysis`, `download_concept`,
+  `generate_concept_description`, `get_concept_description`,
+  `get_execution_status`, `get_execution_statuses`, `cleanup_concepts`.
+- **Knowledge graphs** — `visualize_concept_lineage`, `build_graph`,
+  `list_graph_functions`, `run_graph_analytics`.
+- **Ontology** — `save_ontology`, `load_ontology`,
+  `update_concept_ontology_type`, `add_to_lineage`, `describe_ontology`,
+  `import_owl`.
+- **Knowledge / context layer** — `list_context_notes`, `create_context_note`,
+  `create_context_notes_from_file`, `get_context_note`, `update_context_note`,
+  `delete_context_note`, `search_context_notes`, `auto_seed`,
+  `interview_template`, `submit_interview`, `onboarding_status`, `project_text`.
+- **Agent** — `agent_chat` (streaming), `agent_reset`.
+- **Sharing** — `create_share`, `revoke_share`, `update_share_role`,
+  `list_shares`, `list_inbox`, `accept_share`, `leave_share`, `sync_inbox`.
+- **Dashboards** — `list_all_dashboards`, `list_dashboards`, `get_dashboard`,
+  `save_dashboard`, `delete_dashboard`.
+- **Schedules** — `create_policy`, `list_policies`, `get_policy`,
+  `update_policy`, `delete_policy`, `trigger_policy`, `get_run_history`.
+- **Alerts** — `get_alert_history`, `reprocess_alert`.
+- **Chat history** — `list_sessions`, `get_session`, `rename_session`,
+  `delete_session`.
+- **Compute** — `check_compute_availability`.
+- **Users / account** — `save_user_config`, `load_user_config`, `get_role`,
+  `list_llm_models`, `get_usage_status`, `get_login_activity`.
+- **Auth / tokens** — `issue_token`, `list_tokens`, `revoke_token`,
+  `revoke_specific_token`, `revoke_all_tokens`.
+- **Vadalog authoring** — `analyze_program`, `build_bind`, `parse_binds`,
+  `evaluate_program`.
+- **Vadalingo translation** — `translate_nl_to_vadalog`,
+  `translate_sql_to_vadalog`, `translate_rdf_to_vadalog`,
+  `translate_owl_to_vadalog`.
+
+### Optional configuration
+
+Some recipient-side sharing flows require a Supabase token. Set it via the
+`SUPABASE_TOKEN` environment variable (or `px.config`) and it is attached
+automatically as the `X-Supabase-Token` header when present.
+
+## Streaming
+
+A few endpoints stream results instead of returning a single response. These
+return Python generators you iterate over.
+
+#### Chat with the Vadalog AI agent (NDJSON stream)
+```python
+for event in px.agent_chat(project_id=project_id, message="What does this project do?"):
+    if event.get("type") == "content":
+        print(event["data"]["chunk"], end="")
+```
+
+#### Run a concept with live status updates (WebSocket stream)
+WebSocket streaming requires the `websocket-client` dependency (installed
+automatically with the SDK).
+```python
+for event in px.run_concept_stream(project_id=project_id, concept_name="location"):
+    print(event.get("event"), event.get("data"))
+    # iteration ends after the terminal "complete" or "error" event
+```
+
+#### Auto-seed the context layer from connected data sources (NDJSON stream)
+```python
+for event in px.auto_seed(scope="project", scope_id=project_id):
+    print(event)
+```
+
+## Tokens
+
+Issue and manage API tokens programmatically:
+```python
+token = px.issue_token(name="ci-bot", expires_in_minutes=60)
+print(token["token"])   # the raw JWT — shown only once
+px.list_tokens()
+px.revoke_specific_token(token["jti"])
 ```
 
 ---

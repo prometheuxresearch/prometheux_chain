@@ -46,11 +46,11 @@ def cleanup_projects(project_id=None, project_scope="user"):
         raise Exception(f"Project cleanup failed: {response.get('message', 'Unknown error')}")
 
 
-def copy_project(project_id, target_scope="user", new_project_name=None):
+def copy_project(project_id, target_scope="user", new_project_name=None, compute=None):
     """Copy a project."""
     return _check(JarvisPyClient.copy_project(
         project_id=project_id, target_scope=target_scope,
-        new_project_name=new_project_name,
+        new_project_name=new_project_name, compute=compute,
     ), "copy")
 
 
@@ -61,12 +61,12 @@ def export_project(project_id=None, scope="user"):
     ), "export")
 
 
-def import_project(export_data, scope="user"):
+def import_project(export_data, scope="user", force_new_id=False, compute=None):
     """Import a project from exported data."""
     if not export_data or not isinstance(export_data, dict):
         raise ValueError("export_data must be a non-empty dictionary")
     return _check(JarvisPyClient.import_project(
-        export_data=export_data, scope=scope,
+        export_data=export_data, scope=scope, force_new_id=force_new_id, compute=compute,
     ), "import")
 
 
@@ -82,3 +82,61 @@ def import_workspace(export_data, scope="user"):
     return _check(JarvisPyClient.import_workspace(
         export_data=export_data, scope=scope,
     ), "workspace import")
+
+
+# ── Templates ─────────────────────────────────────────────────────────────
+
+def list_templates():
+    """List the available project templates from the marketplace."""
+    return _check(JarvisPyClient.list_templates(), "list templates")
+
+
+def import_template(template_id, new_project_name=None, project_scope="user", compute=None):
+    """Create a new project from a marketplace template."""
+    return _check(JarvisPyClient.import_template(
+        template_id=template_id, new_project_name=new_project_name,
+        project_scope=project_scope, compute=compute,
+    ), "import template")
+
+
+def create_project_from_context(context, scope="user", concept_names=None, file_paths=None):
+    """Create a project from free-text context and optional file attachments.
+
+    ``file_paths`` is a list of local file paths to upload alongside the context.
+    """
+    return _check(JarvisPyClient.create_project_from_context(
+        context=context, scope=scope, concept_names=concept_names, file_paths=file_paths,
+    ), "create from context")
+
+
+# ── Snapshots (versioning) ─────────────────────────────────────────────────
+
+def create_snapshot(project_id, scope="user", description=None):
+    """Create a point-in-time snapshot of a project."""
+    return _check(JarvisPyClient.create_snapshot(
+        project_id=project_id, scope=scope, description=description,
+    ), "create snapshot")
+
+
+def list_snapshots(project_id, scope="user"):
+    """List all snapshots for a project (metadata only)."""
+    return _check(JarvisPyClient.list_snapshots(
+        project_id=project_id, scope=scope,
+    ), "list snapshots")
+
+
+def restore_snapshot(snapshot_id, project_id, scope="user", create_safety_snapshot=True):
+    """Restore a project from a previously saved snapshot."""
+    return _check(JarvisPyClient.restore_snapshot(
+        snapshot_id=snapshot_id, project_id=project_id, scope=scope,
+        create_safety_snapshot=create_safety_snapshot,
+    ), "restore snapshot")
+
+
+def delete_snapshot(snapshot_id, project_id, scope="user"):
+    """Delete a single snapshot."""
+    response = JarvisPyClient.delete_snapshot(
+        snapshot_id=snapshot_id, project_id=project_id, scope=scope,
+    )
+    if response.get('status') != 'success':
+        raise Exception(f"Project delete snapshot failed: {response.get('message', 'Unknown error')}")

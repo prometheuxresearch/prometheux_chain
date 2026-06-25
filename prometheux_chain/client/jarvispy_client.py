@@ -6,13 +6,19 @@ Copyright (C) Prometheux Limited. All rights reserved.
 Author: Prometheux Limited
 """
 
+import json
+import json as _json
 import os
-from urllib.parse import quote
+import re
+from urllib.parse import quote, urlencode
 
 import requests
 
 from ..config import config
 from ..data.database import Database
+
+# Sentinel for "argument not supplied" where None is a meaningful value.
+_UNSET = object()
 
 
 class JarvisPyClient:
@@ -25,16 +31,236 @@ class JarvisPyClient:
         return pmtx_token
 
     @staticmethod
+    def _get_supabase_token():
+        """Optional Supabase token, needed by recipient-side share flows and a
+        few other endpoints. Returns None when not configured."""
+        return os.environ.get('SUPABASE_TOKEN', config.get('SUPABASE_TOKEN', '')) or None
+
+    @staticmethod
+    def _headers(pmtx_token, content_type='application/json'):
+        headers = {'Authorization': f"Bearer {pmtx_token}"}
+        if content_type:
+            headers['Content-Type'] = content_type
+        supabase_token = JarvisPyClient._get_supabase_token()
+        if supabase_token:
+            headers['X-Supabase-Token'] = supabase_token
+        return headers
+
+    # Default network timeouts (seconds). ``connect`` fails fast on an
+    # unreachable/half-open backend; ``read`` is generous to accommodate
+    # long-running engine/LLM operations. Both are overridable via config
+    # (``JARVISPY_CONNECT_TIMEOUT`` / ``JARVISPY_READ_TIMEOUT``) or the
+    # same-named environment variables.
+    _DEFAULT_CONNECT_TIMEOUT = 10.0
+    _DEFAULT_READ_TIMEOUT = 300.0
+
+    @staticmethod
+    def _timeout():
+        """Return a ``(connect, read)`` timeout tuple for requests calls.
+
+        Always returns finite values so no call can hang indefinitely.
+        """
+        def _as_float(value, fallback):
+            try:
+                parsed = float(value)
+                return parsed if parsed > 0 else fallback
+            except (TypeError, ValueError):
+                return fallback
+
+        connect = _as_float(config.get('JARVISPY_CONNECT_TIMEOUT'),
+                            JarvisPyClient._DEFAULT_CONNECT_TIMEOUT)
+        read = _as_float(config.get('JARVISPY_READ_TIMEOUT'),
+                        JarvisPyClient._DEFAULT_READ_TIMEOUT)
+        return (connect, read)
+
+    @staticmethod
+    def _send(method, url, **kwargs):
+        """Issue a requests call with a guaranteed timeout and friendly errors."""
+        kwargs.setdefault('timeout', JarvisPyClient._timeout())
+        try:
+            return requests.request(method, url, **kwargs)
+        except requests.exceptions.Timeout as exc:
+            read_timeout = kwargs['timeout'][1] if isinstance(kwargs['timeout'], tuple) else kwargs['timeout']
+            raise Exception(
+                f"Request to {url} timed out after {read_timeout}s. "
+                "The backend may be slow or unresponsive."
+            ) from exc
+        except requests.exceptions.ConnectionError as exc:
+            raise Exception(
+                f"Could not connect to JarvisPy backend at {config.get('JARVISPY_URL')}. "
+                "Check that it is running and JARVISPY_URL is correct."
+            ) from exc
+
+    @staticmethod
+    def _safe_filename(name):
+        """Sanitize a server-supplied filename to a bare basename.
+
+        Strips any directory components (including ``..``) so a malicious or
+        buggy server response can never cause a write outside the intended
+        directory. Only applied to server-derived names — an explicit
+        ``dest_path`` from the caller is always honored verbatim.
+        """
+        candidate = os.path.basename((name or "").replace('\\', '/').split('/')[-1])
+        if not candidate or candidate in ('.', '..'):
+            return "download"
+        return candidate
+
+    @staticmethod
     def _request(method, path, json=None, params=None):
         """Send an authenticated request to the JarvisPy backend."""
         pmtx_token = JarvisPyClient._get_auth()
         url = f"{config['JARVISPY_URL']}{path}"
-        headers = {
-            'Content-Type': 'application/json',
-            'Authorization': f"Bearer {pmtx_token}"
-        }
-        response = requests.request(method, url, headers=headers, json=json, params=params)
+        headers = JarvisPyClient._headers(pmtx_token)
+        response = JarvisPyClient._send(method, url, headers=headers, json=json, params=params)
         return JarvisPyClient._handle_response(response)
+
+    @staticmethod
+    def _request_multipart(method, path, files, data=None, params=None):
+        """Send an authenticated multipart/form-data request (file uploads)."""
+        pmtx_token = JarvisPyClient._get_auth()
+        url = f"{config['JARVISPY_URL']}{path}"
+        headers = JarvisPyClient._headers(pmtx_token, content_type=None)
+        response = JarvisPyClient._send(method, url, headers=headers, files=files, data=data, params=params)
+        return JarvisPyClient._handle_response(response)
+
+    @staticmethod
+    def _request_stream(method, path, json=None, params=None):
+        """Generator yielding parsed NDJSON objects from a streaming endpoint."""
+        pmtx_token = JarvisPyClient._get_auth()
+        url = f"{config['JARVISPY_URL']}{path}"
+        headers = JarvisPyClient._headers(pmtx_token)
+        with JarvisPyClient._send(method, url, headers=headers, json=json, params=params, stream=True) as response:
+            if response.status_code >= 400:
+                JarvisPyClient._handle_response(response)
+            try:
+                for line in response.iter_lines(decode_unicode=True):
+                    if not line:
+                        continue
+                    try:
+                        yield _json.loads(line)
+                    except ValueError:
+                        yield {"type": "raw", "data": line}
+            except (requests.exceptions.Timeout, requests.exceptions.ChunkedEncodingError,
+                    requests.exceptions.ConnectionError) as exc:
+                # A stalled or dropped stream must surface as a terminal event,
+                # never an unbounded hang or an unhandled raw exception.
+                yield {"type": "error", "data": {"status": "error", "message": str(exc)}}
+
+    @staticmethod
+    def _request_download(method, path, params=None, dest_path=None):
+        """Stream a binary file response to disk and return the local path."""
+        pmtx_token = JarvisPyClient._get_auth()
+        url = f"{config['JARVISPY_URL']}{path}"
+        headers = JarvisPyClient._headers(pmtx_token)
+        with JarvisPyClient._send(method, url, headers=headers, params=params, stream=True) as response:
+            if response.status_code >= 400:
+                JarvisPyClient._handle_response(response)
+            if dest_path is None:
+                filename = None
+                disposition = response.headers.get('Content-Disposition', '')
+                match = re.search(r'filename="?([^";]+)"?', disposition)
+                if match:
+                    filename = match.group(1)
+                if not filename:
+                    filename = path.split('?')[0]
+                # The filename is server-controlled here; sanitize to a bare
+                # basename so it cannot escape the current directory.
+                dest_path = JarvisPyClient._safe_filename(filename)
+            with open(dest_path, 'wb') as out_file:
+                for chunk in response.iter_content(chunk_size=8192):
+                    if chunk:
+                        out_file.write(chunk)
+        return dest_path
+
+    @staticmethod
+    def _websocket(path, init_payload=None, params=None):
+        """Generator yielding parsed messages from a WebSocket endpoint.
+
+        Auth is passed as query params (``token`` and optional
+        ``x_supabase_token``). The single ``init_payload`` is sent once after
+        connecting. Iteration stops after a ``complete`` or ``error`` event.
+        """
+        try:
+            from websocket import create_connection
+            try:
+                from websocket import WebSocketTimeoutException
+            except ImportError:
+                class WebSocketTimeoutException(Exception):
+                    """Fallback when websocket-client doesn't export the type."""
+        except ImportError as exc:
+            raise Exception(
+                "WebSocket support requires 'websocket-client'. "
+                "Install it with: pip install websocket-client"
+            ) from exc
+
+        pmtx_token = JarvisPyClient._get_auth()
+        base = config['JARVISPY_URL']
+        if base.startswith("https://"):
+            ws_base = "wss://" + base[len("https://"):]
+        elif base.startswith("http://"):
+            ws_base = "ws://" + base[len("http://"):]
+        else:
+            ws_base = base
+
+        query = dict(params or {})
+        query['token'] = pmtx_token
+        supabase_token = JarvisPyClient._get_supabase_token()
+        if supabase_token:
+            query['x_supabase_token'] = supabase_token
+
+        url = f"{ws_base}{path}?{urlencode(query)}"
+        # Bound both the handshake and per-message waits so a hung or silent
+        # server can never block the caller forever. The backend sends a
+        # heartbeat ping every ~20s, so a recv timeout comfortably above that
+        # only fires on a genuinely dead connection.
+        connect_timeout = JarvisPyClient._timeout()[0]
+
+        def _as_float(value, fallback):
+            try:
+                parsed = float(value)
+                return parsed if parsed > 0 else fallback
+            except (TypeError, ValueError):
+                return fallback
+
+        recv_timeout = _as_float(config.get('JARVISPY_WS_TIMEOUT'), 60.0)
+        connection = create_connection(url, timeout=connect_timeout)
+        connection.settimeout(recv_timeout)
+        try:
+            connection.send(_json.dumps(init_payload or {}))
+            while True:
+                try:
+                    raw = connection.recv()
+                except WebSocketTimeoutException as exc:
+                    yield {
+                        "event": "error",
+                        "data": {
+                            "status": "error",
+                            "message": (
+                                f"WebSocket timed out after {recv_timeout}s with no "
+                                "message from the server (a heartbeat is expected "
+                                "every ~20s); the connection appears dead."
+                            ),
+                        },
+                    }
+                    break
+                except Exception:
+                    break
+                if not raw:
+                    continue
+                try:
+                    message = _json.loads(raw)
+                except ValueError:
+                    continue
+                if message.get("event") == "ping":
+                    continue
+                yield message
+                if message.get("event") in ("complete", "error"):
+                    break
+        finally:
+            try:
+                connection.close()
+            except Exception:
+                pass
 
     @staticmethod
     def _handle_response(response):
@@ -76,10 +302,12 @@ class JarvisPyClient:
                                        json={'project': {'id': project_id, 'scope': project_scope}})
 
     @staticmethod
-    def copy_project(project_id, target_scope="user", new_project_name=None):
-        return JarvisPyClient._request("POST", "/api/v1/projects/copy",
-                                       json={'project_id': project_id, 'target_scope': target_scope,
-                                             'new_project_name': new_project_name})
+    def copy_project(project_id, target_scope="user", new_project_name=None, compute=None):
+        payload = {'project_id': project_id, 'target_scope': target_scope,
+                   'new_project_name': new_project_name}
+        if compute:
+            payload['compute'] = compute
+        return JarvisPyClient._request("POST", "/api/v1/projects/copy", json=payload)
 
     @staticmethod
     def export_project(project_id, scope="user"):
@@ -87,9 +315,11 @@ class JarvisPyClient:
                                        json={'project_id': project_id, 'scope': scope})
 
     @staticmethod
-    def import_project(export_data, scope="user"):
-        return JarvisPyClient._request("POST", "/api/v1/projects/import-project",
-                                       json={'export_data': export_data, 'scope': scope})
+    def import_project(export_data, scope="user", force_new_id=False, compute=None):
+        payload = {'export_data': export_data, 'scope': scope, 'force_new_id': force_new_id}
+        if compute:
+            payload['compute'] = compute
+        return JarvisPyClient._request("POST", "/api/v1/projects/import-project", json=payload)
 
     @staticmethod
     def export_workspace(scope="user"):
@@ -100,21 +330,81 @@ class JarvisPyClient:
         return JarvisPyClient._request("POST", "/api/v1/projects/import-workspace",
                                        json={'export_data': export_data, 'scope': scope})
 
+    @staticmethod
+    def list_templates():
+        return JarvisPyClient._request("GET", "/api/v1/projects/list-templates")
+
+    @staticmethod
+    def import_template(template_id, new_project_name=None, project_scope="user", compute=None):
+        payload = {'template_id': template_id, 'project_scope': project_scope}
+        if new_project_name is not None:
+            payload['new_project_name'] = new_project_name
+        if compute:
+            payload['compute'] = compute
+        return JarvisPyClient._request("POST", "/api/v1/projects/import-template", json=payload)
+
+    @staticmethod
+    def create_project_from_context(context, scope="user", concept_names=None, file_paths=None):
+        data = {
+            'context': context or "",
+            'scope': scope,
+            'concept_names': json.dumps(concept_names or []),
+        }
+        opened_files = []
+        files = []
+        try:
+            for file_path in (file_paths or []):
+                file_obj = open(file_path, 'rb')
+                opened_files.append(file_obj)
+                files.append(('files', (os.path.basename(file_path), file_obj)))
+            return JarvisPyClient._request_multipart(
+                "POST", "/api/v1/projects/create-from-context",
+                files=files or None, data=data,
+            )
+        finally:
+            for file_obj in opened_files:
+                file_obj.close()
+
+    @staticmethod
+    def create_snapshot(project_id, scope="user", description=None):
+        payload = {'project_id': project_id, 'scope': scope}
+        if description is not None:
+            payload['description'] = description
+        return JarvisPyClient._request("POST", "/api/v1/projects/snapshots/create", json=payload)
+
+    @staticmethod
+    def list_snapshots(project_id, scope="user"):
+        return JarvisPyClient._request("GET", "/api/v1/projects/snapshots/list",
+                                       params={'project_id': project_id, 'scope': scope})
+
+    @staticmethod
+    def restore_snapshot(snapshot_id, project_id, scope="user", create_safety_snapshot=True):
+        return JarvisPyClient._request("POST", "/api/v1/projects/snapshots/restore",
+                                       json={'snapshot_id': snapshot_id, 'project_id': project_id,
+                                             'scope': scope, 'create_safety_snapshot': create_safety_snapshot})
+
+    @staticmethod
+    def delete_snapshot(snapshot_id, project_id, scope="user"):
+        return JarvisPyClient._request("POST", "/api/v1/projects/snapshots/delete",
+                                       json={'snapshot_id': snapshot_id, 'project_id': project_id,
+                                             'scope': scope})
+
     # ── Data sources ──────────────────────────────────────────────────────
 
     @staticmethod
-    def cleanup_sources(source_ids):
-        return JarvisPyClient._request("POST", "/api/v1/data/cleanup", json={'source_ids': source_ids})
+    def cleanup_sources(source_ids=None, scope="user"):
+        return JarvisPyClient._request("POST", "/api/v1/data/cleanup",
+                                       json={'scope': scope, 'source_ids': source_ids})
 
     @staticmethod
-    def connect_sources(database_payload: Database, compute_row_count=False):
+    def connect_sources(database_payload: Database, compute_row_count=False, scope="user"):
         return JarvisPyClient._request("POST", "/api/v1/data/connect",
-                                       json={'database': database_payload.to_dict(),
+                                       json={'scope': scope, 'database': database_payload.to_dict(),
                                              'computeRowCount': compute_row_count})
 
     @staticmethod
-    def list_sources():
-        return JarvisPyClient._request("GET", "/api/v1/data/list", params={'scope': 'user'})
+    def list_sources(scope="user"):
+        return JarvisPyClient._request("GET", "/api/v1/data/list", params={'scope': scope})
 
     @staticmethod
     def infer_schema(database: Database, add_bind: bool, add_model: bool):
@@ -122,13 +412,89 @@ class JarvisPyClient:
                                        json={'database': database.to_dict(),
                                              'addBind': add_bind, 'addModel': add_model})
 
+    @staticmethod
+    def list_sheets(database: Database):
+        return JarvisPyClient._request("POST", "/api/v1/data/list-sheets",
+                                       json={'database': database.to_dict()})
+
+    @staticmethod
+    def list_demo_sources():
+        return JarvisPyClient._request("GET", "/api/v1/data/demo-sources")
+
+    @staticmethod
+    def refresh_sources(scope="user", group_filter=None):
+        return JarvisPyClient._request("POST", "/api/v1/data/refresh",
+                                       json={'scope': scope, 'group_filter': group_filter})
+
+    @staticmethod
+    def preview_datasource(bind_annotation, scope="user", limit=10, page=1, page_size=0,
+                           order_by=None, search_term=None, column_filters=None, compute=None):
+        payload = {
+            'bind_annotation': bind_annotation,
+            'scope': scope,
+            'limit': limit,
+            'page': page,
+            'page_size': page_size,
+        }
+        if order_by is not None:
+            payload['order_by'] = order_by
+        if search_term is not None:
+            payload['search_term'] = search_term
+        if column_filters is not None:
+            payload['column_filters'] = column_filters
+        if compute:
+            payload['compute'] = compute
+        return JarvisPyClient._request("POST", "/api/v1/data/preview", json=payload)
+
+    @staticmethod
+    def all_pairs_join(database_payloads, to_evaluate=False, parallel=True):
+        payload = {
+            'database_payloads': [
+                db.to_dict() if isinstance(db, Database) else db for db in database_payloads
+            ],
+            'to_evaluate': to_evaluate,
+            'parallel': parallel,
+        }
+        return JarvisPyClient._request("POST", "/api/v1/data/all-pairs-join", json=payload)
+
+    @staticmethod
+    def upload_file(file_path, path=""):
+        with open(file_path, 'rb') as file_obj:
+            files = {'file': (os.path.basename(file_path), file_obj)}
+            return JarvisPyClient._request_multipart(
+                "POST", "/api/v1/data/files/upload", files=files, data={'path': path},
+            )
+
+    @staticmethod
+    def list_files(path=""):
+        return JarvisPyClient._request("GET", "/api/v1/data/files/list", params={'path': path})
+
+    @staticmethod
+    def make_directory(path):
+        return JarvisPyClient._request("POST", "/api/v1/data/files/mkdir", json={'path': path})
+
+    @staticmethod
+    def delete_files(paths, recursive=False):
+        return JarvisPyClient._request("POST", "/api/v1/data/files/delete",
+                                       json={'paths': paths, 'recursive': recursive})
+
+    @staticmethod
+    def move_file(source, destination):
+        return JarvisPyClient._request("POST", "/api/v1/data/files/move",
+                                       json={'source': source, 'destination': destination})
+
+    @staticmethod
+    def download_file(path, dest_path=None):
+        return JarvisPyClient._request_download("GET", "/api/v1/data/files/download",
+                                                params={'path': path}, dest_path=dest_path)
+
     # ── Concepts ──────────────────────────────────────────────────────────
 
     @staticmethod
     def save_concept(project_id, definition, python_scripts=None, scope="user",
                      description=None, concept_type="logic", concept_name=None,
                      binds=None, output_predicate="", existing_name=None,
-                     position=None, group="group_id", compute=None):
+                     position=None, group="group_id", compute=None, force_overwrite=False):
         payload = {'definition': definition, 'scope': scope, 'concept_type': concept_type}
         if python_scripts:
             payload['python_scripts'] = python_scripts
@@ -148,7 +514,14 @@ class JarvisPyClient:
             payload['group'] = group
         if compute:
             payload['compute'] = compute
+        if force_overwrite:
+            payload['force_overwrite'] = force_overwrite
         return JarvisPyClient._request("POST", f"/api/v1/concepts/{project_id}/save", json=payload)
+
+    @staticmethod
+    def rename_concept(project_id, old_name, new_name, scope="user"):
+        return JarvisPyClient._request("POST", f"/api/v1/concepts/{project_id}/rename",
+                                       json={'old_name': old_name, 'new_name': new_name, 'scope': scope})
 
     @staticmethod
     def run_concept(project_id, concept_name, params=None, scope="user",
@@ -166,6 +539,22 @@ class JarvisPyClient:
                                        json=payload)
 
     @staticmethod
+    def run_concept_stream(project_id, concept_name, params=None, scope="user",
+                           force_rerun=True, persist_outputs=False, compute=None):
+        payload = {
+            'params': params or {},
+            'force_rerun': force_rerun,
+            'persist_outputs': persist_outputs,
+            'scope': scope,
+        }
+        if compute:
+            payload['compute'] = compute
+        safe_name = quote(concept_name, safe='')
+        return JarvisPyClient._websocket(
+            f"/api/v1/concepts/{project_id}/run-stream/{safe_name}", init_payload=payload,
+        )
+
+    @staticmethod
     def list_concepts(project_id, scope="user"):
         return JarvisPyClient._request("GET", f"/api/v1/concepts/{project_id}/list",
                                        params={'scope': scope})
@@ -178,19 +567,200 @@ class JarvisPyClient:
         return JarvisPyClient._request("POST", f"/api/v1/concepts/{project_id}/cleanup", json=payload)
 
     @staticmethod
+    def reorder_concepts(project_id, concept_names, scope="user", group=None):
+        payload = {'concept_names': concept_names, 'scope': scope}
+        if group is not None:
+            payload['group'] = group
+        return JarvisPyClient._request("POST", f"/api/v1/concepts/{project_id}/reorder", json=payload)
+
+    @staticmethod
+    def get_execution_statuses(scopes="user"):
+        scope_param = ','.join(scopes) if isinstance(scopes, (list, tuple)) else scopes
+        return JarvisPyClient._request("GET", "/api/v1/concepts/execution-statuses",
+                                       params={'scopes': scope_param})
+
+    @staticmethod
+    def get_execution_status(project_id, scope="user"):
+        return JarvisPyClient._request("GET", f"/api/v1/concepts/{project_id}/execution-status",
+                                       params={'scope': scope})
+
+    @staticmethod
+    def generate_concept_description(project_id, concept_name, scope="user"):
+        return JarvisPyClient._request("POST", f"/api/v1/concepts/{project_id}/generate-description",
+                                       json={'concept_name': concept_name, 'scope': scope})
+
+    @staticmethod
+    def get_concept_description(project_id, concept_name, scope="user"):
+        return JarvisPyClient._request("GET", f"/api/v1/concepts/{project_id}/description",
+                                       params={'concept_name': concept_name, 'scope': scope})
+
+    @staticmethod
     def fetch_results(project_id, output_predicate, page=1, page_size=10,
-                      scope="user", order_by=None):
-        params = {
+                      scope="user", order_by=None, params=None, compute=None):
+        query = {
             'output_predicate': output_predicate,
             'page': page,
             'page_size': page_size,
             'project_scope': scope,
         }
         if order_by:
-            params['order_by'] = order_by
-        return JarvisPyClient._request("GET", f"/api/v1/concepts/{project_id}/fetch", params=params)
+            query['order_by'] = order_by
+        if params:
+            query['params'] = json.dumps(params)
+        if compute:
+            query['compute'] = json.dumps(compute)
+        return JarvisPyClient._request("GET", f"/api/v1/concepts/{project_id}/fetch", params=query)
 
-    # ── User config ───────────────────────────────────────────────────────
+    @staticmethod
+    def search_results(project_id, output_predicate, search_term=None, column_filters=None,
+                       scope="user", page=1, page_size=0, order_by=None, compute=None):
+        query = {
+            'output_predicate': output_predicate,
+            'project_scope': scope,
+            'page': page,
+            'page_size': page_size,
+        }
+        if order_by:
+            query['order_by'] = order_by
+        body = {}
+        if search_term is not None:
+            body['search_term'] = search_term
+        if column_filters is not None:
+            body['column_filters'] = column_filters
+        if compute:
+            body['compute'] = compute
+        return JarvisPyClient._request("POST", f"/api/v1/concepts/{project_id}/search",
+                                       json=body, params=query)
+
+    @staticmethod
+    def llm_analysis(project_id, question, predicate_names=None, predicate_data=None,
+                     params=None, prompt_tuning=None, prompt_tuning_name=None,
+                     default_response=None, scope="user", compute=None):
+        payload = {'question': question, 'project_scope': scope}
+        if predicate_names is not None:
+            payload['predicate_names'] = predicate_names
+        if predicate_data is not None:
+            payload['predicate_data'] = predicate_data
+        if params is not None:
+            payload['params'] = params
+        if prompt_tuning is not None:
+            payload['prompt_tuning'] = prompt_tuning
+        if prompt_tuning_name is not None:
+            payload['prompt_tuning_name'] = prompt_tuning_name
+        if default_response is not None:
+            payload['default_response'] = default_response
+        if compute:
+            payload['compute'] = compute
+        return JarvisPyClient._request("POST", f"/api/v1/concepts/{project_id}/llm", json=payload)
+
+    @staticmethod
+    def download_concept(project_id, path=None, export_csv=False, concept_name=None,
+                         scope="user", dest_path=None):
+        params = {}
+        if export_csv:
+            params['export_csv'] = 'true'
+            params['concept_name'] = concept_name
+            params['scope'] = scope
+            params['path'] = path or ""
+        else:
+            params['path'] = path
+        return JarvisPyClient._request_download("GET", f"/api/v1/concepts/{project_id}/download",
+                                                params=params, dest_path=dest_path)
+
+    # ── Ontology ──────────────────────────────────────────────────────────
+
+    @staticmethod
+    def save_ontology(project_id, ontology_data, scope="user"):
+        return JarvisPyClient._request("POST", f"/api/v1/concepts/{project_id}/save-ontology",
+                                       json={'ontology_data': ontology_data, 'scope': scope})
+
+    @staticmethod
+    def load_ontology(project_id, scope="user"):
+        return JarvisPyClient._request("GET", f"/api/v1/concepts/{project_id}/load-ontology",
+                                       params={'scope': scope})
+
+    @staticmethod
+    def update_concept_ontology_type(project_id, concept_name, ontology_type=None,
+                                     edge_source=None, edge_target=None, scope="user"):
+        safe_name = quote(concept_name, safe='')
+        payload = {'ontology_type': ontology_type, 'scope': scope}
+        if edge_source is not None:
+            payload['edge_source'] = edge_source
+        if edge_target is not None:
+            payload['edge_target'] = edge_target
+        return JarvisPyClient._request(
+            "PATCH", f"/api/v1/concepts/{project_id}/concepts/{safe_name}/ontology-type", json=payload,
+        )
+
+    @staticmethod
+    def add_to_lineage(project_id, element_type, element_data, all_nodes=None, scope="user"):
+        return JarvisPyClient._request("POST", f"/api/v1/concepts/{project_id}/add-to-lineage",
+                                       json={'element_type': element_type, 'element_data': element_data,
+                                             'all_nodes': all_nodes or [], 'scope': scope})
+
+    @staticmethod
+    def describe_ontology(project_id, ontology_data, scope="user"):
+        return JarvisPyClient._request("POST", f"/api/v1/concepts/{project_id}/describe-ontology",
+                                       json={'ontology_data': ontology_data, 'project': {'scope': scope}})
+
+    @staticmethod
+    def import_owl(project_id, owl_content, base_namespace=None):
+        payload = {'owl_content': owl_content}
+        if base_namespace is not None:
+            payload['base_namespace'] = base_namespace
+        return JarvisPyClient._request("POST", f"/api/v1/concepts/{project_id}/import-owl", json=payload)
+
+    # ── Knowledge Graphs ──────────────────────────────────────────────────
+
+    @staticmethod
+    def visualize_concept_lineage(project_id, scope="user"):
+        return JarvisPyClient._request("POST", f"/api/v1/kgs/{project_id}/visualize-concept-lineage",
+                                       json={'project': {'scope': scope}})
+
+    @staticmethod
+    def build_graph(project_id, output_predicate, column_roles, scope="user", page=1,
+                    page_size=0, order_by=None, pagination_mode="records", max_depth=50,
+                    source_node=None, target_node=None, recompute=False, compute=None):
+        safe_predicate = quote(output_predicate, safe='')
+        query = {
+            'scope': scope,
+            'page': page,
+            'page_size': page_size,
+            'pagination_mode': pagination_mode,
+            'max_depth': max_depth,
+            'recompute': recompute,
+        }
+        if order_by:
+            query['order_by'] = order_by
+        if source_node is not None:
+            query['source_node'] = source_node
+        if target_node is not None:
+            query['target_node'] = target_node
+        body = {'column_roles': column_roles}
+        if compute:
+            body['compute'] = compute
+        return JarvisPyClient._request("POST", f"/api/v1/kgs/{project_id}/build-graph/{safe_predicate}",
+                                       json=body, params=query)
+
+    @staticmethod
+    def list_graph_functions():
+        return JarvisPyClient._request("GET", "/api/v1/kgs/graph-functions")
+
+    @staticmethod
+    def run_graph_analytics(project_id, output_predicate, column_roles, function,
+                            function_params=None, scope="user", compute=None):
+        safe_predicate = quote(output_predicate, safe='')
+        body = {'column_roles': column_roles, 'function': function, 'project': {'scope': scope}}
+        if function_params is not None:
+            body['function_params'] = function_params
+        if compute:
+            body['compute'] = compute
+        return JarvisPyClient._request(
+            "POST", f"/api/v1/kgs/{project_id}/graph-analytics/{safe_predicate}",
+            json=body, params={'scope': scope},
+        )
+
+    # ── User config / account ─────────────────────────────────────────────
 
     @staticmethod
     def save_user_config(config_data, scope="user"):
@@ -200,3 +770,393 @@ class JarvisPyClient:
     @staticmethod
     def load_user_config(scope="user"):
         return JarvisPyClient._request("GET", "/api/v1/users/load-config", params={'scope': scope})
+
+    @staticmethod
+    def get_role():
+        return JarvisPyClient._request("GET", "/api/v1/users/get-role")
+
+    @staticmethod
+    def get_login_activity():
+        return JarvisPyClient._request("GET", "/api/v1/users/login-activity")
+
+    @staticmethod
+    def list_llm_models(provider, credentials=None):
+        payload = {'provider': provider}
+        if credentials:
+            payload.update(credentials)
+        return JarvisPyClient._request("POST", "/api/v1/users/llm-models", json=payload)
+
+    @staticmethod
+    def get_usage_status():
+        return JarvisPyClient._request("GET", "/api/v1/users/usage-status")
+
+    # ── Auth / tokens ─────────────────────────────────────────────────────
+
+    @staticmethod
+    def issue_token(name=None, expires_in_minutes=None):
+        payload = {}
+        if name is not None:
+            payload['name'] = name
+        if expires_in_minutes is not None:
+            payload['expires_in_minutes'] = expires_in_minutes
+        return JarvisPyClient._request("POST", "/api/v1/auth/issue-token", json=payload)
+
+    @staticmethod
+    def list_tokens():
+        return JarvisPyClient._request("GET", "/api/v1/auth/tokens")
+
+    @staticmethod
+    def revoke_token():
+        return JarvisPyClient._request("POST", "/api/v1/auth/revoke")
+
+    @staticmethod
+    def revoke_specific_token(jti):
+        safe_jti = quote(jti, safe='')
+        return JarvisPyClient._request("POST", f"/api/v1/auth/revoke/{safe_jti}")
+
+    @staticmethod
+    def revoke_all_tokens():
+        return JarvisPyClient._request("POST", "/api/v1/auth/revoke-all")
+
+    # ── Knowledge / Context Layer ─────────────────────────────────────────
+
+    @staticmethod
+    def list_context_notes(scope, scope_id=None, kinds=None):
+        params = {'scope': scope}
+        if scope_id is not None:
+            params['scope_id'] = scope_id
+        if kinds:
+            params['kinds'] = ','.join(kinds) if isinstance(kinds, (list, tuple)) else kinds
+        return JarvisPyClient._request("GET", "/api/v1/knowledge/context", params=params)
+
+    @staticmethod
+    def create_context_note(scope, kind, text, scope_id=None, source="user",
+                            pinned=False, supersedes=None):
+        payload = {
+            'scope': scope,
+            'scope_id': scope_id,
+            'kind': kind,
+            'text': text,
+            'source': source,
+            'pinned': pinned,
+        }
+        if supersedes is not None:
+            payload['supersedes'] = supersedes
+        return JarvisPyClient._request("POST", "/api/v1/knowledge/context", json=payload)
+
+    @staticmethod
+    def create_context_notes_from_file(file_path, scope="global", scope_id=None):
+        payload = {'scope': scope, 'file_path': file_path}
+        if scope_id is not None:
+            payload['scope_id'] = scope_id
+        return JarvisPyClient._request("POST", "/api/v1/knowledge/context/from-file", json=payload)
+
+    @staticmethod
+    def get_context_note(note_id):
+        return JarvisPyClient._request("GET", f"/api/v1/knowledge/context/{quote(note_id, safe='')}")
+
+    @staticmethod
+    def update_context_note(note_id, text=None, kind=None, pinned=None,
+                            scope=_UNSET, scope_id=_UNSET):
+        payload = {'text': text, 'kind': kind, 'pinned': pinned}
+        if scope is not _UNSET:
+            payload['scope'] = scope
+        if scope_id is not _UNSET:
+            payload['scope_id'] = scope_id
+        return JarvisPyClient._request("PATCH", f"/api/v1/knowledge/context/{quote(note_id, safe='')}",
+                                       json=payload)
+
+    @staticmethod
+    def delete_context_note(note_id):
+        return JarvisPyClient._request("DELETE", f"/api/v1/knowledge/context/{quote(note_id, safe='')}")
+
+    @staticmethod
+    def auto_seed(scope="project", scope_id=None, datasource_ids=None):
+        payload = {'scope': scope}
+        if scope_id is not None:
+            payload['scope_id'] = scope_id
+        if datasource_ids is not None:
+            payload['datasource_ids'] = datasource_ids
+        return JarvisPyClient._request_stream("POST", "/api/v1/knowledge/auto-seed", json=payload)
+
+    @staticmethod
+    def interview_template(scope="global"):
+        return JarvisPyClient._request("GET", "/api/v1/knowledge/interview/template",
+                                       params={'scope': scope})
+
+    @staticmethod
+    def submit_interview(scope, answers, scope_id=None):
+        payload = {'scope': scope, 'answers': answers}
+        if scope_id is not None:
+            payload['scope_id'] = scope_id
+        return JarvisPyClient._request("POST", "/api/v1/knowledge/interview", json=payload)
+
+    @staticmethod
+    def onboarding_status():
+        return JarvisPyClient._request("GET", "/api/v1/knowledge/onboarding-status")
+
+    @staticmethod
+    def search_context_notes(query, scope, scope_id=None, kinds=None, top_k=10):
+        params = {'scope': scope, 'top_k': top_k}
+        if scope_id is not None:
+            params['scope_id'] = scope_id
+        if kinds:
+            params['kinds'] = ','.join(kinds) if isinstance(kinds, (list, tuple)) else kinds
+        return JarvisPyClient._request("POST", "/api/v1/knowledge/context/search",
+                                       json={'query': query}, params=params)
+
+    @staticmethod
+    def project_text(project_id, scope="user", refresh=False):
+        return JarvisPyClient._request("GET", f"/api/v1/knowledge/project/{project_id}/text",
+                                       params={'scope': scope, 'refresh': refresh})
+
+    # ── Agent ─────────────────────────────────────────────────────────────
+
+    @staticmethod
+    def agent_chat(project_id, message, session_id=None, model=None, attachment_paths=None):
+        payload = {'message': message}
+        if session_id is not None:
+            payload['session_id'] = session_id
+        if model is not None:
+            payload['model'] = model
+        if attachment_paths is not None:
+            payload['attachment_paths'] = attachment_paths
+        return JarvisPyClient._request_stream("POST", f"/api/v1/agent/{project_id}/chat", json=payload)
+
+    @staticmethod
+    def agent_reset(project_id, session_id=None):
+        payload = {}
+        if session_id is not None:
+            payload['session_id'] = session_id
+        return JarvisPyClient._request("POST", f"/api/v1/agent/{project_id}/reset", json=payload)
+
+    # ── Project sharing ───────────────────────────────────────────────────
+
+    @staticmethod
+    def create_share(project_id, recipient, share_role, expires_in_minutes=None):
+        payload = {'project_id': project_id, 'recipient': recipient, 'share_role': share_role}
+        if expires_in_minutes is not None:
+            payload['expires_in_minutes'] = expires_in_minutes
+        return JarvisPyClient._request("POST", "/api/v1/projects/share", json=payload)
+
+    @staticmethod
+    def revoke_share(share_id=None, project_id=None, recipient_sub=None):
+        payload = {}
+        if share_id is not None:
+            payload['share_id'] = share_id
+        if project_id is not None:
+            payload['project_id'] = project_id
+        if recipient_sub is not None:
+            payload['recipient_sub'] = recipient_sub
+        return JarvisPyClient._request("POST", "/api/v1/projects/share/revoke", json=payload)
+
+    @staticmethod
+    def update_share_role(share_id, share_role):
+        return JarvisPyClient._request("POST", "/api/v1/projects/share/update-role",
+                                       json={'share_id': share_id, 'share_role': share_role})
+
+    @staticmethod
+    def list_shares(project_id=None):
+        params = {}
+        if project_id is not None:
+            params['project_id'] = project_id
+        return JarvisPyClient._request("GET", "/api/v1/projects/share/list", params=params)
+
+    @staticmethod
+    def list_inbox():
+        return JarvisPyClient._request("GET", "/api/v1/projects/share/inbox")
+
+    @staticmethod
+    def accept_share(share_id):
+        return JarvisPyClient._request("POST", "/api/v1/projects/share/accept",
+                                       json={'share_id': share_id})
+
+    @staticmethod
+    def leave_share(share_id):
+        return JarvisPyClient._request("POST", "/api/v1/projects/share/leave",
+                                       json={'share_id': share_id})
+
+    @staticmethod
+    def sync_inbox():
+        return JarvisPyClient._request("POST", "/api/v1/projects/share/sync")
+
+    # ── Dashboards ────────────────────────────────────────────────────────
+
+    @staticmethod
+    def list_all_dashboards(scope="user"):
+        return JarvisPyClient._request("GET", "/api/v1/dashboards/list", params={'scope': scope})
+
+    @staticmethod
+    def list_dashboards(project_id, scope="user"):
+        return JarvisPyClient._request("GET", f"/api/v1/dashboards/{project_id}/list",
+                                       params={'scope': scope})
+
+    @staticmethod
+    def get_dashboard(project_id, dashboard_id, scope="user"):
+        return JarvisPyClient._request("GET", f"/api/v1/dashboards/{project_id}/{dashboard_id}",
+                                       params={'scope': scope})
+
+    @staticmethod
+    def save_dashboard(project_id, dashboard, scope="user"):
+        return JarvisPyClient._request("POST", f"/api/v1/dashboards/{project_id}/save",
+                                       json={'scope': scope, 'dashboard': dashboard})
+
+    @staticmethod
+    def delete_dashboard(project_id, dashboard_id, scope="user"):
+        return JarvisPyClient._request("DELETE", f"/api/v1/dashboards/{project_id}/{dashboard_id}",
+                                       params={'scope': scope})
+
+    # ── Schedules ─────────────────────────────────────────────────────────
+
+    @staticmethod
+    def create_policy(project_id, concept_name, trigger_type="cron", trigger_config=None,
+                      scope="user", enabled=True):
+        return JarvisPyClient._request("POST", f"/api/v1/schedules/{project_id}/policies",
+                                       json={'concept_name': concept_name, 'trigger_type': trigger_type,
+                                             'trigger_config': trigger_config or {}, 'scope': scope,
+                                             'enabled': enabled})
+
+    @staticmethod
+    def list_policies(project_id, scope="user", concept_name=None):
+        params = {'scope': scope}
+        if concept_name is not None:
+            params['concept_name'] = concept_name
+        return JarvisPyClient._request("GET", f"/api/v1/schedules/{project_id}/policies", params=params)
+
+    @staticmethod
+    def get_policy(project_id, policy_id, scope="user"):
+        return JarvisPyClient._request("GET", f"/api/v1/schedules/{project_id}/policies/{policy_id}",
+                                       params={'scope': scope})
+
+    @staticmethod
+    def update_policy(project_id, policy_id, scope="user", trigger_config=None, enabled=None):
+        payload = {'scope': scope}
+        if trigger_config is not None:
+            payload['trigger_config'] = trigger_config
+        if enabled is not None:
+            payload['enabled'] = enabled
+        return JarvisPyClient._request("PATCH", f"/api/v1/schedules/{project_id}/policies/{policy_id}",
+                                       json=payload)
+
+    @staticmethod
+    def delete_policy(project_id, policy_id, scope="user"):
+        return JarvisPyClient._request("DELETE", f"/api/v1/schedules/{project_id}/policies/{policy_id}",
+                                       params={'scope': scope})
+
+    @staticmethod
+    def trigger_policy(project_id, policy_id, scope="user"):
+        return JarvisPyClient._request(
+            "POST", f"/api/v1/schedules/{project_id}/policies/{policy_id}/trigger",
+            params={'scope': scope},
+        )
+
+    @staticmethod
+    def get_run_history(project_id, policy_id, scope="user", limit=50, offset=0):
+        return JarvisPyClient._request(
+            "GET", f"/api/v1/schedules/{project_id}/policies/{policy_id}/runs",
+            params={'scope': scope, 'limit': limit, 'offset': offset},
+        )
+
+    # ── Alerts ────────────────────────────────────────────────────────────
+
+    @staticmethod
+    def get_alert_history(limit=100, offset=0, scope="user"):
+        return JarvisPyClient._request("GET", "/api/v1/alerts/history",
+                                       params={'limit': limit, 'offset': offset, 'scope': scope})
+
+    @staticmethod
+    def reprocess_alert(alert_id, scope="user", compute=None):
+        payload = {'scope': scope}
+        if compute:
+            payload['compute'] = compute
+        return JarvisPyClient._request("POST", f"/api/v1/alerts/{quote(alert_id, safe='')}/reprocess",
+                                       json=payload)
+
+    # ── Chat history ──────────────────────────────────────────────────────
+
+    @staticmethod
+    def list_sessions(project_id=None, limit=50):
+        params = {'limit': limit}
+        if project_id is not None:
+            params['project_id'] = project_id
+        return JarvisPyClient._request("GET", "/api/v1/chat-history/sessions", params=params)
+
+    @staticmethod
+    def get_session(session_id):
+        return JarvisPyClient._request("GET", f"/api/v1/chat-history/sessions/{quote(session_id, safe='')}")
+
+    @staticmethod
+    def rename_session(session_id, title):
+        return JarvisPyClient._request("PATCH", f"/api/v1/chat-history/sessions/{quote(session_id, safe='')}",
+                                       json={'title': title})
+
+    @staticmethod
+    def delete_session(session_id):
+        return JarvisPyClient._request("DELETE", f"/api/v1/chat-history/sessions/{quote(session_id, safe='')}")
+
+    # ── Compute ───────────────────────────────────────────────────────────
+
+    @staticmethod
+    def check_compute_availability(machine_configs=None, databricks_configs=None):
+        compute = {}
+        if machine_configs is not None:
+            compute['machine_configs'] = machine_configs
+        if databricks_configs is not None:
+            compute['databricks_configs'] = databricks_configs
+        return JarvisPyClient._request("POST", "/api/v1/compute/availability",
+                                       json={'compute': compute})
+
+    # ── Vadalog authoring ─────────────────────────────────────────────────
+
+    @staticmethod
+    def analyze_program(program, concept_type="logic", concept_name=""):
+        return JarvisPyClient._request("POST", "/api/v1/vadalog/analyze",
+                                       json={'program': program, 'conceptType': concept_type,
+                                             'conceptName': concept_name})
+
+    @staticmethod
+    def build_bind(bind_annotation, predicate_name, is_output=False):
+        return JarvisPyClient._request("POST", "/api/v1/vadalog/build-bind",
+                                       json={'bindAnnotation': bind_annotation,
+                                             'predicateName': predicate_name, 'isOutput': is_output})
+
+    @staticmethod
+    def parse_binds(program, output_predicate=""):
+        return JarvisPyClient._request("POST", "/api/v1/vadalog/parse-binds",
+                                       json={'program': program, 'outputPredicate': output_predicate})
+
+    @staticmethod
+    def evaluate_program(program, params=None, compute=None):
+        payload = {'program': program, 'params': params or {}}
+        if compute:
+            payload['compute'] = compute
+        return JarvisPyClient._request("POST", "/api/v1/vadalog/evaluate", json=payload)
+
+    # ── Vadalingo translation ─────────────────────────────────────────────
+
+    @staticmethod
+    def translate_nl_to_vadalog(project_id, domain_knowledge):
+        return JarvisPyClient._request("POST", f"/api/v1/vadalingo/{project_id}/translate/nl-to-vadalog",
+                                       json={'domain_knowledge': domain_knowledge})
+
+    @staticmethod
+    def translate_sql_to_vadalog(project_id, sql_data):
+        return JarvisPyClient._request("POST", f"/api/v1/vadalingo/{project_id}/translate/sql-to-vadalog",
+                                       json={'sql_data': sql_data})
+
+    @staticmethod
+    def translate_rdf_to_vadalog(project_id, rdf_data):
+        return JarvisPyClient._request("POST", f"/api/v1/vadalingo/{project_id}/translate/rdf-to-vadalog",
+                                       json={'rdf_data': rdf_data})
+
+    @staticmethod
+    def translate_owl_to_vadalog(project_id, owl_content, base_namespace, data_base_path=None,
+                                 options=None, add_concepts=False):
+        payload = {'owl_content': owl_content, 'base_namespace': base_namespace,
+                   'add_concepts': add_concepts}
+        if data_base_path is not None:
+            payload['data_base_path'] = data_base_path
+        if options is not None:
+            payload['options'] = options
+        return JarvisPyClient._request("POST", f"/api/v1/vadalingo/{project_id}/translate/owl-to-vadalog",
+                                       json=payload)
