@@ -46,13 +46,72 @@ class JarvisPyClient:
             headers['X-Supabase-Token'] = supabase_token
         return headers
 
+    # Default network timeouts (seconds). ``connect`` fails fast on an
+    # unreachable/half-open backend; ``read`` is generous to accommodate
+    # long-running engine/LLM operations. Both are overridable via config
+    # (``JARVISPY_CONNECT_TIMEOUT`` / ``JARVISPY_READ_TIMEOUT``) or the
+    # same-named environment variables.
+    _DEFAULT_CONNECT_TIMEOUT = 10.0
+    _DEFAULT_READ_TIMEOUT = 300.0
+
+    @staticmethod
+    def _timeout():
+        """Return a ``(connect, read)`` timeout tuple for requests calls.
+
+        Always returns finite values so no call can hang indefinitely.
+        """
+        def _as_float(value, fallback):
+            try:
+                parsed = float(value)
+                return parsed if parsed > 0 else fallback
+            except (TypeError, ValueError):
+                return fallback
+
+        connect = _as_float(config.get('JARVISPY_CONNECT_TIMEOUT'),
+                            JarvisPyClient._DEFAULT_CONNECT_TIMEOUT)
+        read = _as_float(config.get('JARVISPY_READ_TIMEOUT'),
+                        JarvisPyClient._DEFAULT_READ_TIMEOUT)
+        return (connect, read)
+
+    @staticmethod
+    def _send(method, url, **kwargs):
+        """Issue a requests call with a guaranteed timeout and friendly errors."""
+        kwargs.setdefault('timeout', JarvisPyClient._timeout())
+        try:
+            return requests.request(method, url, **kwargs)
+        except requests.exceptions.Timeout as exc:
+            read_timeout = kwargs['timeout'][1] if isinstance(kwargs['timeout'], tuple) else kwargs['timeout']
+            raise Exception(
+                f"Request to {url} timed out after {read_timeout}s. "
+                "The backend may be slow or unresponsive."
+            ) from exc
+        except requests.exceptions.ConnectionError as exc:
+            raise Exception(
+                f"Could not connect to JarvisPy backend at {config.get('JARVISPY_URL')}. "
+                "Check that it is running and JARVISPY_URL is correct."
+            ) from exc
+
+    @staticmethod
+    def _safe_filename(name):
+        """Sanitize a server-supplied filename to a bare basename.
+
+        Strips any directory components (including ``..``) so a malicious or
+        buggy server response can never cause a write outside the intended
+        directory. Only applied to server-derived names — an explicit
+        ``dest_path`` from the caller is always honored verbatim.
+        """
+        candidate = os.path.basename((name or "").replace('\\', '/').split('/')[-1])
+        if not candidate or candidate in ('.', '..'):
+            return "download"
+        return candidate
+
     @staticmethod
     def _request(method, path, json=None, params=None):
         """Send an authenticated request to the JarvisPy backend."""
         pmtx_token = JarvisPyClient._get_auth()
         url = f"{config['JARVISPY_URL']}{path}"
         headers = JarvisPyClient._headers(pmtx_token)
-        response = requests.request(method, url, headers=headers, json=json, params=params)
+        response = JarvisPyClient._send(method, url, headers=headers, json=json, params=params)
         return JarvisPyClient._handle_response(response)
 
     @staticmethod
@@ -61,7 +120,7 @@ class JarvisPyClient:
         pmtx_token = JarvisPyClient._get_auth()
         url = f"{config['JARVISPY_URL']}{path}"
         headers = JarvisPyClient._headers(pmtx_token, content_type=None)
-        response = requests.request(method, url, headers=headers, files=files, data=data, params=params)
+        response = JarvisPyClient._send(method, url, headers=headers, files=files, data=data, params=params)
         return JarvisPyClient._handle_response(response)
 
     @staticmethod
@@ -70,16 +129,22 @@ class JarvisPyClient:
         pmtx_token = JarvisPyClient._get_auth()
         url = f"{config['JARVISPY_URL']}{path}"
         headers = JarvisPyClient._headers(pmtx_token)
-        with requests.request(method, url, headers=headers, json=json, params=params, stream=True) as response:
+        with JarvisPyClient._send(method, url, headers=headers, json=json, params=params, stream=True) as response:
             if response.status_code >= 400:
                 JarvisPyClient._handle_response(response)
-            for line in response.iter_lines(decode_unicode=True):
-                if not line:
-                    continue
-                try:
-                    yield _json.loads(line)
-                except ValueError:
-                    yield {"type": "raw", "data": line}
+            try:
+                for line in response.iter_lines(decode_unicode=True):
+                    if not line:
+                        continue
+                    try:
+                        yield _json.loads(line)
+                    except ValueError:
+                        yield {"type": "raw", "data": line}
+            except (requests.exceptions.Timeout, requests.exceptions.ChunkedEncodingError,
+                    requests.exceptions.ConnectionError) as exc:
+                # A stalled or dropped stream must surface as a terminal event,
+                # never an unbounded hang or an unhandled raw exception.
+                yield {"type": "error", "data": {"status": "error", "message": str(exc)}}
 
     @staticmethod
     def _request_download(method, path, params=None, dest_path=None):
@@ -87,7 +152,7 @@ class JarvisPyClient:
         pmtx_token = JarvisPyClient._get_auth()
         url = f"{config['JARVISPY_URL']}{path}"
         headers = JarvisPyClient._headers(pmtx_token)
-        with requests.request(method, url, headers=headers, params=params, stream=True) as response:
+        with JarvisPyClient._send(method, url, headers=headers, params=params, stream=True) as response:
             if response.status_code >= 400:
                 JarvisPyClient._handle_response(response)
             if dest_path is None:
@@ -97,8 +162,10 @@ class JarvisPyClient:
                 if match:
                     filename = match.group(1)
                 if not filename:
-                    filename = os.path.basename(path.split('?')[0]) or "download"
-                dest_path = filename
+                    filename = path.split('?')[0]
+                # The filename is server-controlled here; sanitize to a bare
+                # basename so it cannot escape the current directory.
+                dest_path = JarvisPyClient._safe_filename(filename)
             with open(dest_path, 'wb') as out_file:
                 for chunk in response.iter_content(chunk_size=8192):
                     if chunk:
@@ -115,6 +182,11 @@ class JarvisPyClient:
         """
         try:
             from websocket import create_connection
+            try:
+                from websocket import WebSocketTimeoutException
+            except ImportError:
+                class WebSocketTimeoutException(Exception):
+                    """Fallback when websocket-client doesn't export the type."""
         except ImportError as exc:
             raise Exception(
                 "WebSocket support requires 'websocket-client'. "
@@ -137,12 +209,40 @@ class JarvisPyClient:
             query['x_supabase_token'] = supabase_token
 
         url = f"{ws_base}{path}?{urlencode(query)}"
-        connection = create_connection(url)
+        # Bound both the handshake and per-message waits so a hung or silent
+        # server can never block the caller forever. The backend sends a
+        # heartbeat ping every ~20s, so a recv timeout comfortably above that
+        # only fires on a genuinely dead connection.
+        connect_timeout = JarvisPyClient._timeout()[0]
+
+        def _as_float(value, fallback):
+            try:
+                parsed = float(value)
+                return parsed if parsed > 0 else fallback
+            except (TypeError, ValueError):
+                return fallback
+
+        recv_timeout = _as_float(config.get('JARVISPY_WS_TIMEOUT'), 60.0)
+        connection = create_connection(url, timeout=connect_timeout)
+        connection.settimeout(recv_timeout)
         try:
             connection.send(_json.dumps(init_payload or {}))
             while True:
                 try:
                     raw = connection.recv()
+                except WebSocketTimeoutException as exc:
+                    yield {
+                        "event": "error",
+                        "data": {
+                            "status": "error",
+                            "message": (
+                                f"WebSocket timed out after {recv_timeout}s with no "
+                                "message from the server (a heartbeat is expected "
+                                "every ~20s); the connection appears dead."
+                            ),
+                        },
+                    }
+                    break
                 except Exception:
                     break
                 if not raw:
