@@ -37,7 +37,7 @@ pip install --upgrade prometheux_chain
 
 ## Usage
 
-This guide demonstrates how to get started with the Prometheux Chain SDK. The example below outlines a typical workflow, including creating a project, defining concept logic, and running concepts to generate results.
+This guide demonstrates how to get started with the Prometheux Chain SDK. The example below outlines a typical workflow, including creating an ontology, defining concept logic, and running concepts to generate results.
 
 ### Workflow
 
@@ -57,9 +57,9 @@ os.environ['PMTX_TOKEN'] = 'my_pmtx_token'
 px.config.set('JARVISPY_URL', "https://platform.prometheux.ai/jarvispy/'my_organization'/'my_username'")
 ```
 
-#### Create a new project
+#### Create a new ontology
 ```python
-project_id = px.save_project(project_name="test_project")
+ontology_id = px.save_ontology(ontology_name="test_ontology")
 ```
 
 #### Define concept logic using Vadalog syntax and save it
@@ -78,17 +78,17 @@ location(Location) :- company(_,Location).
 
 @output("location").
 """
-px.save_concept(project_id=project_id, definition=definition)
+px.save_concept(ontology_id=ontology_id, definition=definition)
 ```
 
 #### Run the concept to generate results
 ```python
-px.run_concept(project_id=project_id, concept_name="location")
+px.run_concept(ontology_id=ontology_id, concept_name="location")
 ```
 
 #### Fetch the produced facts
 ```python
-results = px.fetch_results(project_id=project_id, output_predicate="location")
+results = px.fetch_results(ontology_id=ontology_id, output_predicate="location")
 ```
 
 ---
@@ -98,9 +98,9 @@ results = px.fetch_results(project_id=project_id, output_predicate="location")
 The SDK exposes a flat, function-based API (`import prometheux_chain as px`)
 covering the user-facing JarvisPy backend:
 
-- **Projects** — `save_project`, `list_projects`, `load_project`, `copy_project`,
-  `export_project` / `import_project`, `export_workspace` / `import_workspace`,
-  `list_templates`, `import_template`, `create_project_from_context`,
+- **Ontologies** — `save_ontology`, `list_ontologies`, `load_ontology`, `copy_ontology`,
+  `export_ontology` / `import_ontology`, `export_workspace` / `import_workspace`,
+  `list_templates`, `import_template`, `create_ontology_from_context`,
   `create_snapshot`, `list_snapshots`, `restore_snapshot`, `delete_snapshot`.
 - **Data sources** — `connect_sources`, `list_sources`, `infer_schema`,
   `list_sheets`, `list_demo_sources`, `refresh_sources`, `preview_datasource`,
@@ -114,13 +114,12 @@ covering the user-facing JarvisPy backend:
   `get_execution_status`, `get_execution_statuses`, `cleanup_concepts`.
 - **Knowledge graphs** — `visualize_concept_lineage`, `build_graph`,
   `list_graph_functions`, `run_graph_analytics`.
-- **Ontology** — `save_ontology`, `load_ontology`,
-  `update_concept_ontology_type`, `add_to_lineage`, `describe_ontology`,
-  `import_owl`.
+- **Ontology schema** — `save_ontology_schema`, `load_ontology_schema`,
+  `update_concept_ontology_schema_type`, `add_to_lineage`, `import_owl`.
 - **Knowledge / context layer** — `list_context_notes`, `create_context_note`,
   `create_context_notes_from_file`, `get_context_note`, `update_context_note`,
   `delete_context_note`, `search_context_notes`, `auto_seed`,
-  `interview_template`, `submit_interview`, `onboarding_status`, `project_text`.
+  `interview_template`, `submit_interview`, `onboarding_status`, `ontology_text`.
 - **Agent** — `agent_chat` (streaming), `agent_reset`.
 - **Sharing** — `create_share`, `revoke_share`, `update_share_role`,
   `list_shares`, `list_inbox`, `accept_share`, `leave_share`, `sync_inbox`.
@@ -155,7 +154,7 @@ return Python generators you iterate over.
 
 #### Chat with the Vadalog AI agent (NDJSON stream)
 ```python
-for event in px.agent_chat(project_id=project_id, message="What does this project do?"):
+for event in px.agent_chat(ontology_id=ontology_id, message="What does this ontology do?"):
     if event.get("type") == "content":
         print(event["data"]["chunk"], end="")
 ```
@@ -164,14 +163,14 @@ for event in px.agent_chat(project_id=project_id, message="What does this projec
 WebSocket streaming requires the `websocket-client` dependency (installed
 automatically with the SDK).
 ```python
-for event in px.run_concept_stream(project_id=project_id, concept_name="location"):
+for event in px.run_concept_stream(ontology_id=ontology_id, concept_name="location"):
     print(event.get("event"), event.get("data"))
     # iteration ends after the terminal "complete" or "error" event
 ```
 
 #### Auto-seed the context layer from connected data sources (NDJSON stream)
 ```python
-for event in px.auto_seed(scope="project", scope_id=project_id):
+for event in px.auto_seed(scope="project", scope_id=ontology_id):
     print(event)
 ```
 
