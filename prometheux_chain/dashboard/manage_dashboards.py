@@ -23,29 +23,29 @@ def list_all_dashboards(scope="user"):
     return _check(JarvisPyClient.list_all_dashboards(scope=scope), "list all")
 
 
-def list_dashboards(project_id, scope="user"):
+def list_dashboards(ontology_id, scope="user"):
     """List metadata for all dashboards in a project."""
-    return _check(JarvisPyClient.list_dashboards(project_id=project_id, scope=scope), "list")
+    return _check(JarvisPyClient.list_dashboards(ontology_id=ontology_id, scope=scope), "list")
 
 
-def get_dashboard(project_id, dashboard_id, scope="user"):
+def get_dashboard(ontology_id, dashboard_id, scope="user"):
     """Load a single dashboard with its full definition."""
     return _check(JarvisPyClient.get_dashboard(
-        project_id=project_id, dashboard_id=dashboard_id, scope=scope,
+        ontology_id=ontology_id, dashboard_id=dashboard_id, scope=scope,
     ), "get")
 
 
-def save_dashboard(project_id, dashboard, scope="user"):
+def save_dashboard(ontology_id, dashboard, scope="user"):
     """Create or update a dashboard. Returns the assigned dashboard id."""
     return _check(JarvisPyClient.save_dashboard(
-        project_id=project_id, dashboard=dashboard, scope=scope,
+        ontology_id=ontology_id, dashboard=dashboard, scope=scope,
     ), "save")
 
 
-def delete_dashboard(project_id, dashboard_id, scope="user"):
+def delete_dashboard(ontology_id, dashboard_id, scope="user"):
     """Permanently delete a dashboard."""
     response = JarvisPyClient.delete_dashboard(
-        project_id=project_id, dashboard_id=dashboard_id, scope=scope,
+        ontology_id=ontology_id, dashboard_id=dashboard_id, scope=scope,
     )
     if response.get('status') != 'success':
         raise Exception(f"Dashboard delete failed: {response.get('message', 'Unknown error')}")
