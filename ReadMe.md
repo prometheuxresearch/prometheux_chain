@@ -123,8 +123,8 @@ covering the user-facing JarvisPy backend:
 - **Agent** — `agent_chat` (streaming), `agent_reset`.
 - **Sharing** — `create_share`, `revoke_share`, `update_share_role`,
   `list_shares`, `list_inbox`, `accept_share`, `leave_share`, `sync_inbox`.
-- **Dashboards** — `list_all_dashboards`, `list_dashboards`, `get_dashboard`,
-  `save_dashboard`, `delete_dashboard`.
+- **Apps** — `list_all_apps`, `list_apps`, `get_app`,
+  `save_app`, `delete_app`.
 - **Schedules** — `create_policy`, `list_policies`, `get_policy`,
   `update_policy`, `delete_policy`, `trigger_policy`, `get_run_history`.
 - **Alerts** — `get_alert_history`, `reprocess_alert`.

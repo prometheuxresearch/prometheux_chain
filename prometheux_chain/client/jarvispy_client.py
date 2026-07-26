@@ -975,30 +975,30 @@ class JarvisPyClient:
     def sync_inbox():
         return JarvisPyClient._request("POST", "/api/v1/ontologies/share/sync")
 
-    # ── Dashboards ────────────────────────────────────────────────────────
+    # ── Apps ──────────────────────────────────────────────────────────────
 
     @staticmethod
-    def list_all_dashboards(scope="user"):
-        return JarvisPyClient._request("GET", "/api/v1/dashboards/list", params={'scope': scope})
+    def list_all_apps(scope="user"):
+        return JarvisPyClient._request("GET", "/api/v1/apps/list", params={'scope': scope})
 
     @staticmethod
-    def list_dashboards(ontology_id, scope="user"):
-        return JarvisPyClient._request("GET", f"/api/v1/dashboards/{ontology_id}/list",
+    def list_apps(ontology_id, scope="user"):
+        return JarvisPyClient._request("GET", f"/api/v1/apps/{ontology_id}/list",
                                        params={'scope': scope})
 
     @staticmethod
-    def get_dashboard(ontology_id, dashboard_id, scope="user"):
-        return JarvisPyClient._request("GET", f"/api/v1/dashboards/{ontology_id}/{dashboard_id}",
+    def get_app(ontology_id, app_id, scope="user"):
+        return JarvisPyClient._request("GET", f"/api/v1/apps/{ontology_id}/{app_id}",
                                        params={'scope': scope})
 
     @staticmethod
-    def save_dashboard(ontology_id, dashboard, scope="user"):
-        return JarvisPyClient._request("POST", f"/api/v1/dashboards/{ontology_id}/save",
-                                       json={'scope': scope, 'dashboard': dashboard})
+    def save_app(ontology_id, app, scope="user"):
+        return JarvisPyClient._request("POST", f"/api/v1/apps/{ontology_id}/save",
+                                       json={'scope': scope, 'app': app})
 
     @staticmethod
-    def delete_dashboard(ontology_id, dashboard_id, scope="user"):
-        return JarvisPyClient._request("DELETE", f"/api/v1/dashboards/{ontology_id}/{dashboard_id}",
+    def delete_app(ontology_id, app_id, scope="user"):
+        return JarvisPyClient._request("DELETE", f"/api/v1/apps/{ontology_id}/{app_id}",
                                        params={'scope': scope})
 
     # ── Schedules ─────────────────────────────────────────────────────────

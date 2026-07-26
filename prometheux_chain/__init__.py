@@ -110,12 +110,12 @@ from .share.manage_share import accept_share
 from .share.manage_share import leave_share
 from .share.manage_share import sync_inbox
 
-# ── Dashboards ──────────────────────────────────────────────────────────────
-from .dashboard.manage_dashboards import list_all_dashboards
-from .dashboard.manage_dashboards import list_dashboards
-from .dashboard.manage_dashboards import get_dashboard
-from .dashboard.manage_dashboards import save_dashboard
-from .dashboard.manage_dashboards import delete_dashboard
+# ── Apps ────────────────────────────────────────────────────────────────────
+from .app.manage_apps import list_all_apps
+from .app.manage_apps import list_apps
+from .app.manage_apps import get_app
+from .app.manage_apps import save_app
+from .app.manage_apps import delete_app
 
 # ── Schedules ───────────────────────────────────────────────────────────────
 from .schedule.manage_schedules import create_policy
