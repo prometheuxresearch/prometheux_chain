@@ -18,9 +18,9 @@ def _check(response, action="operation"):
     return response.get('data')
 
 
-def list_sessions(project_id=None, limit=50):
+def list_sessions(ontology_id=None, limit=50):
     """List recent chat sessions, newest first."""
-    return _check(JarvisPyClient.list_sessions(project_id=project_id, limit=limit), "list sessions")
+    return _check(JarvisPyClient.list_sessions(ontology_id=ontology_id, limit=limit), "list sessions")
 
 
 def get_session(session_id):

@@ -18,34 +18,34 @@ def _check(response, action="operation"):
     return response.get('data')
 
 
-def translate_nl_to_vadalog(project_id, domain_knowledge):
+def translate_nl_to_vadalog(ontology_id, domain_knowledge):
     """Translate a natural-language domain description into Vadalog.
 
     ``domain_knowledge`` may reference concepts with ``@concept_name``.
     """
     return _check(JarvisPyClient.translate_nl_to_vadalog(
-        project_id=project_id, domain_knowledge=domain_knowledge,
+        ontology_id=ontology_id, domain_knowledge=domain_knowledge,
     ), "translate nl")
 
 
-def translate_sql_to_vadalog(project_id, sql_data):
+def translate_sql_to_vadalog(ontology_id, sql_data):
     """Translate a SQL query into Vadalog."""
     return _check(JarvisPyClient.translate_sql_to_vadalog(
-        project_id=project_id, sql_data=sql_data,
+        ontology_id=ontology_id, sql_data=sql_data,
     ), "translate sql")
 
 
-def translate_rdf_to_vadalog(project_id, rdf_data):
+def translate_rdf_to_vadalog(ontology_id, rdf_data):
     """Translate RDF data into Vadalog."""
     return _check(JarvisPyClient.translate_rdf_to_vadalog(
-        project_id=project_id, rdf_data=rdf_data,
+        ontology_id=ontology_id, rdf_data=rdf_data,
     ), "translate rdf")
 
 
-def translate_owl_to_vadalog(project_id, owl_content, base_namespace, data_base_path=None,
+def translate_owl_to_vadalog(ontology_id, owl_content, base_namespace, data_base_path=None,
                              options=None, add_concepts=False):
     """Translate an OWL ontology into Vadalog rules."""
     return _check(JarvisPyClient.translate_owl_to_vadalog(
-        project_id=project_id, owl_content=owl_content, base_namespace=base_namespace,
+        ontology_id=ontology_id, owl_content=owl_content, base_namespace=base_namespace,
         data_base_path=data_base_path, options=options, add_concepts=add_concepts,
     ), "translate owl")
