@@ -19,22 +19,22 @@ def _check(response, action="operation"):
     return response.get('data')
 
 
-def create_share(project_id, recipient, share_role, expires_in_minutes=None):
+def create_share(ontology_id, recipient, share_role, expires_in_minutes=None):
     """Share a project with another user.
 
     ``recipient`` is a dict identifying the target by ``sub``, ``email``, or
     ``username`` + ``organization``. ``share_role`` is 'viewer' or 'editor'.
     """
     return _check(JarvisPyClient.create_share(
-        project_id=project_id, recipient=recipient, share_role=share_role,
+        ontology_id=ontology_id, recipient=recipient, share_role=share_role,
         expires_in_minutes=expires_in_minutes,
     ), "create")
 
 
-def revoke_share(share_id=None, project_id=None, recipient_sub=None):
+def revoke_share(share_id=None, ontology_id=None, recipient_sub=None):
     """Revoke a share, by ``share_id`` or by ``project_id`` + ``recipient_sub``."""
     return _check(JarvisPyClient.revoke_share(
-        share_id=share_id, project_id=project_id, recipient_sub=recipient_sub,
+        share_id=share_id, ontology_id=ontology_id, recipient_sub=recipient_sub,
     ), "revoke")
 
 
@@ -45,9 +45,9 @@ def update_share_role(share_id, share_role):
     ), "update role")
 
 
-def list_shares(project_id=None):
+def list_shares(ontology_id=None):
     """List shares created by the caller (optionally filtered by project)."""
-    return _check(JarvisPyClient.list_shares(project_id=project_id), "list")
+    return _check(JarvisPyClient.list_shares(ontology_id=ontology_id), "list")
 
 
 def list_inbox():
