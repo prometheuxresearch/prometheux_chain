@@ -3,22 +3,22 @@ from .config import config
 from .data.database import Database
 
 # ── Projects ────────────────────────────────────────────────────────────────
-from .project.manage_projects import cleanup_projects
-from .project.manage_projects import save_project
-from .project.manage_projects import list_projects
-from .project.manage_projects import load_project
-from .project.manage_projects import copy_project
-from .project.manage_projects import export_project
-from .project.manage_projects import import_project
-from .project.manage_projects import export_workspace
-from .project.manage_projects import import_workspace
-from .project.manage_projects import list_templates
-from .project.manage_projects import import_template
-from .project.manage_projects import create_project_from_context
-from .project.manage_projects import create_snapshot
-from .project.manage_projects import list_snapshots
-from .project.manage_projects import restore_snapshot
-from .project.manage_projects import delete_snapshot
+from .ontology.manage_ontologies import cleanup_ontologies
+from .ontology.manage_ontologies import save_ontology
+from .ontology.manage_ontologies import list_ontologies
+from .ontology.manage_ontologies import load_ontology
+from .ontology.manage_ontologies import copy_ontology
+from .ontology.manage_ontologies import export_ontology
+from .ontology.manage_ontologies import import_ontology
+from .ontology.manage_ontologies import export_workspace
+from .ontology.manage_ontologies import import_workspace
+from .ontology.manage_ontologies import list_templates
+from .ontology.manage_ontologies import import_template
+from .ontology.manage_ontologies import create_ontology_from_context
+from .ontology.manage_ontologies import create_snapshot
+from .ontology.manage_ontologies import list_snapshots
+from .ontology.manage_ontologies import restore_snapshot
+from .ontology.manage_ontologies import delete_snapshot
 
 # ── Data ────────────────────────────────────────────────────────────────────
 from .data.manage_data import cleanup_sources
@@ -76,12 +76,11 @@ from .auth.manage_auth import revoke_specific_token
 from .auth.manage_auth import revoke_all_tokens
 
 # ── Ontology ────────────────────────────────────────────────────────────────
-from .ontology.manage_ontology import save_ontology
-from .ontology.manage_ontology import load_ontology
-from .ontology.manage_ontology import update_concept_ontology_type
-from .ontology.manage_ontology import add_to_lineage
-from .ontology.manage_ontology import describe_ontology
-from .ontology.manage_ontology import import_owl
+from .ontology_schema.manage_ontology_schema import save_ontology_schema
+from .ontology_schema.manage_ontology_schema import load_ontology_schema
+from .ontology_schema.manage_ontology_schema import update_concept_ontology_schema_type
+from .ontology_schema.manage_ontology_schema import add_to_lineage
+from .ontology_schema.manage_ontology_schema import import_owl
 
 # ── Knowledge / Context Layer ───────────────────────────────────────────────
 from .knowledge.manage_knowledge import list_context_notes
@@ -95,7 +94,7 @@ from .knowledge.manage_knowledge import auto_seed
 from .knowledge.manage_knowledge import interview_template
 from .knowledge.manage_knowledge import submit_interview
 from .knowledge.manage_knowledge import onboarding_status
-from .knowledge.manage_knowledge import project_text
+from .knowledge.manage_knowledge import ontology_text
 
 # ── Agent ───────────────────────────────────────────────────────────────────
 from .agent.manage_agent import agent_chat
@@ -111,12 +110,12 @@ from .share.manage_share import accept_share
 from .share.manage_share import leave_share
 from .share.manage_share import sync_inbox
 
-# ── Dashboards ──────────────────────────────────────────────────────────────
-from .dashboard.manage_dashboards import list_all_dashboards
-from .dashboard.manage_dashboards import list_dashboards
-from .dashboard.manage_dashboards import get_dashboard
-from .dashboard.manage_dashboards import save_dashboard
-from .dashboard.manage_dashboards import delete_dashboard
+# ── Apps ────────────────────────────────────────────────────────────────────
+from .app.manage_apps import list_all_apps
+from .app.manage_apps import list_apps
+from .app.manage_apps import get_app
+from .app.manage_apps import save_app
+from .app.manage_apps import delete_app
 
 # ── Schedules ───────────────────────────────────────────────────────────────
 from .schedule.manage_schedules import create_policy
