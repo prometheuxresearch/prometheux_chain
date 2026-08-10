@@ -138,6 +138,9 @@ from .chat_history.manage_chat_history import delete_session
 
 # ── Compute ─────────────────────────────────────────────────────────────────
 from .compute.manage_compute import check_compute_availability
+from .compute.manage_compute import list_machines_combined
+from .compute.manage_compute import set_machine_active
+from .compute.manage_compute import get_machine_status
 
 # ── Vadalog authoring ───────────────────────────────────────────────────────
 from .vadalog.manage_vadalog import analyze_program

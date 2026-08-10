@@ -599,17 +599,20 @@ class JarvisPyClient:
                       scope="user", order_by=None, params=None, compute=None):
         query = {
             'output_predicate': output_predicate,
-            'page': page,
-            'page_size': page_size,
             'project_scope': scope,
         }
+        body = {
+            'page': page,
+            'page_size': page_size,
+        }
         if order_by:
-            query['order_by'] = order_by
+            body['order_by'] = order_by
         if params:
-            query['params'] = json.dumps(params)
+            body['params'] = params
         if compute:
-            query['compute'] = json.dumps(compute)
-        return JarvisPyClient._request("GET", f"/api/v1/concepts/{ontology_id}/fetch", params=query)
+            body['compute'] = compute
+        return JarvisPyClient._request("POST", f"/api/v1/concepts/{ontology_id}/fetch",
+                                       json=body, params=query)
 
     @staticmethod
     def search_results(ontology_id, output_predicate, search_term=None, column_filters=None,
@@ -1100,6 +1103,28 @@ class JarvisPyClient:
             compute['databricks_configs'] = databricks_configs
         return JarvisPyClient._request("POST", "/api/v1/compute/availability",
                                        json={'compute': compute})
+
+    # ── Machines (compute lifecycle) ───────────────────────────────────────
+
+    @staticmethod
+    def list_machines_combined():
+        """Catalog + the caller's enabled/disabled machines."""
+        return JarvisPyClient._request("GET", "/api/v1/machines/machines-combined")
+
+    @staticmethod
+    def set_machine_active(user_machine_id, is_active, autotermination_minutes=None):
+        """Start (is_active=True) or stop (is_active=False) one owned machine."""
+        body = {'user_machine_id': user_machine_id, 'is_active': bool(is_active)}
+        if autotermination_minutes is not None:
+            body['autotermination_minutes'] = autotermination_minutes
+        return JarvisPyClient._request("PATCH", "/api/v1/machines/user-machines/toggle-active",
+                                       json=body)
+
+    @staticmethod
+    def get_machine_status(user_machine_id):
+        """Real-time pod status of one owned machine."""
+        return JarvisPyClient._request(
+            "GET", f"/api/v1/machines/user-machines/{user_machine_id}/status")
 
     # ── Vadalog authoring ─────────────────────────────────────────────────
 
