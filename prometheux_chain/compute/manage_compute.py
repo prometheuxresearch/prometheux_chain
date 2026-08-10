@@ -24,3 +24,20 @@ def check_compute_availability(machine_configs=None, databricks_configs=None):
     return JarvisPyClient.check_compute_availability(
         machine_configs=machine_configs, databricks_configs=databricks_configs,
     )
+
+
+def list_machines_combined():
+    """Return the machine catalog plus the caller's enabled/disabled machines."""
+    return JarvisPyClient.list_machines_combined()
+
+
+def set_machine_active(user_machine_id, is_active, autotermination_minutes=None):
+    """Start (is_active=True) or stop (is_active=False) one owned machine."""
+    return JarvisPyClient.set_machine_active(
+        user_machine_id, is_active, autotermination_minutes=autotermination_minutes,
+    )
+
+
+def get_machine_status(user_machine_id):
+    """Return real-time pod status of one owned machine."""
+    return JarvisPyClient.get_machine_status(user_machine_id)
