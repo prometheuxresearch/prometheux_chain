@@ -32,7 +32,7 @@ source myenv/bin/activate  # On Windows: myenv\Scripts\activate
 2. Install the SDK via pip:
 
 ```
-pip install --upgrade prometheux_chain
+pip install --upgrade prometheux-chain
 ```
 
 ## Usage
