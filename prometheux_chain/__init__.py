@@ -1,3 +1,22 @@
+# Underscore aliases: every name bound here lands in the package's public
+# namespace, which is this SDK's entire API surface.
+from importlib.metadata import PackageNotFoundError as _NoDistribution
+from importlib.metadata import version as _distribution_version
+from pathlib import Path as _Path
+
+try:
+    __version__ = _distribution_version("prometheux_chain")
+except _NoDistribution:
+    # Not installed, so there is no distribution metadata to read — a source
+    # checkout being imported directly. Fall back to the file setup.py stamps
+    # into that metadata at build time, so both paths report the same number.
+    _version_file = _Path(__file__).resolve().parents[1] / "version.txt"
+    __version__ = (
+        _version_file.read_text(encoding="utf-8").strip()
+        if _version_file.is_file()
+        else "0.0.0+unknown"
+    )
+
 from .config import config
 
 from .data.database import Database
