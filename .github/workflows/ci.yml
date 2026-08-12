@@ -1,0 +1,103 @@
+name: CI
+
+# This SDK is pip-installed by customers and by our own notebooks, and it had no
+# CI at all. Its sibling px-mcp-server was broken for two weeks by exactly the
+# gap that leaves: an uncapped dependency resolved to a new major (`mcp` 2.0.0,
+# released 2026-07-28), every fresh install failed on import, and nobody noticed
+# because nothing installed it from scratch on a schedule. The dependencies here
+# are uncapped too, so the same thing can happen to `requests`, `pyyaml` or
+# `websocket-client`.
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  # Dependency resolution can break with no commit of ours, which is how the
+  # break above arrived. A weekly run finds it while it is still a red check
+  # rather than a customer's traceback.
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+jobs:
+  import:
+    # Not called "test": there is no test suite in this repo (test/ holds
+    # notebooks and fixtures). Importing the package is still a real check
+    # rather than a formality — __init__.py re-exports ~140 names from every
+    # submodule, so a syntax error, a missing dependency or a function renamed
+    # anywhere in the package surfaces right here.
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # setup.py claims >=3.9; check both ends of that range rather than
+        # trusting the classifier.
+        python-version: ["3.9", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          # No pip cache on purpose: a customer installing today resolves from
+          # scratch, so CI must too, or it will not see a new major until they do.
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+
+      - name: Report resolved dependency versions
+        run: pip freeze
+
+      - name: Import the package
+        run: |
+          python - <<'PY'
+          import prometheux_chain as pc
+
+          expected = ("list_concepts", "run_concept", "save_ontology", "agent_chat", "config")
+          missing = [name for name in expected if not hasattr(pc, name)]
+          if missing:
+              raise SystemExit(f"public API is missing: {missing}")
+
+          public = [name for name in dir(pc) if not name.startswith("_")]
+          print(f"import OK: {len(public)} public names, version {pc.__version__}")
+          PY
+
+  install-from-built-package:
+    # The wheel is what customers actually get. Building it and installing it in
+    # a clean environment is the only check that covers packaging mistakes and
+    # dependency resolution together — an editable install can hide both, and it
+    # is where a missing package_data entry (config.yaml) would show up.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Build wheel and sdist
+        run: |
+          python -m pip install --upgrade pip build
+          python -m build
+
+      - name: Install the wheel into a clean environment
+        run: |
+          python -m venv /tmp/fresh
+          /tmp/fresh/bin/pip install dist/*.whl
+
+      - name: Report what a customer would get
+        run: /tmp/fresh/bin/pip freeze
+
+      - name: Import from outside the source tree
+        # Run from /tmp so the installed package is what gets imported, not the
+        # working copy sitting in the checkout directory.
+        working-directory: /tmp
+        run: |
+          /tmp/fresh/bin/python - <<'PY'
+          import prometheux_chain as pc
+
+          public = [name for name in dir(pc) if not name.startswith("_")]
+          print(f"installed import OK: {len(public)} public names, version {pc.__version__}")
+          PY
