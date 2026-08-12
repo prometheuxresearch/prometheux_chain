@@ -12,6 +12,12 @@ on:
   push:
     tags: ["v*"]
 
+# The build job needs nothing beyond reading the checkout. A job-level block
+# replaces this one rather than adding to it, so the publish job below still
+# ends up with id-token as its only permission.
+permissions:
+  contents: read
+
 jobs:
   build:
     # Deliberately holds no `id-token` permission. This job installs

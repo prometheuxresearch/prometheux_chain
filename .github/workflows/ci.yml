@@ -21,6 +21,13 @@ on:
     - cron: "0 6 * * 1"
   workflow_dispatch:
 
+# Nothing here writes to the repository — it installs, imports and builds — so
+# the token these jobs hand to every third-party action and dependency should
+# not be able to either. Without this it inherits the repository default, which
+# may be read/write.
+permissions:
+  contents: read
+
 concurrency:
   # A new push to the same ref supersedes whatever is still running for it.
   group: ci-${{ github.ref }}
