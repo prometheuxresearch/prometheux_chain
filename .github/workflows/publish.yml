@@ -1,0 +1,117 @@
+name: Publish
+
+# Releases used to happen from a laptop: deploy.sh prompted for a version, built
+# whatever happened to be in the working tree, and ran `twine upload`. Nothing
+# tied the artifact on PyPI to a reviewed commit — or to any commit at all,
+# since the script wrote the version bump but never committed it.
+#
+# Publishing from a tag fixes the provenance: the only thing that can reach
+# customers is a tagged commit that already reached main, and the two checks in
+# the build job refuse anything else before a build starts.
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  build:
+    # Deliberately holds no `id-token` permission. This job installs
+    # dependencies and builds the distributions — third-party code — and PyPI's
+    # guidance is to keep all of that out of any job able to mint a publishing
+    # token. A malicious dependency here can waste a release; it cannot ask for
+    # a credential.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The ancestry check below needs real history, which the default
+          # shallow fetch of a single tag ref does not have.
+          fetch-depth: 0
+
+      - name: Require the tag to match version.txt
+        run: |
+          tag_version="${GITHUB_REF_NAME#v}"
+          file_version="$(tr -d '[:space:]' < version.txt)"
+          if [ "$tag_version" != "$file_version" ]; then
+            echo "::error::Tag ${GITHUB_REF_NAME} declares ${tag_version} but version.txt says ${file_version}. setup.py stamps version.txt into the package, so this would publish ${file_version} under a tag naming ${tag_version}."
+            exit 1
+          fi
+          echo "Tag and version.txt agree on ${file_version}."
+
+      - name: Require the tag to be on main
+        run: |
+          git fetch --no-tags origin main
+          if ! git merge-base --is-ancestor "${GITHUB_SHA}" origin/main; then
+            echo "::error::${GITHUB_REF_NAME} points at a commit that has not reached origin/main. Customers pip-install this SDK, so a release has to be merged and reviewed first."
+            exit 1
+          fi
+          echo "Tagged commit is on main."
+
+      - uses: actions/setup-python@v5
+        with:
+          # The floor of python_requires, so a release cannot ship syntax the
+          # oldest supported interpreter rejects.
+          python-version: "3.9"
+          # No pip cache, for the same reason as CI: a customer installing today
+          # resolves from scratch, so the release check must too.
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e . build twine
+
+      - name: Report resolved dependency versions
+        run: pip freeze
+
+      - name: Import the package
+        # CI already did this for the commit, but dependency resolution moves
+        # under a fixed commit — that is exactly how the `mcp` 2.0.0 break
+        # arrived — and a release is the last moment a red check is still free.
+        run: |
+          python - <<'PY'
+          import prometheux_chain as pc
+
+          expected = ("list_concepts", "run_concept", "save_ontology", "agent_chat", "config")
+          missing = [name for name in expected if not hasattr(pc, name)]
+          if missing:
+              raise SystemExit(f"public API is missing: {missing}")
+          print("import OK, version", pc.__version__)
+          PY
+
+      - name: Build
+        run: |
+          rm -rf build dist ./*.egg-info
+          python -m build
+
+      - name: Check the artifacts
+        run: |
+          twine check dist/*
+          ls -l dist/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          if-no-files-found: error
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      # The only permission this job has, and the only job that has it. PyPI
+      # verifies GitHub's signature on the token and matches its claims against
+      # the registered publisher — repository and workflow filename — so a copy
+      # of this file in another repository gets a token naming that repository,
+      # which PyPI refuses.
+      id-token: write
+    steps:
+      # Two steps on purpose: nothing but the artifact and the upload is in
+      # scope while the OIDC token exists. No checkout, no dependency install.
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Publish to PyPI
+        # No skip-existing: a version already on PyPI means the tag or
+        # version.txt is wrong, and failing loudly is the point.
+        uses: pypa/gh-action-pypi-publish@release/v1
