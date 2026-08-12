@@ -1,0 +1,46 @@
+name: Draft changelog entry
+
+# CI-A: when a PR merges into main (a release), draft user-facing changelog
+# entries with the Claude API and open a PR in the changelog repo for review.
+# - develop -> main : fan out into one entry per feature PR in the release.
+# - feature -> main : one entry for that PR.
+
+on:
+  pull_request:
+    types: [closed]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  draft:
+    # Only real releases: a PR that MERGED into main. Feature PRs into develop
+    # (staging) are ignored — the develop -> main merge is the release.
+    if: >-
+      github.event.pull_request.merged == true &&
+      github.event.pull_request.base.ref == 'main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install deps
+        run: pip install anthropic requests
+
+      - name: Draft entries and open changelog PR
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          CHANGELOG_TOKEN: ${{ secrets.CHANGELOG_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CHANGELOG_REPO: prometheuxresearch/prometheux-changelog
+          SOURCE_REPO: ${{ github.repository }}
+          RELEASE_PR: ${{ github.event.pull_request.number }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          RELEASE_DATE: ${{ github.event.pull_request.merged_at }}
+          DEVELOP_BRANCH: develop
+          SKIP_INTERNAL: "true"
+        run: python .github/scripts/draft_changelog.py
