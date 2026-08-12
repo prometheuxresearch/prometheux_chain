@@ -8,16 +8,23 @@ name: CI
 # are uncapped too, so the same thing can happen to `requests`, `pyyaml` or
 # `websocket-client`.
 on:
+  # Work on a branch is already covered by the pull_request run, so listing
+  # develop here only bought a second identical set of checks on the same
+  # commit. push stays for main so the merge commit itself is checked.
   push:
-    branches: [main, develop]
+    branches: [main]
   pull_request:
-    branches: [main, develop]
   # Dependency resolution can break with no commit of ours, which is how the
   # break above arrived. A weekly run finds it while it is still a red check
   # rather than a customer's traceback.
   schedule:
     - cron: "0 6 * * 1"
   workflow_dispatch:
+
+concurrency:
+  # A new push to the same ref supersedes whatever is still running for it.
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   import:
