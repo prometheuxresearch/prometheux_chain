@@ -27,10 +27,10 @@ setup(
     include_package_data=True,
     author='Prometheux Limited',
     author_email='davben@prometheux.co.uk',
-    description='Prometheux chain is a Python SDK designed to build, evolve and deploy your new knowledge graphs.',
+    description='Prometheux Chain is a Python SDK to build, evolve and deploy your ontologies.',
     long_description=long_description,
     long_description_content_type='text/markdown',
-    url='https://github.com/prometheuxresearch/prometheux_chain',
+    url='https://github.com/prometheuxresearch/prometheux-chain',
     classifiers=[
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.9',
