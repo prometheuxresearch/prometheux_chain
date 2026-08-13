@@ -21,6 +21,33 @@ from ..data.database import Database
 _UNSET = object()
 
 
+def _resolve_user_agent():
+    """Build the SDK's User-Agent once at import.
+
+    Sent on every request so the backend can distinguish programmatic
+    (CLI / SDK) callers from the browser frontend in usage analytics. Reads
+    ``version.txt`` from the repo root when present (editable installs); falls
+    back to ``unknown`` in wheels that don't ship it.
+    """
+    version = "unknown"
+    try:
+        here = os.path.dirname(os.path.abspath(__file__))
+        for cand in (
+            os.path.join(here, "..", "..", "version.txt"),
+            os.path.join(here, "..", "version.txt"),
+        ):
+            if os.path.exists(cand):
+                with open(cand) as fh:
+                    version = fh.read().strip() or version
+                break
+    except Exception:
+        pass
+    return f"prometheux-chain/{version}"
+
+
+_USER_AGENT = _resolve_user_agent()
+
+
 class JarvisPyClient:
 
     @staticmethod
@@ -38,7 +65,7 @@ class JarvisPyClient:
 
     @staticmethod
     def _headers(pmtx_token, content_type='application/json'):
-        headers = {'Authorization': f"Bearer {pmtx_token}"}
+        headers = {'Authorization': f"Bearer {pmtx_token}", 'User-Agent': _USER_AGENT}
         if content_type:
             headers['Content-Type'] = content_type
         supabase_token = JarvisPyClient._get_supabase_token()
