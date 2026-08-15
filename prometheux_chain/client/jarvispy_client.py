@@ -21,6 +21,33 @@ from ..data.database import Database
 _UNSET = object()
 
 
+def _resolve_user_agent():
+    """Build the SDK's User-Agent once at import.
+
+    Sent on every request so the backend can distinguish programmatic
+    (CLI / SDK) callers from the browser frontend in usage analytics. Reads
+    ``version.txt`` from the repo root when present (editable installs); falls
+    back to ``unknown`` in wheels that don't ship it.
+    """
+    version = "unknown"
+    try:
+        here = os.path.dirname(os.path.abspath(__file__))
+        for cand in (
+            os.path.join(here, "..", "..", "version.txt"),
+            os.path.join(here, "..", "version.txt"),
+        ):
+            if os.path.exists(cand):
+                with open(cand) as fh:
+                    version = fh.read().strip() or version
+                break
+    except Exception:
+        pass
+    return f"prometheux-chain/{version}"
+
+
+_USER_AGENT = _resolve_user_agent()
+
+
 class JarvisPyClient:
 
     @staticmethod
@@ -38,7 +65,7 @@ class JarvisPyClient:
 
     @staticmethod
     def _headers(pmtx_token, content_type='application/json'):
-        headers = {'Authorization': f"Bearer {pmtx_token}"}
+        headers = {'Authorization': f"Bearer {pmtx_token}", 'User-Agent': _USER_AGENT}
         if content_type:
             headers['Content-Type'] = content_type
         supabase_token = JarvisPyClient._get_supabase_token()
@@ -311,7 +338,7 @@ class JarvisPyClient:
 
     @staticmethod
     def export_ontology(ontology_id, scope="user"):
-        return JarvisPyClient._request("POST", "/api/v1/ontologies/export-project",
+        return JarvisPyClient._request("POST", "/api/v1/ontologies/export-ontology",
                                        json={'project_id': ontology_id, 'scope': scope})
 
     @staticmethod
@@ -319,7 +346,7 @@ class JarvisPyClient:
         payload = {'export_data': export_data, 'scope': scope, 'force_new_id': force_new_id}
         if compute:
             payload['compute'] = compute
-        return JarvisPyClient._request("POST", "/api/v1/ontologies/import-project", json=payload)
+        return JarvisPyClient._request("POST", "/api/v1/ontologies/import-ontology", json=payload)
 
     @staticmethod
     def export_workspace(scope="user"):
@@ -905,7 +932,7 @@ class JarvisPyClient:
 
     @staticmethod
     def ontology_text(ontology_id, scope="user", refresh=False):
-        return JarvisPyClient._request("GET", f"/api/v1/knowledge/project/{ontology_id}/text",
+        return JarvisPyClient._request("GET", f"/api/v1/knowledge/ontology/{ontology_id}/text",
                                        params={'scope': scope, 'refresh': refresh})
 
     # ── Agent ─────────────────────────────────────────────────────────────
