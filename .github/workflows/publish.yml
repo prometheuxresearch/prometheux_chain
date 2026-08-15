@@ -5,21 +5,88 @@ name: Publish
 # tied the artifact on PyPI to a reviewed commit — or to any commit at all,
 # since the script wrote the version bump but never committed it.
 #
-# Publishing from a tag fixes the provenance: the only thing that can reach
-# customers is a tagged commit that already reached main, and the two checks in
-# the build job refuse anything else before a build starts.
+# Publishing from a tag fixed the provenance but left the release itself manual,
+# and the manual half is the half that failed. 0.3.2 was reviewed, merged, and
+# stamped into version.txt on main — and never tagged. Nothing was built, PyPI
+# went on serving 0.3.1, and the first sign of any of it was a red check on
+# another repository's pull request, where prometheux-cli could not resolve the
+# `>=0.3.2` floor it had just adopted. A release that can be silently skipped is
+# reported by whoever depends on it next, which is too late and somewhere else.
+#
+# So the merge is the release. That is already what this repository says
+# elsewhere: changelog-draft.yml drafts entries for a PR merged into main and
+# ignores everything merged into develop, on the grounds that "the develop ->
+# main merge is the release". Publishing now agrees with it. The guard job reads
+# version.txt and stops the run when that version is already tagged, so an
+# ordinary merge that does not bump the version is a no-op.
+#
+# Provenance is not weakened by dropping the tag trigger — it is enforced
+# earlier. The two checks that used to guard the build asked whether the tag
+# matched version.txt and whether its commit had reached main; neither question
+# can be answered wrongly now, because the version *is* version.txt and the only
+# commits this trigger can build are on main. The tag is still created, after a
+# successful upload rather than before the build, which additionally means a
+# failed publish can be re-run instead of needing the tag deleted first.
+#
+# One workflow rather than "merge creates a tag, tag triggers publish", because a
+# tag pushed with the default GITHUB_TOKEN does not start another workflow run.
+# The two-file version would need a stored PAT — a long-lived secret this
+# repository otherwise does not have, and the reason Trusted Publishing is used
+# below. prometheux-cli's release.yml arrived at the same arrangement for the
+# same reason.
 on:
   push:
-    tags: ["v*"]
+    branches: [main]
 
-# The build job needs nothing beyond reading the checkout. A job-level block
-# replaces this one rather than adding to it, so the publish job below still
-# ends up with id-token as its only permission.
+concurrency:
+  # Never abort a run half-way: cancelling between the upload and the tag leaves
+  # a version on PyPI with nothing in git recording that it shipped.
+  group: publish-main
+  cancel-in-progress: false
+
+# The guard and build jobs need nothing beyond reading the checkout. A job-level
+# block replaces this one rather than adding to it, so the publish job below
+# still ends up with id-token as its only permission, and the tag job with
+# contents.
 permissions:
   contents: read
 
 jobs:
+  guard:
+    # Decides whether this push is a release at all. Most pushes to main are not:
+    # they change code without bumping version.txt, and re-running the build for
+    # them would either publish a duplicate — which PyPI refuses — or need a
+    # skip-existing flag that would hide a genuine version mistake.
+    runs-on: ubuntu-latest
+    outputs:
+      should_publish: ${{ steps.check.outputs.should_publish }}
+      version: ${{ steps.check.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Tags are the record of what has already shipped, and the default
+          # shallow fetch does not bring them.
+          fetch-depth: 0
+
+      - id: check
+        run: |
+          version="$(tr -d '[:space:]' < version.txt)"
+          if [ -z "$version" ]; then
+            echo "::error::version.txt is empty; setup.py stamps it into the package, so there is no version to release."
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          if [ -n "$(git tag -l "v$version")" ]; then
+            echo "v$version is already tagged — this push released nothing."
+            echo "should_publish=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "v$version is not tagged yet — releasing it."
+            echo "should_publish=true" >> "$GITHUB_OUTPUT"
+          fi
+
   build:
+    needs: guard
+    if: needs.guard.outputs.should_publish == 'true'
     # Deliberately holds no `id-token` permission. This job installs
     # dependencies and builds the distributions — third-party code — and PyPI's
     # guidance is to keep all of that out of any job able to mint a publishing
@@ -28,29 +95,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          # The ancestry check below needs real history, which the default
-          # shallow fetch of a single tag ref does not have.
-          fetch-depth: 0
-
-      - name: Require the tag to match version.txt
-        run: |
-          tag_version="${GITHUB_REF_NAME#v}"
-          file_version="$(tr -d '[:space:]' < version.txt)"
-          if [ "$tag_version" != "$file_version" ]; then
-            echo "::error::Tag ${GITHUB_REF_NAME} declares ${tag_version} but version.txt says ${file_version}. setup.py stamps version.txt into the package, so this would publish ${file_version} under a tag naming ${tag_version}."
-            exit 1
-          fi
-          echo "Tag and version.txt agree on ${file_version}."
-
-      - name: Require the tag to be on main
-        run: |
-          git fetch --no-tags origin main
-          if ! git merge-base --is-ancestor "${GITHUB_SHA}" origin/main; then
-            echo "::error::${GITHUB_REF_NAME} points at a commit that has not reached origin/main. Customers pip-install this SDK, so a release has to be merged and reviewed first."
-            exit 1
-          fi
-          echo "Tagged commit is on main."
 
       - uses: actions/setup-python@v5
         with:
@@ -83,6 +127,21 @@ jobs:
           print("import OK, version", pc.__version__)
           PY
 
+      - name: Check the built version is the one the guard decided to release
+        # setup.py reads version.txt at build time, so these agree by
+        # construction — unless the working tree the build saw differs from the
+        # one the guard read, which is the failure this catches before an
+        # artifact reaches PyPI under the wrong name.
+        env:
+          EXPECTED: ${{ needs.guard.outputs.version }}
+        run: |
+          built="$(python -c 'import prometheux_chain; print(prometheux_chain.__version__)')"
+          if [ "$built" != "$EXPECTED" ]; then
+            echo "::error::guard resolved $EXPECTED but the package reports $built."
+            exit 1
+          fi
+          echo "Building $built."
+
       - name: Build
         run: |
           rm -rf build dist ./*.egg-info
@@ -100,14 +159,17 @@ jobs:
           if-no-files-found: error
 
   publish:
-    needs: build
+    needs: [guard, build]
+    if: needs.guard.outputs.should_publish == 'true'
     runs-on: ubuntu-latest
     permissions:
       # The only permission this job has, and the only job that has it. PyPI
       # verifies GitHub's signature on the token and matches its claims against
       # the registered publisher — repository and workflow filename — so a copy
       # of this file in another repository gets a token naming that repository,
-      # which PyPI refuses.
+      # which PyPI refuses. That binding to the filename is also why this file is
+      # still publish.yml: renaming it would invalidate the registered publisher
+      # and every upload with it.
       id-token: write
     steps:
       # Two steps on purpose: nothing but the artifact and the upload is in
@@ -118,6 +180,32 @@ jobs:
           path: dist/
 
       - name: Publish to PyPI
-        # No skip-existing: a version already on PyPI means the tag or
-        # version.txt is wrong, and failing loudly is the point.
+        # No skip-existing: a version already on PyPI means version.txt is wrong,
+        # and failing loudly is the point.
         uses: pypa/gh-action-pypi-publish@release/v1
+
+  tag:
+    needs: [guard, publish]
+    if: needs.guard.outputs.should_publish == 'true'
+    # Last, so that the tag means "this version is on PyPI" rather than "someone
+    # intended to release this". It is also what the guard reads on the next
+    # push, so a run that fails before the upload leaves nothing behind and can
+    # simply be re-run.
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Tag the released commit
+        # Plain git rather than a release action: this is the one job that can
+        # write to the repository, and the less third-party code runs inside it
+        # the better. Nothing listens for tags any more, so this pushes a record,
+        # not a trigger.
+        env:
+          VERSION: ${{ needs.guard.outputs.version }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "v$VERSION" -m "prometheux_chain $VERSION"
+          git push origin "v$VERSION"
