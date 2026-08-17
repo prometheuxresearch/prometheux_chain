@@ -152,32 +152,88 @@ jobs:
           twine check dist/*
           ls -l dist/
 
+      - name: Record what this release contains (SBOM + checksums)
+        # Under artifacts/, never dist/: the publish job uploads everything in
+        # dist/ to PyPI, and an SBOM is not a distribution.
+        #
+        # The SBOM describes a clean install of the built wheel rather than this
+        # job's environment, which also holds build and twine. install_requires
+        # pins nothing, so the resolved transitive versions captured here are the
+        # only record of what someone installing this version actually received —
+        # which is the question asked after a dependency turns out to be bad, and
+        # `pip freeze` in a log that expires does not answer it.
+        run: |
+          mkdir -p artifacts
+          python -m venv /tmp/sbom-env
+          /tmp/sbom-env/bin/pip install --upgrade pip
+          /tmp/sbom-env/bin/pip install dist/*.whl
+          pip install cyclonedx-bom
+          cyclonedx-py environment /tmp/sbom-env \
+            --output-format JSON --output-file artifacts/sbom.cyclonedx.json
+          sha256sum dist/* artifacts/sbom.cyclonedx.json > artifacts/SHA256SUMS
+          cat artifacts/SHA256SUMS
+
       - uses: actions/upload-artifact@v4
         with:
           name: dist
           path: dist/
           if-no-files-found: error
 
+      - uses: actions/upload-artifact@v4
+        # Separate from dist/ so the publish job can download the distributions
+        # alone and hand PyPI exactly what belongs there.
+        with:
+          name: sbom
+          path: artifacts/
+          if-no-files-found: error
+
   publish:
     needs: [guard, build]
     if: needs.guard.outputs.should_publish == 'true'
     runs-on: ubuntu-latest
+    # A trusted publisher is bound to this workflow's *filename*, not to a ref:
+    # PyPI's half of the trust carries no branch constraint, so the trigger at
+    # the top of this file is all that keeps a release on main — and a trigger
+    # is one more line that anyone with write access can rewrite on a branch of
+    # their own, where main's protection rules never see it.
+    #
+    # Two settings outside this file turn that into a real restriction, and
+    # neither works without the other. The publisher registered on PyPI names
+    # this environment, so a run that drops the key below mints a token with no
+    # environment claim and PyPI refuses it; the environment's deployment branch
+    # policy allows main only, so the key cannot be claimed from anywhere else.
+    environment: pypi
     permissions:
-      # The only permission this job has, and the only job that has it. PyPI
-      # verifies GitHub's signature on the token and matches its claims against
-      # the registered publisher — repository and workflow filename — so a copy
-      # of this file in another repository gets a token naming that repository,
-      # which PyPI refuses. That binding to the filename is also why this file is
-      # still publish.yml: renaming it would invalidate the registered publisher
-      # and every upload with it.
+      # PyPI verifies GitHub's signature on the token and matches its claims
+      # against the registered publisher — repository and workflow filename — so
+      # a copy of this file in another repository gets a token naming that
+      # repository, which PyPI refuses. That binding to the filename is also why
+      # this file is still publish.yml: renaming it would invalidate the
+      # registered publisher and every upload with it.
       id-token: write
+      # Signing the provenance statement below, and nothing else. Notably not
+      # contents: the tag job holds that separately, so neither job can both
+      # write to the repository and mint a publishing credential.
+      attestations: write
     steps:
-      # Two steps on purpose: nothing but the artifact and the upload is in
-      # scope while the OIDC token exists. No checkout, no dependency install.
+      # Still nothing here that runs code we did not write: no checkout, and no
+      # dependency install, so no third-party package executes while the OIDC
+      # token is in scope. Both actions below are first-party and install nothing.
       - uses: actions/download-artifact@v4
         with:
           name: dist
           path: dist/
+
+      - name: Attest build provenance
+        # Signs a statement that this workflow, at this commit, produced these
+        # exact files, and records it in a public transparency log. Not a
+        # duplicate of the PEP 740 attestations gh-action-pypi-publish sends
+        # below: those are verified through PyPI, whereas this one answers "did
+        # prometheuxresearch build this?" about a wheel someone already has, via
+        # `gh attestation verify`, without PyPI in the trust path.
+        uses: actions/attest-build-provenance@v4
+        with:
+          subject-path: "dist/*"
 
       - name: Publish to PyPI
         # No skip-existing: a version already on PyPI means version.txt is wrong,
@@ -209,3 +265,30 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git tag -a "v$VERSION" -m "prometheux_chain $VERSION"
           git push origin "v$VERSION"
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: sbom
+          path: artifacts/
+
+      - name: Publish the GitHub Release
+        # Somewhere to put the SBOM and the checksums: PyPI stores neither, and
+        # an artifact from this run expires. The release is attached to the tag
+        # pushed above, which is why this step follows it.
+        #
+        # gh rather than a release action, for the same reason the tag uses plain
+        # git — gh is preinstalled on the runner and adds no third-party code to
+        # the one job that can write here.
+        #
+        # --generate-notes because this repository keeps no CHANGELOG.md; the
+        # user-facing changelog is drafted into the changelog repository by
+        # changelog-draft.yml, so these notes are the commit-level record.
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ needs.guard.outputs.version }}
+        run: |
+          gh release create "v$VERSION" \
+            --title "v$VERSION" \
+            --generate-notes \
+            artifacts/sbom.cyclonedx.json \
+            artifacts/SHA256SUMS
