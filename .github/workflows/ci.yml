@@ -115,3 +115,31 @@ jobs:
           public = [name for name in dir(pc) if not name.startswith("_")]
           print(f"installed import OK: {len(public)} public names, version {pc.__version__}")
           PY
+
+  secrets:
+    name: secret scan (gitleaks, full history)
+    # This repository is public, and releases used to be built and uploaded from
+    # laptops, so a credential that reached a commit here is the kind of thing
+    # that would have arrived by accident rather than by design. Deleting one
+    # from HEAD does not unpublish it either: the old commit stays fetchable, so
+    # the fix is a history rewrite plus a rotation. Scanning the whole history
+    # rather than the checkout is therefore the only version of this check worth
+    # running. prometheux-cli gates on the same job.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # gitleaks walks the commit graph; the default shallow fetch would
+          # leave it with one commit to look at.
+          fetch-depth: 0
+
+      - name: Install gitleaks
+        run: |
+          VER=8.30.1
+          curl -fsSL "https://github.com/gitleaks/gitleaks/releases/download/v${VER}/gitleaks_${VER}_linux_x64.tar.gz" \
+            | tar -xz -C /usr/local/bin gitleaks
+
+      - name: Scan
+        # --redact: a finding must not reprint the secret into a log that is as
+        # public as the repository.
+        run: gitleaks git . --redact --verbose
