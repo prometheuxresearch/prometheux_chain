@@ -22,7 +22,12 @@ def save_ontology(ontology_id=None, ontology_name=None, ontology_scope="user", d
         ontology_id=ontology_id, ontology_name=ontology_name,
         ontology_scope=ontology_scope, description=description,
     ), "save")
-    return data.get('project_id') if isinstance(data, dict) else data
+    # The save endpoint returns the (server-generated on create) id under
+    # 'ontology_id'; older servers used 'project_id'. Read either so a create
+    # never silently yields None (which downstream turns into concepts_None).
+    if isinstance(data, dict):
+        return data.get('ontology_id') or data.get('project_id')
+    return data
 
 
 def list_ontologies(ontology_scopes=None):
