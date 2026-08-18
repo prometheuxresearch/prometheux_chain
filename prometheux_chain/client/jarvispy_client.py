@@ -338,7 +338,7 @@ class JarvisPyClient:
 
     @staticmethod
     def export_ontology(ontology_id, scope="user"):
-        return JarvisPyClient._request("POST", "/api/v1/ontologies/export-project",
+        return JarvisPyClient._request("POST", "/api/v1/ontologies/export-ontology",
                                        json={'project_id': ontology_id, 'scope': scope})
 
     @staticmethod
@@ -346,7 +346,7 @@ class JarvisPyClient:
         payload = {'export_data': export_data, 'scope': scope, 'force_new_id': force_new_id}
         if compute:
             payload['compute'] = compute
-        return JarvisPyClient._request("POST", "/api/v1/ontologies/import-project", json=payload)
+        return JarvisPyClient._request("POST", "/api/v1/ontologies/import-ontology", json=payload)
 
     @staticmethod
     def export_workspace(scope="user"):
