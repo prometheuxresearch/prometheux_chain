@@ -197,14 +197,14 @@ install is always a commit that was reviewed.
 ```bash
 # 1. Bump the version. This is the only place it lives: setup.py stamps it into
 #    the package metadata, and prometheux_chain.__version__ reads it back out.
-echo "0.3.3" > version.txt
+echo "0.3.4" > version.txt
 
 # 2. Open a PR with that change and merge it. That is the whole release.
 ```
 
 The guard job compares `version.txt` against the tags that already exist, so a
 merge that does not bump the version is a no-op. A merge that does bump it builds,
-publishes, attests the artifacts, tags the commit `v0.3.3`, and opens a GitHub
+publishes, attests the artifacts, tags the commit `v0.3.4`, and opens a GitHub
 Release with the SBOM and checksums attached. A version already on PyPI fails the
 upload rather than being skipped quietly.
 
