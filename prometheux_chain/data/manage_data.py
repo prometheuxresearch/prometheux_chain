@@ -17,23 +17,23 @@ def _check(response, action="operation"):
     return response.get('data')
 
 
-def cleanup_sources(source_ids=None, scope="user"):
+def cleanup_sources(source_ids=None):
     """Delete data sources by ID. If None, deletes all."""
-    response = JarvisPyClient.cleanup_sources(source_ids=source_ids, scope=scope)
+    response = JarvisPyClient.cleanup_sources(source_ids=source_ids)
     if response.get('status') != 'success':
         raise Exception(f"Source cleanup failed: {response.get('message', 'Unknown error')}")
 
 
-def connect_sources(database_payload: Database = None, compute_row_count=False, scope="user"):
+def connect_sources(database_payload: Database = None, compute_row_count=False):
     """Connect a data source."""
     return _check(JarvisPyClient.connect_sources(
-        database_payload=database_payload, compute_row_count=compute_row_count, scope=scope,
+        database_payload=database_payload, compute_row_count=compute_row_count,
     ), "connect")
 
 
-def list_sources(scope="user"):
+def list_sources():
     """List all connected data sources."""
-    return _check(JarvisPyClient.list_sources(scope=scope), "list")
+    return _check(JarvisPyClient.list_sources(), "list")
 
 
 def infer_schema(database: Database, add_bind=True, add_model=False):
@@ -53,16 +53,16 @@ def list_demo_sources():
     return _check(JarvisPyClient.list_demo_sources(), "list demo sources")
 
 
-def refresh_sources(scope="user", group_filter=None):
+def refresh_sources(group_filter=None):
     """Re-connect every stored data-source group and reconcile the list."""
-    return _check(JarvisPyClient.refresh_sources(scope=scope, group_filter=group_filter), "refresh")
+    return _check(JarvisPyClient.refresh_sources(group_filter=group_filter), "refresh")
 
 
-def preview_datasource(bind_annotation, scope="user", limit=10, page=1, page_size=0,
+def preview_datasource(bind_annotation, limit=10, page=1, page_size=0,
                        order_by=None, search_term=None, column_filters=None, compute=None):
     """Preview rows from a data source described by a bind annotation."""
     return _check(JarvisPyClient.preview_datasource(
-        bind_annotation=bind_annotation, scope=scope, limit=limit, page=page,
+        bind_annotation=bind_annotation, limit=limit, page=page,
         page_size=page_size, order_by=order_by, search_term=search_term,
         column_filters=column_filters, compute=compute,
     ), "preview")

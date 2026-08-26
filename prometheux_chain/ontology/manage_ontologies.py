@@ -16,12 +16,10 @@ def _check(response, action="operation"):
     return response.get('data')
 
 
-def save_ontology(ontology_id=None, ontology_name=None, ontology_scope="user", description=None):
+def save_ontology(ontology_id=None, ontology_name=None, description=None):
     """Save or create a project."""
     data = _check(JarvisPyClient.save_ontology(
-        ontology_id=ontology_id, ontology_name=ontology_name,
-        ontology_scope=ontology_scope, description=description,
-    ), "save")
+        ontology_id=ontology_id, ontology_name=ontology_name, description=description), "save")
     # The save endpoint returns the (server-generated on create) id under
     # 'ontology_id'; older servers used 'project_id'. Read either so a create
     # never silently yields None (which downstream turns into concepts_None).
@@ -30,63 +28,52 @@ def save_ontology(ontology_id=None, ontology_name=None, ontology_scope="user", d
     return data
 
 
-def list_ontologies(ontology_scopes=None):
-    """List all projects for the given scopes."""
-    return _check(JarvisPyClient.list_ontologies(
-        ontology_scopes=ontology_scopes or ["user"],
-    ), "list")
+def list_ontologies():
+    """List all projects."""
+    return _check(JarvisPyClient.list_ontologies(), "list")
 
 
-def load_ontology(ontology_id, ontology_scope="user"):
+def load_ontology(ontology_id):
     """Load a project by ID."""
-    return _check(JarvisPyClient.load_ontology(
-        ontology_id=ontology_id, ontology_scope=ontology_scope,
-    ), "load")
+    return _check(JarvisPyClient.load_ontology(ontology_id=ontology_id), "load")
 
 
-def cleanup_ontologies(ontology_id=None, ontology_scope="user"):
+def cleanup_ontologies(ontology_id=None):
     """Delete a project and its resources."""
-    response = JarvisPyClient.cleanup_ontologies(ontology_id=ontology_id, ontology_scope=ontology_scope)
+    response = JarvisPyClient.cleanup_ontologies(ontology_id=ontology_id)
     if response.get('status') != 'success':
         raise Exception(f"Project cleanup failed: {response.get('message', 'Unknown error')}")
 
 
-def copy_ontology(ontology_id, target_scope="user", new_ontology_name=None, compute=None):
+def copy_ontology(ontology_id, new_ontology_name=None, compute=None):
     """Copy a project."""
     return _check(JarvisPyClient.copy_ontology(
-        ontology_id=ontology_id, target_scope=target_scope,
-        new_ontology_name=new_ontology_name, compute=compute,
-    ), "copy")
+        ontology_id=ontology_id, new_ontology_name=new_ontology_name, compute=compute), "copy")
 
 
-def export_ontology(ontology_id=None, scope="user"):
+def export_ontology(ontology_id=None):
     """Export a single project."""
-    return _check(JarvisPyClient.export_ontology(
-        ontology_id=ontology_id, scope=scope,
-    ), "export")
+    return _check(JarvisPyClient.export_ontology(ontology_id=ontology_id), "export")
 
 
-def import_ontology(export_data, scope="user", force_new_id=False, compute=None):
+def import_ontology(export_data, force_new_id=False, compute=None):
     """Import a project from exported data."""
     if not export_data or not isinstance(export_data, dict):
         raise ValueError("export_data must be a non-empty dictionary")
     return _check(JarvisPyClient.import_ontology(
-        export_data=export_data, scope=scope, force_new_id=force_new_id, compute=compute,
-    ), "import")
+        export_data=export_data, force_new_id=force_new_id, compute=compute), "import")
 
 
-def export_workspace(scope="user"):
+def export_workspace():
     """Export the entire workspace."""
-    return _check(JarvisPyClient.export_workspace(scope=scope), "workspace export")
+    return _check(JarvisPyClient.export_workspace(), "workspace export")
 
 
-def import_workspace(export_data, scope="user"):
+def import_workspace(export_data):
     """Import an entire workspace from exported data."""
     if not export_data or not isinstance(export_data, dict):
         raise ValueError("export_data must be a non-empty dictionary")
-    return _check(JarvisPyClient.import_workspace(
-        export_data=export_data, scope=scope,
-    ), "workspace import")
+    return _check(JarvisPyClient.import_workspace(export_data=export_data), "workspace import")
 
 
 # ── Templates ─────────────────────────────────────────────────────────────
@@ -96,52 +83,43 @@ def list_templates():
     return _check(JarvisPyClient.list_templates(), "list templates")
 
 
-def import_template(template_id, new_ontology_name=None, ontology_scope="user", compute=None):
+def import_template(template_id, new_ontology_name=None, compute=None):
     """Create a new project from a marketplace template."""
     return _check(JarvisPyClient.import_template(
-        template_id=template_id, new_ontology_name=new_ontology_name,
-        ontology_scope=ontology_scope, compute=compute,
-    ), "import template")
+        template_id=template_id, new_ontology_name=new_ontology_name, compute=compute), "import template")
 
 
-def create_ontology_from_context(context, scope="user", concept_names=None, file_paths=None):
+def create_ontology_from_context(context, concept_names=None, file_paths=None):
     """Create a project from free-text context and optional file attachments.
 
     ``file_paths`` is a list of local file paths to upload alongside the context.
     """
     return _check(JarvisPyClient.create_ontology_from_context(
-        context=context, scope=scope, concept_names=concept_names, file_paths=file_paths,
-    ), "create from context")
+        context=context, concept_names=concept_names, file_paths=file_paths), "create from context")
 
 
 # ── Snapshots (versioning) ─────────────────────────────────────────────────
 
-def create_snapshot(ontology_id, scope="user", description=None):
+def create_snapshot(ontology_id, description=None):
     """Create a point-in-time snapshot of a project."""
     return _check(JarvisPyClient.create_snapshot(
-        ontology_id=ontology_id, scope=scope, description=description,
-    ), "create snapshot")
+        ontology_id=ontology_id, description=description), "create snapshot")
 
 
-def list_snapshots(ontology_id, scope="user"):
+def list_snapshots(ontology_id):
     """List all snapshots for a project (metadata only)."""
-    return _check(JarvisPyClient.list_snapshots(
-        ontology_id=ontology_id, scope=scope,
-    ), "list snapshots")
+    return _check(JarvisPyClient.list_snapshots(ontology_id=ontology_id), "list snapshots")
 
 
-def restore_snapshot(snapshot_id, ontology_id, scope="user", create_safety_snapshot=True):
+def restore_snapshot(snapshot_id, ontology_id, create_safety_snapshot=True):
     """Restore a project from a previously saved snapshot."""
     return _check(JarvisPyClient.restore_snapshot(
-        snapshot_id=snapshot_id, ontology_id=ontology_id, scope=scope,
-        create_safety_snapshot=create_safety_snapshot,
-    ), "restore snapshot")
+        snapshot_id=snapshot_id, ontology_id=ontology_id,
+        create_safety_snapshot=create_safety_snapshot), "restore snapshot")
 
 
-def delete_snapshot(snapshot_id, ontology_id, scope="user"):
+def delete_snapshot(snapshot_id, ontology_id):
     """Delete a single snapshot."""
-    response = JarvisPyClient.delete_snapshot(
-        snapshot_id=snapshot_id, ontology_id=ontology_id, scope=scope,
-    )
+    response = JarvisPyClient.delete_snapshot(snapshot_id=snapshot_id, ontology_id=ontology_id)
     if response.get('status') != 'success':
         raise Exception(f"Project delete snapshot failed: {response.get('message', 'Unknown error')}")

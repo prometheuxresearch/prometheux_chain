@@ -16,14 +16,14 @@ def _check(response, action="operation"):
     return response.get('data')
 
 
-def visualize_concept_lineage(ontology_id, scope="user"):
+def visualize_concept_lineage(ontology_id):
     """Return concept-level lineage (nodes + transitive dependency edges)."""
     return _check(JarvisPyClient.visualize_concept_lineage(
-        ontology_id=ontology_id, scope=scope,
+        ontology_id=ontology_id,
     ), "visualize concept lineage")
 
 
-def build_graph(ontology_id, output_predicate, column_roles, scope="user", page=1,
+def build_graph(ontology_id, output_predicate, column_roles, page=1,
                 page_size=0, order_by=None, pagination_mode="records", max_depth=50,
                 source_node=None, target_node=None, recompute=False, compute=None):
     """Build a graph visualization from an edge predicate's output facts.
@@ -33,7 +33,7 @@ def build_graph(ontology_id, output_predicate, column_roles, scope="user", page=
     """
     return _check(JarvisPyClient.build_graph(
         ontology_id=ontology_id, output_predicate=output_predicate, column_roles=column_roles,
-        scope=scope, page=page, page_size=page_size, order_by=order_by,
+        page=page, page_size=page_size, order_by=order_by,
         pagination_mode=pagination_mode, max_depth=max_depth, source_node=source_node,
         target_node=target_node, recompute=recompute, compute=compute,
     ), "build graph")
@@ -45,9 +45,9 @@ def list_graph_functions():
 
 
 def run_graph_analytics(ontology_id, output_predicate, column_roles, function,
-                        function_params=None, scope="user", compute=None):
+                        function_params=None, compute=None):
     """Run a graph analytics function (e.g. pagerank, cc, dc, paths) over an edge predicate."""
     return _check(JarvisPyClient.run_graph_analytics(
         ontology_id=ontology_id, output_predicate=output_predicate, column_roles=column_roles,
-        function=function, function_params=function_params, scope=scope, compute=compute,
+        function=function, function_params=function_params, compute=compute,
     ), "run graph analytics")
