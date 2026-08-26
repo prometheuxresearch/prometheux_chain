@@ -11,15 +11,15 @@ from typing import Dict, Any
 from ..client.jarvispy_client import JarvisPyClient
 
 
-def save_user_config(config_data: Dict[str, Any], scope: str = "user") -> str:
+def save_user_config(config_data: Dict[str, Any]) -> str:
     """Save user configuration."""
-    response = JarvisPyClient.save_user_config(config_data, scope)
+    response = JarvisPyClient.save_user_config(config_data)
     return response.get("message", "Configuration saved successfully")
 
 
-def load_user_config(scope: str = "user") -> Dict[str, Any]:
+def load_user_config() -> Dict[str, Any]:
     """Load user configuration."""
-    response = JarvisPyClient.load_user_config(scope)
+    response = JarvisPyClient.load_user_config()
     return response.get("data", {})
 
 

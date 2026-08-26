@@ -307,63 +307,61 @@ class JarvisPyClient:
     # ── Projects ──────────────────────────────────────────────────────────
 
     @staticmethod
-    def save_ontology(ontology_id, ontology_name, ontology_scope, description=None):
-        payload = {'project': {'id': ontology_id, 'name': ontology_name, 'scope': ontology_scope}}
+    def save_ontology(ontology_id, ontology_name, description=None):
+        payload = {'project': {'id': ontology_id, 'name': ontology_name}}
         if description is not None:
             payload['project']['description'] = description
         return JarvisPyClient._request("POST", "/api/v1/ontologies/save", json=payload)
 
     @staticmethod
-    def list_ontologies(ontology_scopes):
-        scopes = ','.join(ontology_scopes) if isinstance(ontology_scopes, (list, tuple)) else ontology_scopes
-        return JarvisPyClient._request("GET", "/api/v1/ontologies/list", params={'scopes': scopes})
+    def list_ontologies():
+        return JarvisPyClient._request("GET", "/api/v1/ontologies/list")
 
     @staticmethod
-    def load_ontology(ontology_id, ontology_scope):
+    def load_ontology(ontology_id):
         return JarvisPyClient._request("GET", "/api/v1/ontologies/load",
-                                       params={'project_id': ontology_id, 'scope': ontology_scope})
+                                       params={'project_id': ontology_id})
 
     @staticmethod
-    def cleanup_ontologies(ontology_id, ontology_scope):
+    def cleanup_ontologies(ontology_id):
         return JarvisPyClient._request("POST", "/api/v1/ontologies/cleanup",
-                                       json={'project': {'id': ontology_id, 'scope': ontology_scope}})
+                                       json={'project': {'id': ontology_id}})
 
     @staticmethod
-    def copy_ontology(ontology_id, target_scope="user", new_ontology_name=None, compute=None):
-        payload = {'project_id': ontology_id, 'target_scope': target_scope,
-                   'new_project_name': new_ontology_name}
+    def copy_ontology(ontology_id, new_ontology_name=None, compute=None):
+        payload = {'project_id': ontology_id, 'new_project_name': new_ontology_name}
         if compute:
             payload['compute'] = compute
         return JarvisPyClient._request("POST", "/api/v1/ontologies/copy", json=payload)
 
     @staticmethod
-    def export_ontology(ontology_id, scope="user"):
+    def export_ontology(ontology_id):
         return JarvisPyClient._request("POST", "/api/v1/ontologies/export-ontology",
-                                       json={'project_id': ontology_id, 'scope': scope})
+                                       json={'project_id': ontology_id})
 
     @staticmethod
-    def import_ontology(export_data, scope="user", force_new_id=False, compute=None):
-        payload = {'export_data': export_data, 'scope': scope, 'force_new_id': force_new_id}
+    def import_ontology(export_data, force_new_id=False, compute=None):
+        payload = {'export_data': export_data, 'force_new_id': force_new_id}
         if compute:
             payload['compute'] = compute
         return JarvisPyClient._request("POST", "/api/v1/ontologies/import-ontology", json=payload)
 
     @staticmethod
-    def export_workspace(scope="user"):
-        return JarvisPyClient._request("POST", "/api/v1/ontologies/export-workspace", json={'scope': scope})
+    def export_workspace():
+        return JarvisPyClient._request("POST", "/api/v1/ontologies/export-workspace", json={})
 
     @staticmethod
-    def import_workspace(export_data, scope="user"):
+    def import_workspace(export_data):
         return JarvisPyClient._request("POST", "/api/v1/ontologies/import-workspace",
-                                       json={'export_data': export_data, 'scope': scope})
+                                       json={'export_data': export_data})
 
     @staticmethod
     def list_templates():
         return JarvisPyClient._request("GET", "/api/v1/ontologies/list-templates")
 
     @staticmethod
-    def import_template(template_id, new_ontology_name=None, ontology_scope="user", compute=None):
-        payload = {'template_id': template_id, 'project_scope': ontology_scope}
+    def import_template(template_id, new_ontology_name=None, compute=None):
+        payload = {'template_id': template_id}
         if new_ontology_name is not None:
             payload['new_project_name'] = new_ontology_name
         if compute:
@@ -371,10 +369,9 @@ class JarvisPyClient:
         return JarvisPyClient._request("POST", "/api/v1/ontologies/import-template", json=payload)
 
     @staticmethod
-    def create_ontology_from_context(context, scope="user", concept_names=None, file_paths=None):
+    def create_ontology_from_context(context, concept_names=None, file_paths=None):
         data = {
             'context': context or "",
-            'scope': scope,
             'concept_names': json.dumps(concept_names or []),
         }
         opened_files = []
@@ -386,52 +383,50 @@ class JarvisPyClient:
                 files.append(('files', (os.path.basename(file_path), file_obj)))
             return JarvisPyClient._request_multipart(
                 "POST", "/api/v1/ontologies/create-from-context",
-                files=files or None, data=data,
-            )
+                files=files or None, data=data)
         finally:
             for file_obj in opened_files:
                 file_obj.close()
 
     @staticmethod
-    def create_snapshot(ontology_id, scope="user", description=None):
-        payload = {'project_id': ontology_id, 'scope': scope}
+    def create_snapshot(ontology_id, description=None):
+        payload = {'project_id': ontology_id}
         if description is not None:
             payload['description'] = description
         return JarvisPyClient._request("POST", "/api/v1/ontologies/snapshots/create", json=payload)
 
     @staticmethod
-    def list_snapshots(ontology_id, scope="user"):
+    def list_snapshots(ontology_id):
         return JarvisPyClient._request("GET", "/api/v1/ontologies/snapshots/list",
-                                       params={'project_id': ontology_id, 'scope': scope})
+                                       params={'project_id': ontology_id})
 
     @staticmethod
-    def restore_snapshot(snapshot_id, ontology_id, scope="user", create_safety_snapshot=True):
+    def restore_snapshot(snapshot_id, ontology_id, create_safety_snapshot=True):
         return JarvisPyClient._request("POST", "/api/v1/ontologies/snapshots/restore",
                                        json={'snapshot_id': snapshot_id, 'project_id': ontology_id,
-                                             'scope': scope, 'create_safety_snapshot': create_safety_snapshot})
+                                             'create_safety_snapshot': create_safety_snapshot})
 
     @staticmethod
-    def delete_snapshot(snapshot_id, ontology_id, scope="user"):
+    def delete_snapshot(snapshot_id, ontology_id):
         return JarvisPyClient._request("POST", "/api/v1/ontologies/snapshots/delete",
-                                       json={'snapshot_id': snapshot_id, 'project_id': ontology_id,
-                                             'scope': scope})
+                                       json={'snapshot_id': snapshot_id, 'project_id': ontology_id})
 
     # ── Data sources ──────────────────────────────────────────────────────
 
     @staticmethod
-    def cleanup_sources(source_ids=None, scope="user"):
+    def cleanup_sources(source_ids=None):
         return JarvisPyClient._request("POST", "/api/v1/data/cleanup",
-                                       json={'scope': scope, 'source_ids': source_ids})
+                                       json={'source_ids': source_ids})
 
     @staticmethod
-    def connect_sources(database_payload: Database, compute_row_count=False, scope="user"):
+    def connect_sources(database_payload: Database, compute_row_count=False):
         return JarvisPyClient._request("POST", "/api/v1/data/connect",
-                                       json={'scope': scope, 'database': database_payload.to_dict(),
+                                       json={'database': database_payload.to_dict(),
                                              'computeRowCount': compute_row_count})
 
     @staticmethod
-    def list_sources(scope="user"):
-        return JarvisPyClient._request("GET", "/api/v1/data/list", params={'scope': scope})
+    def list_sources():
+        return JarvisPyClient._request("GET", "/api/v1/data/list")
 
     @staticmethod
     def infer_schema(database: Database, add_bind: bool, add_model: bool):
@@ -449,16 +444,15 @@ class JarvisPyClient:
         return JarvisPyClient._request("GET", "/api/v1/data/demo-sources")
 
     @staticmethod
-    def refresh_sources(scope="user", group_filter=None):
+    def refresh_sources(group_filter=None):
         return JarvisPyClient._request("POST", "/api/v1/data/refresh",
-                                       json={'scope': scope, 'group_filter': group_filter})
+                                       json={'group_filter': group_filter})
 
     @staticmethod
-    def preview_datasource(bind_annotation, scope="user", limit=10, page=1, page_size=0,
+    def preview_datasource(bind_annotation, limit=10, page=1, page_size=0,
                            order_by=None, search_term=None, column_filters=None, compute=None):
         payload = {
             'bind_annotation': bind_annotation,
-            'scope': scope,
             'limit': limit,
             'page': page,
             'page_size': page_size,
@@ -518,11 +512,11 @@ class JarvisPyClient:
     # ── Concepts ──────────────────────────────────────────────────────────
 
     @staticmethod
-    def save_concept(ontology_id, definition, python_scripts=None, scope="user",
+    def save_concept(ontology_id, definition, python_scripts=None,
                      description=None, concept_type="logic", concept_name=None,
                      binds=None, output_predicate="", existing_name=None,
                      position=None, group="group_id", compute=None, force_overwrite=False):
-        payload = {'definition': definition, 'scope': scope, 'concept_type': concept_type}
+        payload = {'definition': definition, 'concept_type': concept_type}
         if python_scripts:
             payload['python_scripts'] = python_scripts
         if description:
@@ -546,18 +540,17 @@ class JarvisPyClient:
         return JarvisPyClient._request("POST", f"/api/v1/concepts/{ontology_id}/save", json=payload)
 
     @staticmethod
-    def rename_concept(ontology_id, old_name, new_name, scope="user"):
+    def rename_concept(ontology_id, old_name, new_name):
         return JarvisPyClient._request("POST", f"/api/v1/concepts/{ontology_id}/rename",
-                                       json={'old_name': old_name, 'new_name': new_name, 'scope': scope})
+                                       json={'old_name': old_name, 'new_name': new_name})
 
     @staticmethod
-    def run_concept(ontology_id, concept_name, params=None, scope="user",
+    def run_concept(ontology_id, concept_name, params=None,
                     force_rerun=True, persist_outputs=False, compute=None):
         payload = {
             'params': params or {},
             'force_rerun': force_rerun,
             'persist_outputs': persist_outputs,
-            'scope': scope,
         }
         if compute:
             payload['compute'] = compute
@@ -566,67 +559,60 @@ class JarvisPyClient:
                                        json=payload)
 
     @staticmethod
-    def run_concept_stream(ontology_id, concept_name, params=None, scope="user",
+    def run_concept_stream(ontology_id, concept_name, params=None,
                            force_rerun=True, persist_outputs=False, compute=None):
         payload = {
             'params': params or {},
             'force_rerun': force_rerun,
             'persist_outputs': persist_outputs,
-            'scope': scope,
         }
         if compute:
             payload['compute'] = compute
         safe_name = quote(concept_name, safe='')
         return JarvisPyClient._websocket(
-            f"/api/v1/concepts/{ontology_id}/run-stream/{safe_name}", init_payload=payload,
-        )
+            f"/api/v1/concepts/{ontology_id}/run-stream/{safe_name}", init_payload=payload)
 
     @staticmethod
-    def list_concepts(ontology_id, scope="user"):
-        return JarvisPyClient._request("GET", f"/api/v1/concepts/{ontology_id}/list",
-                                       params={'scope': scope})
+    def list_concepts(ontology_id):
+        return JarvisPyClient._request("GET", f"/api/v1/concepts/{ontology_id}/list")
 
     @staticmethod
-    def cleanup_concepts(ontology_id, scope="user", concept_names=None):
-        payload = {'scope': scope}
+    def cleanup_concepts(ontology_id, concept_names=None):
+        payload = {}
         if concept_names:
             payload['concept_names'] = concept_names
         return JarvisPyClient._request("POST", f"/api/v1/concepts/{ontology_id}/cleanup", json=payload)
 
     @staticmethod
-    def reorder_concepts(ontology_id, concept_names, scope="user", group=None):
-        payload = {'concept_names': concept_names, 'scope': scope}
+    def reorder_concepts(ontology_id, concept_names, group=None):
+        payload = {'concept_names': concept_names}
         if group is not None:
             payload['group'] = group
         return JarvisPyClient._request("POST", f"/api/v1/concepts/{ontology_id}/reorder", json=payload)
 
     @staticmethod
-    def get_execution_statuses(scopes="user"):
-        scope_param = ','.join(scopes) if isinstance(scopes, (list, tuple)) else scopes
-        return JarvisPyClient._request("GET", "/api/v1/concepts/execution-statuses",
-                                       params={'scopes': scope_param})
+    def get_execution_statuses():
+        return JarvisPyClient._request("GET", "/api/v1/concepts/execution-statuses")
 
     @staticmethod
-    def get_execution_status(ontology_id, scope="user"):
-        return JarvisPyClient._request("GET", f"/api/v1/concepts/{ontology_id}/execution-status",
-                                       params={'scope': scope})
+    def get_execution_status(ontology_id):
+        return JarvisPyClient._request("GET", f"/api/v1/concepts/{ontology_id}/execution-status")
 
     @staticmethod
-    def generate_concept_description(ontology_id, concept_name, scope="user"):
+    def generate_concept_description(ontology_id, concept_name):
         return JarvisPyClient._request("POST", f"/api/v1/concepts/{ontology_id}/generate-description",
-                                       json={'concept_name': concept_name, 'scope': scope})
+                                       json={'concept_name': concept_name})
 
     @staticmethod
-    def get_concept_description(ontology_id, concept_name, scope="user"):
+    def get_concept_description(ontology_id, concept_name):
         return JarvisPyClient._request("GET", f"/api/v1/concepts/{ontology_id}/description",
-                                       params={'concept_name': concept_name, 'scope': scope})
+                                       params={'concept_name': concept_name})
 
     @staticmethod
     def fetch_results(ontology_id, output_predicate, page=1, page_size=10,
-                      scope="user", order_by=None, params=None, compute=None):
+                      order_by=None, params=None, compute=None):
         query = {
             'output_predicate': output_predicate,
-            'project_scope': scope,
         }
         body = {
             'page': page,
@@ -643,10 +629,9 @@ class JarvisPyClient:
 
     @staticmethod
     def search_results(ontology_id, output_predicate, search_term=None, column_filters=None,
-                       scope="user", page=1, page_size=0, order_by=None, compute=None):
+                       page=1, page_size=0, order_by=None, compute=None):
         query = {
             'output_predicate': output_predicate,
-            'project_scope': scope,
             'page': page,
             'page_size': page_size,
         }
@@ -665,8 +650,8 @@ class JarvisPyClient:
     @staticmethod
     def llm_analysis(ontology_id, question, predicate_names=None, predicate_data=None,
                      params=None, prompt_tuning=None, prompt_tuning_name=None,
-                     default_response=None, scope="user", compute=None):
-        payload = {'question': question, 'project_scope': scope}
+                     default_response=None, compute=None):
+        payload = {'question': question}
         if predicate_names is not None:
             payload['predicate_names'] = predicate_names
         if predicate_data is not None:
@@ -685,12 +670,11 @@ class JarvisPyClient:
 
     @staticmethod
     def download_concept(ontology_id, path=None, export_csv=False, concept_name=None,
-                         scope="user", dest_path=None):
+                         dest_path=None):
         params = {}
         if export_csv:
             params['export_csv'] = 'true'
             params['concept_name'] = concept_name
-            params['scope'] = scope
             params['path'] = path or ""
         else:
             params['path'] = path
@@ -700,33 +684,31 @@ class JarvisPyClient:
     # ── Ontology Schema ───────────────────────────────────────────────────
 
     @staticmethod
-    def save_ontology_schema(ontology_id, ontology_schema_data, scope="user"):
+    def save_ontology_schema(ontology_id, ontology_schema_data):
         return JarvisPyClient._request("POST", f"/api/v1/concepts/{ontology_id}/save-ontology-schema",
-                                       json={'ontology_schema_data': ontology_schema_data, 'scope': scope})
+                                       json={'ontology_schema_data': ontology_schema_data})
 
     @staticmethod
-    def load_ontology_schema(ontology_id, scope="user"):
-        return JarvisPyClient._request("GET", f"/api/v1/concepts/{ontology_id}/load-ontology-schema",
-                                       params={'scope': scope})
+    def load_ontology_schema(ontology_id):
+        return JarvisPyClient._request("GET", f"/api/v1/concepts/{ontology_id}/load-ontology-schema")
 
     @staticmethod
     def update_concept_ontology_schema_type(ontology_id, concept_name, ontology_schema_type=None,
-                                            edge_source=None, edge_target=None, scope="user"):
+                                            edge_source=None, edge_target=None):
         safe_name = quote(concept_name, safe='')
-        payload = {'ontology_schema_type': ontology_schema_type, 'scope': scope}
+        payload = {'ontology_schema_type': ontology_schema_type}
         if edge_source is not None:
             payload['edge_source'] = edge_source
         if edge_target is not None:
             payload['edge_target'] = edge_target
         return JarvisPyClient._request(
-            "PATCH", f"/api/v1/concepts/{ontology_id}/concepts/{safe_name}/ontology-schema-type", json=payload,
-        )
+            "PATCH", f"/api/v1/concepts/{ontology_id}/concepts/{safe_name}/ontology-schema-type", json=payload)
 
     @staticmethod
-    def add_to_lineage(ontology_id, element_type, element_data, all_nodes=None, scope="user"):
+    def add_to_lineage(ontology_id, element_type, element_data, all_nodes=None):
         return JarvisPyClient._request("POST", f"/api/v1/concepts/{ontology_id}/add-to-lineage",
                                        json={'element_type': element_type, 'element_data': element_data,
-                                             'all_nodes': all_nodes or [], 'scope': scope})
+                                             'all_nodes': all_nodes or []})
 
     @staticmethod
     def import_owl(ontology_id, owl_content, base_namespace=None):
@@ -738,17 +720,16 @@ class JarvisPyClient:
     # ── Knowledge Graphs ──────────────────────────────────────────────────
 
     @staticmethod
-    def visualize_concept_lineage(ontology_id, scope="user"):
+    def visualize_concept_lineage(ontology_id):
         return JarvisPyClient._request("POST", f"/api/v1/kgs/{ontology_id}/visualize-concept-lineage",
-                                       json={'project': {'scope': scope}})
+                                       json={})
 
     @staticmethod
-    def build_graph(ontology_id, output_predicate, column_roles, scope="user", page=1,
+    def build_graph(ontology_id, output_predicate, column_roles, page=1,
                     page_size=0, order_by=None, pagination_mode="records", max_depth=50,
                     source_node=None, target_node=None, recompute=False, compute=None):
         safe_predicate = quote(output_predicate, safe='')
         query = {
-            'scope': scope,
             'page': page,
             'page_size': page_size,
             'pagination_mode': pagination_mode,
@@ -773,28 +754,26 @@ class JarvisPyClient:
 
     @staticmethod
     def run_graph_analytics(ontology_id, output_predicate, column_roles, function,
-                            function_params=None, scope="user", compute=None):
+                            function_params=None, compute=None):
         safe_predicate = quote(output_predicate, safe='')
-        body = {'column_roles': column_roles, 'function': function, 'project': {'scope': scope}}
+        body = {'column_roles': column_roles, 'function': function}
         if function_params is not None:
             body['function_params'] = function_params
         if compute:
             body['compute'] = compute
         return JarvisPyClient._request(
-            "POST", f"/api/v1/kgs/{ontology_id}/graph-analytics/{safe_predicate}",
-            json=body, params={'scope': scope},
-        )
+            "POST", f"/api/v1/kgs/{ontology_id}/graph-analytics/{safe_predicate}", json=body)
 
     # ── User config / account ─────────────────────────────────────────────
 
     @staticmethod
-    def save_user_config(config_data, scope="user"):
+    def save_user_config(config_data):
         return JarvisPyClient._request("POST", "/api/v1/users/save-config",
-                                       json={'config_data': config_data, 'scope': scope})
+                                       json={'config_data': config_data})
 
     @staticmethod
-    def load_user_config(scope="user"):
-        return JarvisPyClient._request("GET", "/api/v1/users/load-config", params={'scope': scope})
+    def load_user_config():
+        return JarvisPyClient._request("GET", "/api/v1/users/load-config")
 
     @staticmethod
     def get_role():
@@ -931,9 +910,9 @@ class JarvisPyClient:
                                        json={'query': query}, params=params)
 
     @staticmethod
-    def ontology_text(ontology_id, scope="user", refresh=False):
+    def ontology_text(ontology_id, refresh=False):
         return JarvisPyClient._request("GET", f"/api/v1/knowledge/ontology/{ontology_id}/text",
-                                       params={'scope': scope, 'refresh': refresh})
+                                       params={'refresh': refresh})
 
     # ── Agent ─────────────────────────────────────────────────────────────
 
@@ -1008,54 +987,50 @@ class JarvisPyClient:
     # ── Apps ──────────────────────────────────────────────────────────────
 
     @staticmethod
-    def list_all_apps(scope="user"):
-        return JarvisPyClient._request("GET", "/api/v1/apps/list", params={'scope': scope})
+    def list_all_apps():
+        return JarvisPyClient._request("GET", "/api/v1/apps/list")
 
     @staticmethod
-    def list_apps(ontology_id, scope="user"):
-        return JarvisPyClient._request("GET", f"/api/v1/apps/{ontology_id}/list",
-                                       params={'scope': scope})
+    def list_apps(ontology_id):
+        return JarvisPyClient._request("GET", f"/api/v1/apps/{ontology_id}/list")
 
     @staticmethod
-    def get_app(ontology_id, app_id, scope="user"):
-        return JarvisPyClient._request("GET", f"/api/v1/apps/{ontology_id}/{app_id}",
-                                       params={'scope': scope})
+    def get_app(ontology_id, app_id):
+        return JarvisPyClient._request("GET", f"/api/v1/apps/{ontology_id}/{app_id}")
 
     @staticmethod
-    def save_app(ontology_id, app, scope="user"):
+    def save_app(ontology_id, app):
         return JarvisPyClient._request("POST", f"/api/v1/apps/{ontology_id}/save",
-                                       json={'scope': scope, 'app': app})
+                                       json={'app': app})
 
     @staticmethod
-    def delete_app(ontology_id, app_id, scope="user"):
-        return JarvisPyClient._request("DELETE", f"/api/v1/apps/{ontology_id}/{app_id}",
-                                       params={'scope': scope})
+    def delete_app(ontology_id, app_id):
+        return JarvisPyClient._request("DELETE", f"/api/v1/apps/{ontology_id}/{app_id}")
 
     # ── Schedules ─────────────────────────────────────────────────────────
 
     @staticmethod
     def create_policy(ontology_id, concept_name, trigger_type="cron", trigger_config=None,
-                      scope="user", enabled=True):
+                      enabled=True):
         return JarvisPyClient._request("POST", f"/api/v1/schedules/{ontology_id}/policies",
                                        json={'concept_name': concept_name, 'trigger_type': trigger_type,
-                                             'trigger_config': trigger_config or {}, 'scope': scope,
+                                             'trigger_config': trigger_config or {},
                                              'enabled': enabled})
 
     @staticmethod
-    def list_policies(ontology_id, scope="user", concept_name=None):
-        params = {'scope': scope}
+    def list_policies(ontology_id, concept_name=None):
+        params = {}
         if concept_name is not None:
             params['concept_name'] = concept_name
         return JarvisPyClient._request("GET", f"/api/v1/schedules/{ontology_id}/policies", params=params)
 
     @staticmethod
-    def get_policy(ontology_id, policy_id, scope="user"):
-        return JarvisPyClient._request("GET", f"/api/v1/schedules/{ontology_id}/policies/{policy_id}",
-                                       params={'scope': scope})
+    def get_policy(ontology_id, policy_id):
+        return JarvisPyClient._request("GET", f"/api/v1/schedules/{ontology_id}/policies/{policy_id}")
 
     @staticmethod
-    def update_policy(ontology_id, policy_id, scope="user", trigger_config=None, enabled=None):
-        payload = {'scope': scope}
+    def update_policy(ontology_id, policy_id, trigger_config=None, enabled=None):
+        payload = {}
         if trigger_config is not None:
             payload['trigger_config'] = trigger_config
         if enabled is not None:
@@ -1064,34 +1039,30 @@ class JarvisPyClient:
                                        json=payload)
 
     @staticmethod
-    def delete_policy(ontology_id, policy_id, scope="user"):
-        return JarvisPyClient._request("DELETE", f"/api/v1/schedules/{ontology_id}/policies/{policy_id}",
-                                       params={'scope': scope})
+    def delete_policy(ontology_id, policy_id):
+        return JarvisPyClient._request("DELETE", f"/api/v1/schedules/{ontology_id}/policies/{policy_id}")
 
     @staticmethod
-    def trigger_policy(ontology_id, policy_id, scope="user"):
+    def trigger_policy(ontology_id, policy_id):
         return JarvisPyClient._request(
-            "POST", f"/api/v1/schedules/{ontology_id}/policies/{policy_id}/trigger",
-            params={'scope': scope},
-        )
+            "POST", f"/api/v1/schedules/{ontology_id}/policies/{policy_id}/trigger")
 
     @staticmethod
-    def get_run_history(ontology_id, policy_id, scope="user", limit=50, offset=0):
+    def get_run_history(ontology_id, policy_id, limit=50, offset=0):
         return JarvisPyClient._request(
             "GET", f"/api/v1/schedules/{ontology_id}/policies/{policy_id}/runs",
-            params={'scope': scope, 'limit': limit, 'offset': offset},
-        )
+            params={'limit': limit, 'offset': offset})
 
     # ── Alerts ────────────────────────────────────────────────────────────
 
     @staticmethod
-    def get_alert_history(limit=100, offset=0, scope="user"):
+    def get_alert_history(limit=100, offset=0):
         return JarvisPyClient._request("GET", "/api/v1/alerts/history",
-                                       params={'limit': limit, 'offset': offset, 'scope': scope})
+                                       params={'limit': limit, 'offset': offset})
 
     @staticmethod
-    def reprocess_alert(alert_id, scope="user", compute=None):
-        payload = {'scope': scope}
+    def reprocess_alert(alert_id, compute=None):
+        payload = {}
         if compute:
             payload['compute'] = compute
         return JarvisPyClient._request("POST", f"/api/v1/alerts/{quote(alert_id, safe='')}/reprocess",

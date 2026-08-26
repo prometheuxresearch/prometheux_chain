@@ -116,8 +116,8 @@ def onboarding_status():
     return _check(JarvisPyClient.onboarding_status(), "onboarding status")
 
 
-def ontology_text(ontology_id, scope="user", refresh=False):
+def ontology_text(ontology_id, refresh=False):
     """Return the Document view payload (summary + rendered Vadalog) for a project."""
     return _check(JarvisPyClient.ontology_text(
-        ontology_id=ontology_id, scope=scope, refresh=refresh,
+        ontology_id=ontology_id, refresh=refresh,
     ), "project text")

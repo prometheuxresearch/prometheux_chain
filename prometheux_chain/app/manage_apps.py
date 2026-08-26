@@ -18,34 +18,34 @@ def _check(response, action="operation"):
     return response.get('data')
 
 
-def list_all_apps(scope="user"):
+def list_all_apps():
     """List metadata for all apps across all ontologies."""
-    return _check(JarvisPyClient.list_all_apps(scope=scope), "list all")
+    return _check(JarvisPyClient.list_all_apps(), "list all")
 
 
-def list_apps(ontology_id, scope="user"):
+def list_apps(ontology_id):
     """List metadata for all apps in an ontology."""
-    return _check(JarvisPyClient.list_apps(ontology_id=ontology_id, scope=scope), "list")
+    return _check(JarvisPyClient.list_apps(ontology_id=ontology_id), "list")
 
 
-def get_app(ontology_id, app_id, scope="user"):
+def get_app(ontology_id, app_id):
     """Load a single app with its full definition."""
     return _check(JarvisPyClient.get_app(
-        ontology_id=ontology_id, app_id=app_id, scope=scope,
+        ontology_id=ontology_id, app_id=app_id,
     ), "get")
 
 
-def save_app(ontology_id, app, scope="user"):
+def save_app(ontology_id, app):
     """Create or update an app. Returns the assigned app id."""
     return _check(JarvisPyClient.save_app(
-        ontology_id=ontology_id, app=app, scope=scope,
+        ontology_id=ontology_id, app=app,
     ), "save")
 
 
-def delete_app(ontology_id, app_id, scope="user"):
+def delete_app(ontology_id, app_id):
     """Permanently delete an app."""
     response = JarvisPyClient.delete_app(
-        ontology_id=ontology_id, app_id=app_id, scope=scope,
+        ontology_id=ontology_id, app_id=app_id,
     )
     if response.get('status') != 'success':
         raise Exception(f"App delete failed: {response.get('message', 'Unknown error')}")
