@@ -18,15 +18,15 @@ def _check(response, action="operation"):
     return response.get('data')
 
 
-def get_alert_history(limit=100, offset=0, scope="user"):
+def get_alert_history(limit=100, offset=0):
     """Retrieve historical alerts (paginated)."""
     return _check(JarvisPyClient.get_alert_history(
-        limit=limit, offset=offset, scope=scope,
+        limit=limit, offset=offset,
     ), "history")
 
 
-def reprocess_alert(alert_id, scope="user", compute=None):
+def reprocess_alert(alert_id, compute=None):
     """Reprocess an alert, re-executing its associated concept."""
     return _check(JarvisPyClient.reprocess_alert(
-        alert_id=alert_id, scope=scope, compute=compute,
+        alert_id=alert_id, compute=compute,
     ), "reprocess")
